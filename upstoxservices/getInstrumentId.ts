@@ -2,7 +2,7 @@ import axios from "axios";
 
 export async function getInstrumentId(company: string) {
   const response = await axios.get(
-    `https://api.upstox.com/v2/instruments/search?query=${encodeURIComponent(company)}&exchanges=NSE&segments=EQ&instrument_types=EQ`,
+    `https://api.upstox.com/v2/instruments/search?query=${encodeURIComponent(company)}&exchanges=NSE&segments=FO&instrument_types=CE,PE&expiry=current_month&atm_offset=0`,
     {
       headers: {
         Authorization: `Bearer ${process.env.UPSTOX_API_KEY}`,
@@ -11,5 +11,10 @@ export async function getInstrumentId(company: string) {
     }
   );
 
-  return response.data.data[0].instrument_key;
+  const instruments = response.data.data;
+  if (!instruments?.length) {
+    throw new Error(`No instruments found for "${company}"`);
+  }
+
+  return instruments;
 }
