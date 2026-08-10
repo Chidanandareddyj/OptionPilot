@@ -1,6 +1,7 @@
 import { getAtmStrike } from "@/upstoxservices/getAtmStrike";
 import { getInstrumentId } from "@/upstoxservices/getInstrumentId";
 import { getOptions } from "@/upstoxservices/getOptions";
+import { calculateLongStraddle } from "@/strategies/LongStraddle";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -27,11 +28,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const longStraddle = calculateLongStraddle(options, 10);
+    console.log(longStraddle);
     return NextResponse.json({
       underlying_key,
       expiry_date,
       underlying_spot_price: atmStrike.underlying_spot_price,
-      atm_strike: atmStrike,
+      long_straddle: longStraddle,
+      options: longStraddle.payoff_table,
     });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
