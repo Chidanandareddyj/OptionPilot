@@ -3,11 +3,13 @@ import { getInstrumentId } from "@/upstoxservices/getInstrumentId";
 import { getOptions } from "@/upstoxservices/getOptions";
 import { calculateLongStraddle } from "@/strategies/LongStraddle";
 import { calculateIronCondor } from "@/strategies/IronCondor";
+import { calculateButterflySpread } from "@/strategies/ButterflySpread";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
     const { company } = await request.json();
+
     const instruments = await getInstrumentId(company);
     const underlying_key = instruments[0]?.underlying_key;
     const expiry_date = instruments[0]?.expiry;
@@ -31,9 +33,7 @@ export async function POST(request: Request) {
 
     const longStraddle = calculateLongStraddle(options, 10);
     const ironCondor = calculateIronCondor(options, 2, 10);
-
-    console.log(longStraddle);
-    console.log(ironCondor);
+    const butterflySpread = calculateButterflySpread(options, 10);
 
     return NextResponse.json({
       underlying_key,
@@ -41,9 +41,13 @@ export async function POST(request: Request) {
       underlying_spot_price: atmStrike.underlying_spot_price,
       long_straddle: longStraddle,
       iron_condor: ironCondor,
+      butterfly_spread: butterflySpread,
       options: longStraddle.payoff_table,
     });
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+    return NextResponse.json(
+      { error: String(error) },
+      { status: 500 },
+    );
   }
 }
