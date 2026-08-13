@@ -2,6 +2,7 @@ import { getAtmStrike } from "@/upstoxservices/getAtmStrike";
 import { getInstrumentId } from "@/upstoxservices/getInstrumentId";
 import { getOptions } from "@/upstoxservices/getOptions";
 import { calculateLongStraddle } from "@/strategies/LongStraddle";
+import { calculateIronCondor } from "@/strategies/IronCondor";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -29,12 +30,17 @@ export async function POST(request: Request) {
     }
 
     const longStraddle = calculateLongStraddle(options, 10);
+    const ironCondor = calculateIronCondor(options, 2, 10);
+
     console.log(longStraddle);
+    console.log(ironCondor);
+
     return NextResponse.json({
       underlying_key,
       expiry_date,
       underlying_spot_price: atmStrike.underlying_spot_price,
       long_straddle: longStraddle,
+      iron_condor: ironCondor,
       options: longStraddle.payoff_table,
     });
   } catch (error) {
