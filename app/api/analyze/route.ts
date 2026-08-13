@@ -4,6 +4,7 @@ import { getOptions } from "@/upstoxservices/getOptions";
 import { calculateLongStraddle } from "@/strategies/LongStraddle";
 import { calculateIronCondor } from "@/strategies/IronCondor";
 import { calculateButterflySpread } from "@/strategies/ButterflySpread";
+import { calculateBullCallSpread } from "@/strategies/BullCallSpread";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
     const longStraddle = calculateLongStraddle(options, 10);
     const ironCondor = calculateIronCondor(options, 2, 10);
     const butterflySpread = calculateButterflySpread(options, 10);
+    const bullCallSpread = calculateBullCallSpread(options, 10);
 
     return NextResponse.json({
       underlying_key,
@@ -42,6 +44,7 @@ export async function POST(request: Request) {
       long_straddle: longStraddle,
       iron_condor: ironCondor,
       butterfly_spread: butterflySpread,
+      bull_call_spread: bullCallSpread,
       options: longStraddle.payoff_table,
     });
   } catch (error) {
