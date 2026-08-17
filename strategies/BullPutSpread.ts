@@ -64,17 +64,17 @@ export function calculateBullPutSpread(
     0,
   );
 
-  if (atmIndex === 0) {
+  if (atmIndex < 2) {
     throw new Error(
       "Not enough option strikes to construct a bull put spread",
     );
   }
 
-  // Sell higher-strike put
-  const higherStrike = strikes[atmIndex];
+  // Sell an OTM put below spot.
+  const higherStrike = strikes[atmIndex - 1];
 
-  // Buy lower-strike put
-  const lowerStrike = strikes[atmIndex - 1];
+  // Buy a further OTM put for downside protection.
+  const lowerStrike = strikes[atmIndex - 2];
 
   const higherPutPremium =
     higherStrike.put_options.market_data.ltp;
@@ -107,19 +107,9 @@ export function calculateBullPutSpread(
     higherStrike.strike_price - netCredit,
   );
 
-  const startIndex = Math.max(
-    0,
-    atmIndex - recordsEachSide - 1,
-  );
-
-  const endIndex = Math.min(
-    strikes.length,
-    atmIndex + recordsEachSide + 1,
-  );
-
   const nearbyStrikes = strikes.slice(
-    startIndex,
-    endIndex,
+    Math.max(0, atmIndex - recordsEachSide),
+    atmIndex + recordsEachSide + 1,
   );
 
   const payoffTable: BullPutSpreadPayoff[] =

@@ -52,13 +52,14 @@ export function calculateBullCallSpread(
     0,
   );
 
-  if (atmIndex >= strikes.length - 1) {
+  if (atmIndex === 0 || atmIndex >= strikes.length - 1) {
     throw new Error(
       "Not enough option strikes to construct a bull call spread",
     );
   }
 
-  const lowerStrike = strikes[atmIndex];
+  // Buy one ITM call below spot and sell one OTM call above spot.
+  const lowerStrike = strikes[atmIndex - 1];
   const higherStrike = strikes[atmIndex + 1];
 
   const lowerCallPremium =
@@ -90,19 +91,9 @@ export function calculateBullCallSpread(
     lowerStrike.strike_price + netDebit,
   );
 
-  const startIndex = Math.max(
-    0,
-    atmIndex - recordsEachSide,
-  );
-
-  const endIndex = Math.min(
-    strikes.length,
-    atmIndex + recordsEachSide + 2,
-  );
-
   const nearbyStrikes = strikes.slice(
-    startIndex,
-    endIndex,
+    Math.max(0, atmIndex - recordsEachSide),
+    atmIndex + recordsEachSide + 1,
   );
 
   const payoffTable: BullCallSpreadPayoff[] =

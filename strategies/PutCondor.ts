@@ -67,7 +67,7 @@ export function calculatePutCondor(
   );
 
   if (
-    atmIndex < 1 ||
+    atmIndex < 2 ||
     atmIndex + 2 >= strikes.length
   ) {
     throw new Error(
@@ -75,8 +75,8 @@ export function calculatePutCondor(
     );
   }
 
-  const lowerStrike = strikes[atmIndex - 1];
-  const lowerMiddleStrike = strikes[atmIndex];
+  const lowerStrike = strikes[atmIndex - 2];
+  const lowerMiddleStrike = strikes[atmIndex - 1];
   const upperMiddleStrike = strikes[atmIndex + 1];
   const upperStrike = strikes[atmIndex + 2];
 
@@ -84,20 +84,13 @@ export function calculatePutCondor(
     lowerMiddleStrike.strike_price -
     lowerStrike.strike_price;
 
-  const width2 =
-    upperMiddleStrike.strike_price -
-    lowerMiddleStrike.strike_price;
-
-  const width3 =
+  const upperWidth =
     upperStrike.strike_price -
     upperMiddleStrike.strike_price;
 
-  if (
-    width1 !== width2 ||
-    width2 !== width3
-  ) {
+  if (width1 !== upperWidth) {
     throw new Error(
-      "Selected strikes are not equally spaced for a balanced put condor",
+      "Selected put condor wings are not equally spaced",
     );
   }
 
@@ -149,19 +142,9 @@ export function calculatePutCondor(
     upperStrike.strike_price - netDebit,
   );
 
-  const startIndex = Math.max(
-    0,
-    atmIndex - recordsEachSide - 1,
-  );
-
-  const endIndex = Math.min(
-    strikes.length,
-    atmIndex + recordsEachSide + 3,
-  );
-
   const nearbyStrikes = strikes.slice(
-    startIndex,
-    endIndex,
+    Math.max(0, atmIndex - recordsEachSide),
+    atmIndex + recordsEachSide + 1,
   );
 
   const payoffTable: PutCondorPayoff[] =

@@ -35,8 +35,11 @@ export function calculateLongStraddle(
     throw new Error("Cannot calculate a long straddle from an empty option chain");
   }
 
-  const spotPrice = chain.data[0].underlying_spot_price;
-  const atmIndex = chain.data.reduce(
+  const strikes = [...chain.data].sort(
+    (a, b) => a.strike_price - b.strike_price,
+  );
+  const spotPrice = strikes[0].underlying_spot_price;
+  const atmIndex = strikes.reduce(
     (closestIndex, current, currentIndex, strikes) =>
       Math.abs(current.strike_price - spotPrice) <
       Math.abs(strikes[closestIndex].strike_price - spotPrice)
@@ -45,10 +48,10 @@ export function calculateLongStraddle(
     0,
   );
 
-  const atm = chain.data[atmIndex];
+  const atm = strikes[atmIndex];
   const callPremium = atm.call_options.market_data.ltp;
   const putPremium = atm.put_options.market_data.ltp;
-  const nearbyStrikes = chain.data.slice(
+  const nearbyStrikes = strikes.slice(
     Math.max(0, atmIndex - recordsEachSide),
     atmIndex + recordsEachSide + 1,
   );

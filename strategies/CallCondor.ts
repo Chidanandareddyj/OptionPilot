@@ -67,7 +67,7 @@ export function calculateCallCondor(
   );
 
   if (
-    atmIndex < 1 ||
+    atmIndex < 2 ||
     atmIndex + 2 >= strikes.length
   ) {
     throw new Error(
@@ -75,8 +75,9 @@ export function calculateCallCondor(
     );
   }
 
-  const lowerStrike = strikes[atmIndex - 1];
-  const lowerMiddleStrike = strikes[atmIndex];
+  // Two ITM calls below spot and two OTM calls above spot.
+  const lowerStrike = strikes[atmIndex - 2];
+  const lowerMiddleStrike = strikes[atmIndex - 1];
   const upperMiddleStrike = strikes[atmIndex + 1];
   const upperStrike = strikes[atmIndex + 2];
 
@@ -84,20 +85,13 @@ export function calculateCallCondor(
     lowerMiddleStrike.strike_price -
     lowerStrike.strike_price;
 
-  const width2 =
-    upperMiddleStrike.strike_price -
-    lowerMiddleStrike.strike_price;
-
-  const width3 =
+  const upperWidth =
     upperStrike.strike_price -
     upperMiddleStrike.strike_price;
 
-  if (
-    width1 !== width2 ||
-    width2 !== width3
-  ) {
+  if (width1 !== upperWidth) {
     throw new Error(
-      "Selected strikes are not equally spaced for a balanced call condor",
+      "Selected call condor wings are not equally spaced",
     );
   }
 
@@ -149,19 +143,9 @@ export function calculateCallCondor(
     upperStrike.strike_price - netDebit,
   );
 
-  const startIndex = Math.max(
-    0,
-    atmIndex - recordsEachSide,
-  );
-
-  const endIndex = Math.min(
-    strikes.length,
-    atmIndex + recordsEachSide + 2,
-  );
-
   const nearbyStrikes = strikes.slice(
-    startIndex,
-    endIndex,
+    Math.max(0, atmIndex - recordsEachSide),
+    atmIndex + recordsEachSide + 1,
   );
 
   const payoffTable: CallCondorPayoff[] =
