@@ -9,6 +9,12 @@ import { calculateCallButterfly } from "@/strategies/CallButterfly";
 import { calculatePutButterfly } from "@/strategies/PutButterfly";
 import { calculateCallCondor } from "@/strategies/CallCondor";
 import { calculatePutCondor } from "@/strategies/PutCondor";
+import {calculateIronCondor} from "@/strategies/IronCondor";
+import {calculateBearCallSpread} from "@/strategies/BearCallSpread";
+import {calculateBearPutSpread} from "@/strategies/BearPutSpread";
+import {calculateLongStrangle} from "@/strategies/LongStrangle";
+import {calculateShortStraddle} from "@/strategies/ShortStraddle";
+import {calculateShortStrangle} from "@/strategies/ShortStrangle";
 
 import { NextResponse } from "next/server";
 
@@ -72,6 +78,12 @@ export async function POST(request: Request) {
     // Put Condor
     const putCondor =
       calculatePutCondor(options, 10);
+    const ironCondor = calculateIronCondor(options, 10);
+    const bearCallSpread = calculateBearCallSpread(options, 10);
+    const bearPutSpread = calculateBearPutSpread(options, 10);
+    const longStrangle = calculateLongStrangle(options, 10);
+    const shortStraddle = calculateShortStraddle(options, 10);
+    const shortStrangle = calculateShortStrangle(options, 10);
 
     return NextResponse.json({
       underlying_key,
@@ -100,6 +112,19 @@ export async function POST(request: Request) {
 
       put_condor:
         putCondor,
+      
+      iron_condor:
+        ironCondor,
+      bear_call_spread:
+        bearCallSpread,
+      bear_put_spread:
+        bearPutSpread,
+      long_strangle:
+        longStrangle,
+      short_straddle:
+        shortStraddle,
+      short_strangle:
+        shortStrangle,
 
       options:
         longStraddle.payoff_table,
