@@ -42,73 +42,37 @@ export function calculateShortStrangle(
   );
 
   const spotPrice = strikes[0].underlying_spot_price;
-
-  /*
-   * For a Short Strangle:
-   * - Sell OTM Put  -> strike below spot
-   * - Sell OTM Call -> strike above spot
-   */
-
-  const otmPutIndex = strikes.reduce(
-    (closestIndex, current, currentIndex) => {
-      if (
-        current.strike_price < spotPrice &&
-        Math.abs(current.strike_price - spotPrice) <
-          Math.abs(strikes[closestIndex].strike_price - spotPrice)
-      ) {
-        return currentIndex;
-      }
-
-      return closestIndex;
-    },
+  const atmIndex = strikes.reduce(
+    (closestIndex, current, currentIndex, allStrikes) =>
+      Math.abs(current.strike_price - spotPrice) <
+      Math.abs(allStrikes[closestIndex].strike_price - spotPrice)
+        ? currentIndex
+        : closestIndex,
     0,
   );
-
-  const otmCallIndex = strikes.reduce(
-    (closestIndex, current, currentIndex) => {
-      if (
-        current.strike_price > spotPrice &&
-        Math.abs(current.strike_price - spotPrice) <
-          Math.abs(strikes[closestIndex].strike_price - spotPrice)
-      ) {
-        return currentIndex;
-      }
-
-      return closestIndex;
-    },
-    strikes.length - 1,
+  const otmPutIndex = strikes.findLastIndex(
+    ({ strike_price }) => strike_price < spotPrice,
+  );
+  const otmCallIndex = strikes.findIndex(
+    ({ strike_price }) => strike_price > spotPrice,
   );
 
-  const putStrike = strikes[otmPutIndex];
-  const callStrike = strikes[otmCallIndex];
-
-  if (
-    putStrike.strike_price >= spotPrice ||
-    callStrike.strike_price <= spotPrice
-  ) {
+  if (otmPutIndex < 0 || otmCallIndex < 0) {
     throw new Error(
       "Could not find valid OTM Put and OTM Call strikes for Short Strangle",
     );
   }
 
+  const putStrike = strikes[otmPutIndex];
+  const callStrike = strikes[otmCallIndex];
+
   const putPremium = putStrike.put_options.market_data.ltp;
   const callPremium = callStrike.call_options.market_data.ltp;
 
-  /*
-   * Generate closing prices around the two selected strikes.
-   */
-
-  const lowerIndex = Math.max(
-    0,
-    otmPutIndex - recordsEachSide,
+  const nearbyStrikes = strikes.slice(
+    Math.max(0, atmIndex - recordsEachSide),
+    atmIndex + recordsEachSide + 1,
   );
-
-  const upperIndex = Math.min(
-    strikes.length,
-    otmCallIndex + recordsEachSide + 1,
-  );
-
-  const nearbyStrikes = strikes.slice(lowerIndex, upperIndex);
 
   const payoffTable: ShortStranglePayoff[] = nearbyStrikes.map(
     ({ strike_price: closingPrice }) => {
