@@ -12,28 +12,30 @@ const W = 1000;
 const H = 330;
 const VH = 625;
 const STEP = 11;
-const PEAK = 0.39 * VH; // mountain summit ≈ 39% up the viewport, as in the reference
+const PEAK = 0.44 * VH; // lift the dotted mountain toward the hero midpoint
 
 const sig = (x: number) => 1 / (1 + Math.exp(-x));
 const g = (t: number, c: number, s: number, a: number) => a * Math.exp(-((t - c) ** 2) / (2 * s * s));
 
-// Ridge height (0..1) across the width: one dominant peak, a plateau to the right, small foothills.
+// Ridge height (0..1) across the width: one broad peak with layered foothills.
 function ridge(t: number) {
   return Math.min(
     1,
-    g(t, 0.72, 0.1, 1) +
-      g(t, 0.55, 0.04, 0.22) +
+    g(t, 0.72, 0.09, 1) +
+      g(t, 0.55, 0.055, 0.22) +
+      g(t, 0.3, 0.11, 0.16) +
       g(t, 0.47, 0.012, 0.12) +
       g(t, 0.42, 0.008, 0.06) +
       g(t, 0.38, 0.006, 0.03) +
-      0.5 * sig((t - 0.86) * 40) +
-      g(t, 0.96, 0.03, 0.1),
+      0.18 * sig((t - 0.86) * 40) +
+      g(t, 0.96, 0.04, 0.12) +
+      0.008 * Math.sin(t * 80) * sig((t - 0.3) * 18),
   );
 }
 
-// Smooth curves (viewport fraction) the two line charts follow; both ride above the ridge.
-const bright = (t: number) => (0.1 + 0.34 * sig((t - 0.5) * 14)) * (1 - 0.35 * sig((t - 0.85) * 20));
-const faint = (t: number) => 0.06 + 0.3 * sig((t - 0.55) * 10);
+// Both price lines use the mountain contour as their trend, then add a small offset.
+const bright = (t: number) => 0.08 + ridge(t) * 0.38;
+const faint = (t: number) => 0.05 + ridge(t) * 0.3;
 
 // mulberry32: tiny seeded PRNG so the "random" walk is identical on server and client.
 function rng(seed: number) {
@@ -57,7 +59,8 @@ function walk(seed: number, curve: (t: number) => number, amp: number, from: num
   const pts: string[] = [];
   let noise = 0;
   for (let x = from; x <= W; x += 6) {
-    noise = noise * 0.88 + (r() - 0.5) * amp;
+    // A shorter memory and larger steps give the plotted lines a price-chart feel.
+    noise = noise * 0.58 + (r() - 0.5) * amp;
     pts.push(`${x},${(H - curve(x / W) * VH + noise).toFixed(1)}`);
   }
   return pts.join(" ");
@@ -123,9 +126,24 @@ export default function Home() {
       <div className="cloud" style={{ bottom: "20%", left: "26%", width: "26vw", height: "10vh", opacity: 0.4 }} />
 
       {/* dotted mountain + lines */}
-      <svg viewBox={`0 0 ${W} ${H}`} className="pointer-events-none absolute bottom-0 left-0 w-full">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="hero-chart pointer-events-none absolute bottom-0 left-0 w-full">
         <polyline points={FAINT} fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="0.9" />
-        <g fill="white">
+        <g className="mountain-range" fill="#0b2d78" opacity="0.35" transform="translate(-210 48) scale(1.3 0.82)">
+          {DOTS.map(([x, y]) => (
+            <circle key={`left-range-${x}-${y}`} cx={x} cy={y} r="3.2" />
+          ))}
+        </g>
+        <g className="mountain-range" fill="#174b9c" opacity="0.3" transform="translate(220 64) scale(0.96 0.72)">
+          {DOTS.map(([x, y]) => (
+            <circle key={`right-range-${x}-${y}`} cx={x} cy={y} r="3.1" />
+          ))}
+        </g>
+        <g className="mountain-shadow" fill="#061653" opacity="0.3" transform="translate(2 2)">
+          {DOTS.map(([x, y]) => (
+            <circle key={`shadow-${x}-${y}`} cx={x} cy={y} r="3.4" />
+          ))}
+        </g>
+        <g className="mountain-dots" fill="white">
           {DOTS.map(([x, y]) => (
             <circle key={`${x}-${y}`} cx={x} cy={y} r="2.9" />
           ))}
@@ -145,15 +163,15 @@ export default function Home() {
       </svg>
 
       {/* header */}
-      <header className="relative flex items-start justify-between px-10 pt-7">
-        <h1 className="font-serif text-[clamp(52px,6.6vw,96px)] leading-[0.92] tracking-[-0.015em]">
+      <header className="hero-header relative flex items-start justify-between px-10 pt-7">
+        <h1 className="hero-title font-serif text-[clamp(52px,6.6vw,96px)] leading-[0.92] tracking-[-0.015em]">
           Options built to
           <br />
           withstand any
           <br />
           <em>volatility</em>
         </h1>
-        <div className="flex items-center gap-10 pt-1">
+        <div className="hero-meta flex items-center gap-10 pt-1">
           <Clock />
           <Link href="/" className="flex items-center gap-2 text-[14px] font-medium">
             <Mark className="size-4" />
@@ -163,7 +181,7 @@ export default function Home() {
       </header>
 
       {/* halftone sphere */}
-      <svg viewBox="-45 -45 90 90" className="absolute left-[47%] top-[27%] w-[76px] opacity-75">
+      <svg viewBox="-45 -45 90 90" className="hero-sphere absolute left-1/2 opacity-75">
         {SPHERE.map(([x, y, r]) => (
           <circle key={`${x}-${y}`} cx={x} cy={y} r={r} fill="white" />
         ))}
@@ -188,7 +206,7 @@ export default function Home() {
       </div> */}
 
       {/* badges */}
-      <div className="absolute bottom-7 left-10 flex gap-1.5">
+      <div className="hero-badges absolute bottom-7 left-10 flex gap-1.5">
         {BADGES.map((b) => (
           <span
             key={b}
@@ -200,7 +218,7 @@ export default function Home() {
       </div>
 
       {/* pill nav */}
-      <nav className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-[#0b0b0e] p-1.5 pr-1.5 text-[12px] shadow-2xl">
+      <nav className="hero-nav absolute bottom-6 left-1/2 flex items-center gap-1 rounded-full bg-[#0b0b0e] p-1.5 pr-1.5 text-[12px] shadow-2xl">
         <span className="mr-2 flex size-9 items-center justify-center rounded-full bg-white text-black">
           <Mark className="size-4" />
         </span>
