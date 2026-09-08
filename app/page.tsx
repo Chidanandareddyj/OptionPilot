@@ -6,69 +6,38 @@ import { useEffect, useState } from "react";
 const NAV = ["Overview", "Strategies", "Analyze", "Insights", "Pricing", "Access"];
 const BADGES = ["NSE", "BSE", "F&O"];
 
-/* ---------- dotted mountain + line chart (deterministic, so SSR === client) ---------- */
-// viewBox units: 1000 wide == viewport width, so at 16:10 the viewport is ~625 units tall.
-const W = 1000;
-const H = 330;
-const VH = 625;
-const STEP = 11;
-const PEAK = 0.44 * VH; // lift the dotted mountain toward the hero midpoint
+// Nav items that map to a real section on the page; the rest are placeholders.
+const SECTIONS: Record<string, string> = { Overview: "overview", Strategies: "strategies", Analyze: "analyze" };
 
-const sig = (x: number) => 1 / (1 + Math.exp(-x));
-const g = (t: number, c: number, s: number, a: number) => a * Math.exp(-((t - c) ** 2) / (2 * s * s));
+const FACTS = [
+  { k: "Defined risk", v: "Every structure caps its own downside before you ever enter it." },
+  { k: "NSE · BSE · F&O", v: "Equity and index options across the Indian markets you trade." },
+  { k: "Plain-English", v: "An LLM explains the reasoning, not just the raw Greeks." },
+];
 
-// Ridge height (0..1) across the width: one broad peak with layered foothills.
-function ridge(t: number) {
-  return Math.min(
-    1,
-    g(t, 0.72, 0.09, 1) +
-      g(t, 0.55, 0.055, 0.22) +
-      g(t, 0.3, 0.11, 0.16) +
-      g(t, 0.47, 0.012, 0.12) +
-      g(t, 0.42, 0.008, 0.06) +
-      g(t, 0.38, 0.006, 0.03) +
-      0.18 * sig((t - 0.86) * 40) +
-      g(t, 0.96, 0.04, 0.12) +
-      0.008 * Math.sin(t * 80) * sig((t - 0.3) * 18),
-  );
-}
+const STRATEGIES = [
+  { name: "Bull Call Spread", tag: "Directional · Bullish", desc: "Buy a call, sell a higher one. Capped cost, capped gain — a clean bet on a move up." },
+  { name: "Bear Put Spread", tag: "Directional · Bearish", desc: "Profit as the underlying falls to target, with your downside defined from the start." },
+  { name: "Iron Condor", tag: "Neutral · Range", desc: "Sell a call spread and a put spread. Collect premium while price stays inside the band." },
+  { name: "Iron Butterfly", tag: "Neutral · Pinning", desc: "Tighter wings, richer premium — for when you expect price to settle near a strike." },
+  { name: "Covered Call", tag: "Income · Holdings", desc: "Earn premium on shares you already own, trading a little upside for steady yield." },
+  { name: "Cash-Secured Put", tag: "Income · Entry", desc: "Get paid to name the price you'd happily buy the underlying at." },
+  { name: "Calendar Spread", tag: "Volatility · Time", desc: "Sell near-term, buy longer-dated. Harvest time decay across two expiries." },
+  { name: "Straddle / Strangle", tag: "Volatility · Events", desc: "Position for a large move in either direction around earnings and event catalysts." },
+];
 
-// Both price lines use the mountain contour as their trend, then add a small offset.
-const bright = (t: number) => 0.08 + ridge(t) * 0.38;
-const faint = (t: number) => 0.05 + ridge(t) * 0.3;
+const STEPS = [
+  { n: "01", title: "Market context", desc: "Pulls the live option chain — implied volatility, open interest, and the underlying's trend and levels." },
+  { n: "02", title: "Payoff modeling", desc: "Computes max profit, max loss, breakevens, and probability of profit across the price range at expiry." },
+  { n: "03", title: "LLM reasoning", desc: "A language model weighs the setup against current conditions and your risk profile, in plain English." },
+  { n: "04", title: "Recommendation", desc: "A ranked verdict — enter, adjust, or skip — with the reasoning and the numbers shown side by side." },
+];
 
-// mulberry32: tiny seeded PRNG so the "random" walk is identical on server and client.
-function rng(seed: number) {
-  return () => {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-const DOTS: [number, number][] = [];
-for (let x = STEP / 2; x < W; x += STEP) {
-  const h = ridge(x / W) * PEAK;
-  for (let y = H - STEP / 2; y > H - h; y -= STEP) DOTS.push([x, y]);
-}
-
-function walk(seed: number, curve: (t: number) => number, amp: number, from: number) {
-  const r = rng(seed);
-  const pts: string[] = [];
-  let noise = 0;
-  for (let x = from; x <= W; x += 6) {
-    // A shorter memory and larger steps give the plotted lines a price-chart feel.
-    noise = noise * 0.58 + (r() - 0.5) * amp;
-    pts.push(`${x},${(H - curve(x / W) * VH + noise).toFixed(1)}`);
-  }
-  return pts.join(" ");
-}
-const LINE = walk(7, bright, 7, 0.18 * W);
-const FAINT = walk(21, faint, 9, 0);
-const LABEL_X = 0.61 * W;
-const LABEL_Y = +(H - bright(0.61) * VH).toFixed(1);
+// Everest skyline traced in the photo's own pixel space (1024x682) so the price
+// line hugs the real ridge. Negative x values are the chart lead-in that rises
+// out of the empty sky on the left before meeting the summit.
+const RIDGE_LINE =
+  "-520,585 -440,560 -360,572 -280,540 -200,548 -120,510 -60,470 0,395 28,360 55,398 95,384 175,381 230,348 285,314 340,284 400,238 450,204 485,174 500,162 520,174 560,204 600,239 645,284 680,319 700,344 730,318 760,289 795,269 820,261 845,284 875,314 905,349 930,329 955,294 975,319 1000,398 1024,468";
 
 /* ---------- dotted wireframe sphere glyph: latitude rings of dots, tilted toward the viewer ---------- */
 const SPHERE: [number, number, number][] = [];
@@ -114,7 +83,9 @@ function Mark({ className }: { className?: string }) {
 
 export default function Home() {
   return (
-    <main className="sky relative min-h-screen overflow-hidden text-white select-none">
+    <main className="relative text-white select-none">
+      {/* ===================== Hero ===================== */}
+      <section id="top" className="sky relative min-h-screen overflow-hidden">
       {/* clouds */}
       <div className="cloud" style={{ top: "3%", right: "-6%", width: "50vw", height: "14vh", opacity: 0.7, transform: "rotate(-7deg)", filter: "blur(18px)" }} />
       <div className="cloud" style={{ top: "15%", right: "8%", width: "34vw", height: "6vh", opacity: 0.5, transform: "rotate(-5deg)", filter: "blur(14px)" }} />
@@ -125,42 +96,14 @@ export default function Home() {
       <div className="cloud" style={{ bottom: "14%", right: "4%", width: "46vw", height: "18vh", opacity: 0.55 }} />
       <div className="cloud" style={{ bottom: "20%", left: "26%", width: "26vw", height: "10vh", opacity: 0.4 }} />
 
-      {/* dotted mountain + lines */}
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="hero-chart pointer-events-none absolute bottom-0 left-0 w-full">
-        <polyline points={FAINT} fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="0.9" />
-        <g className="mountain-range" fill="#0b2d78" opacity="0.35" transform="translate(-210 48) scale(1.3 0.82)">
-          {DOTS.map(([x, y]) => (
-            <circle key={`left-range-${x}-${y}`} cx={x} cy={y} r="3.2" />
-          ))}
-        </g>
-        <g className="mountain-range" fill="#174b9c" opacity="0.3" transform="translate(220 64) scale(0.96 0.72)">
-          {DOTS.map(([x, y]) => (
-            <circle key={`right-range-${x}-${y}`} cx={x} cy={y} r="3.1" />
-          ))}
-        </g>
-        <g className="mountain-shadow" fill="#061653" opacity="0.3" transform="translate(2 2)">
-          {DOTS.map(([x, y]) => (
-            <circle key={`shadow-${x}-${y}`} cx={x} cy={y} r="3.4" />
-          ))}
-        </g>
-        <g className="mountain-dots" fill="white">
-          {DOTS.map(([x, y]) => (
-            <circle key={`${x}-${y}`} cx={x} cy={y} r="2.9" />
-          ))}
-        </g>
-        <polyline points={LINE} fill="none" stroke="white" strokeOpacity="0.9" strokeWidth="1.1" />
-        {/* <circle cx={LABEL_X} cy={LABEL_Y} r="2.2" fill="white" /> */}
-        {/* <text
-          x={LABEL_X + 8}
-          y={LABEL_Y - 5}
-          fill="white"
-          fontSize="6.5"
-          letterSpacing="1"
-          className="font-sans"
-        >
-          BACKTESTED SINCE 2020
-        </text> */}
-      </svg>
+      {/* Everest photo (bottom-right, edges faded) with a price line tracing the ridge */}
+      <div className="hero-photo pointer-events-none absolute bottom-0 right-0">
+        <img src="/everest.jpg" alt="Mount Everest" className="h-full w-full select-none object-cover" />
+        <svg viewBox="0 0 1024 682" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
+          <polyline points={RIDGE_LINE} fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="1" vectorEffect="non-scaling-stroke" transform="translate(0 26)" />
+          <polyline points={RIDGE_LINE} fill="none" stroke="white" strokeOpacity="0.9" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
+        </svg>
+      </div>
 
       {/* header */}
       <header className="hero-header relative flex items-start justify-between px-10 pt-7">
@@ -216,18 +159,108 @@ export default function Home() {
           </span>
         ))}
       </div>
+      </section>
 
-      {/* pill nav */}
-      <nav className="hero-nav absolute bottom-6 left-1/2 flex items-center gap-1 rounded-full bg-[#0b0b0e] p-1.5 pr-1.5 text-[12px] shadow-2xl">
-        <span className="mr-2 flex size-9 items-center justify-center rounded-full bg-white text-black">
+      {/* ===================== Content (mountain gone, colour scheme stays) ===================== */}
+      <div className="sky-content relative">
+        {/* Overview */}
+        <section id="overview" className="section">
+          <p className="eyebrow">Overview</p>
+          <h2 className="font-serif text-[clamp(34px,4.6vw,60px)] leading-[1.04] tracking-[-0.015em]">
+            Options strategies built to
+            <br />
+            <em>withstand any volatility.</em>
+          </h2>
+          <p className="section-lead">
+            OptionPilot designs, stress-tests, and scores defined-risk options strategies for NSE &amp; BSE equities
+            and index F&amp;O. No noise, no tip-sheets — just clear payoff diagrams, defined risk, and probabilities
+            you can actually act on.
+          </p>
+          <div className="mt-14 grid gap-6 sm:grid-cols-3">
+            {FACTS.map((f) => (
+              <div key={f.k} className="border-t border-white/15 pt-5">
+                <div className="font-serif text-[22px]">{f.k}</div>
+                <p className="mt-2 text-[15px] leading-relaxed text-white/60">{f.v}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Strategies */}
+        <section id="strategies" className="section">
+          <p className="eyebrow">Strategies</p>
+          <h2 className="font-serif text-[clamp(34px,4.6vw,60px)] leading-[1.04] tracking-[-0.015em]">
+            A library of defined-risk structures.
+          </h2>
+          <p className="section-lead">
+            Pick a market view — up, down, sideways, or volatile — and OptionPilot assembles the structure, sizes the
+            legs, and shows the trade-off before you commit a rupee.
+          </p>
+          <div className="mt-14 grid gap-3 sm:grid-cols-2">
+            {STRATEGIES.map((s) => (
+              <div
+                key={s.name}
+                className="rounded-2xl border border-white/12 bg-white/[0.04] p-6 transition hover:bg-white/[0.07]"
+              >
+                <div className="flex items-baseline justify-between gap-4">
+                  <h3 className="font-serif text-[26px] leading-tight">{s.name}</h3>
+                  <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
+                    {s.tag}
+                  </span>
+                </div>
+                <p className="mt-3 text-[15px] leading-relaxed text-white/60">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Analyze */}
+        <section id="analyze" className="section pb-44">
+          <p className="eyebrow">Analyze</p>
+          <h2 className="font-serif text-[clamp(34px,4.6vw,60px)] leading-[1.04] tracking-[-0.015em]">
+            Every strategy, scored by an <em>LLM analyst.</em>
+          </h2>
+          <p className="section-lead">
+            OptionPilot doesn&apos;t just draw payoff curves — it reasons about them. Live market data is combined with
+            a language model that weighs the setup and hands back a recommendation you can read in seconds.
+          </p>
+          <div className="mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+            {STEPS.map((st) => (
+              <div key={st.n}>
+                <div className="font-serif text-[40px] leading-none text-white/30">{st.n}</div>
+                <h3 className="mt-3 text-[17px] font-semibold">{st.title}</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-white/60">{st.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-16 rounded-2xl border border-white/12 bg-white/[0.04] p-8">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/45">Sample verdict</p>
+            <p className="mt-4 font-serif text-[clamp(22px,2.4vw,32px)] leading-snug">
+              &ldquo;Iron Condor on NIFTY, 21-day expiry. IV rank is high and price is range-bound, so premium is rich
+              relative to risk.{" "}
+              <span className="text-white/55">
+                Probability of profit 68%, max loss capped at ₹6,200. Recommendation: enter, size at 2% of capital.&rdquo;
+              </span>
+            </p>
+          </div>
+        </section>
+      </div>
+
+      {/* ===================== Floating dock ===================== */}
+      <nav className="hero-nav fixed bottom-6 left-1/2 z-50 flex items-center gap-1 rounded-full bg-[#0b0b0e] p-1.5 pr-1.5 text-[12px] shadow-2xl">
+        <a href="#top" className="mr-2 flex size-9 items-center justify-center rounded-full bg-white text-black">
           <Mark className="size-4" />
-        </span>
+        </a>
         {NAV.map((n) => (
-          <a key={n} href="#" className="px-3 py-1.5 text-white/90 hover:text-white">
+          <a
+            key={n}
+            href={SECTIONS[n] ? `#${SECTIONS[n]}` : "#top"}
+            className={`px-3 py-1.5 text-white/90 hover:text-white ${SECTIONS[n] ? "" : "max-sm:hidden"}`}
+          >
             {n}
           </a>
         ))}
-        <a href="#" className="ml-1 rounded-full bg-[#2b2b30] px-4 py-2 text-white">
+        <a href="#access" className="ml-1 rounded-full bg-[#2b2b30] px-4 py-2 text-white max-sm:hidden">
           More
         </a>
       </nav>

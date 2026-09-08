@@ -5,25 +5,76 @@
   --font-serif: var(--font-instrument-serif);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-/* Deep navy top-left -> cobalt centre -> hazy pale blue at the horizon. */
+/* Content below the hero: the mountain is gone but the blue scheme continues,
+   deepening from the hazy horizon back into navy as you scroll. */
+.sky-content {
+  background: linear-gradient(
+    180deg,
+    #b9d3ec 0%,
+    #3a629f 5%,
+    #123a7e 14%,
+    #08265f 42%,
+    #061f52 100%
+  );
+}
+
+.section {
+  position: relative;
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 7rem 2.5rem;
+  scroll-margin-top: 2rem;
+}
+
+.eyebrow {
+  margin-bottom: 1.25rem;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.section-lead {
+  margin-top: 1.5rem;
+  max-width: 42rem;
+  font-size: 17px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding: 4.5rem 1.25rem;
+  }
+}
+
+/* Natural clear-day sky sampled from the reference: deep navy top-left, a soft
+   hazy glow toward the top-right, easing down through steel blue to a pale
+   horizon. Muted (steel) mid-tones rather than vivid cobalt. */
 .sky {
   background:
-    radial-gradient(ellipse 60% 34% at 68% 102%, rgba(255, 255, 255, 0.85), transparent 70%),
-    radial-gradient(ellipse 95% 42% at 55% 104%, rgba(255, 255, 255, 0.6), transparent 68%),
-    radial-gradient(ellipse 60% 40% at 100% 30%, rgba(120, 170, 235, 0.35), transparent 70%),
+    radial-gradient(ellipse 78% 58% at 100% 0%, rgba(150, 186, 226, 0.5), transparent 62%),
+    radial-gradient(ellipse 92% 46% at 58% 104%, rgba(214, 230, 242, 0.85), transparent 72%),
     linear-gradient(
       168deg,
-      #051653 0%,
-      #0a2b86 22%,
-      #1550bd 42%,
-      #2670d8 58%,
-      #5a97e2 74%,
-      #a7c7ee 88%,
-      #e2ecf8 100%
+      #04245a 0%,
+      #0a3070 13%,
+      #184281 30%,
+      #2b569a 46%,
+      #3c6bb4 60%,
+      #5885c5 74%,
+      #749dd8 85%,
+      #a9c6e4 93%,
+      #d5e6f2 100%
     );
 }
 
@@ -40,8 +91,23 @@ body {
   transform: translateX(-50%);
 }
 
-.hero-chart {
-  height: 62%;
+.hero-photo {
+  width: min(54vw, 740px);
+  aspect-ratio: 1024 / 682;
+}
+
+/* Fade the photo's left and top edges so the rectangle dissolves into the sky.
+   The mask is on the <img> only, so the price line's lead-in over the empty
+   sky (which overflows the box on the left) stays visible. */
+.hero-photo > img {
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 30%),
+    linear-gradient(to top, #000 52%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 30%),
+    linear-gradient(to top, #000 52%, transparent 100%);
+  mask-composite: intersect;
 }
 
 .hero-sphere {
@@ -93,30 +159,22 @@ body {
   }
 
   .hero-sphere {
-    top: clamp(10rem, 30vh, 16rem);
+    top: clamp(9rem, 26vh, 14rem);
     width: clamp(3.25rem, 14vw, 3.75rem);
   }
 
-  .hero-chart {
-    bottom: 4.5rem;
-    height: 56%;
-    opacity: 0.62;
+  /* Scale the mountain up so it keeps the same visual weight it has on desktop:
+     wider than the viewport, anchored bottom-right, its extra width bleeding off
+     the left edge (clipped by the hero's overflow-hidden). */
+  .hero-photo {
+    width: min(155vw, 620px);
   }
 
-  .hero-chart .mountain-range {
-    opacity: 0.12;
-  }
-
-  .hero-chart .mountain-shadow {
-    opacity: 0.06;
-  }
-
-  .hero-chart .mountain-dots {
-    opacity: 0.52;
-  }
-
+  /* On mobile the mountain fills the bottom-left, so lift the badges into the
+     clear sky below the header where they stay legible. */
   .hero-badges {
-    bottom: 4.75rem;
+    top: clamp(13rem, 32vh, 17rem);
+    bottom: auto;
     left: 1.25rem;
   }
 
@@ -126,15 +184,16 @@ body {
     font-size: 0.55rem;
   }
 
+  /* On mobile only the logo + real sections show (placeholders/More hidden),
+     so the pill fits; center it and let it shrink to its content. */
   .hero-nav {
-    right: 1rem;
     bottom: 1rem;
-    left: 1rem;
-    width: auto;
-    max-width: none;
+    left: 50%;
+    width: max-content;
+    max-width: calc(100vw - 2rem);
     overflow-x: auto;
-    justify-content: flex-start;
-    transform: none !important;
+    justify-content: center;
+    transform: translateX(-50%) !important;
     scrollbar-width: none;
     white-space: nowrap;
   }
