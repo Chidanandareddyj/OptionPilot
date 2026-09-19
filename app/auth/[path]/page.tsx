@@ -1,4 +1,4 @@
-import AuthViewClient from "./auth-view";
+import AuthViewClient from "@/app/components/AuthViewClient";
 import { authViewPaths } from "@neondatabase/auth-ui/server";
 
 export const dynamicParams = false;

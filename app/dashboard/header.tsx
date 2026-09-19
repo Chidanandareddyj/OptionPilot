@@ -13,7 +13,7 @@ export default function DashboardHeader({ name }: { name?: string | null }) {
           Analyze{name ? `, ${name}` : ""}
         </h1>
       </div>
-      <UserButton />
+      <UserButton size="icon" />
     </header>
   );
 }
