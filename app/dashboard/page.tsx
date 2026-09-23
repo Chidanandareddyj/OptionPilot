@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import AnalyzePanel from "./analyze-panel";
 import DashboardHeader from "./header";
+import DashboardBackground from "./dashboard-background";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,8 @@ export default async function DashboardPage() {
   });
 
   return (
-    <main className="min-h-screen bg-[#061f52] text-white">
+    <main className="relative min-h-screen text-white">
+      <DashboardBackground />
       <DashboardHeader name={session.user.name} />
       <AnalyzePanel
         history={history.map((row) => ({

@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "node -r dotenv/config ./node_modules/prisma/build/index.js generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --test lib/analysis.test.ts"
+    "test": "node --experimental-strip-types --test lib/analysis.test.ts app/dashboard/types.test.ts"
   },
   "dependencies": {
     "@neon/config": "^1.7.2",
@@ -19,7 +19,8 @@
     "axios": "^1.19.0",
     "next": "16.3.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "thinking-orbs": "^0.3.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

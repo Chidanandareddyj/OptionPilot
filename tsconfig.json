@@ -31,5 +31,5 @@
     "**/*.mts",
     "auth-ui-modules.d.ts"
   ],
-  "exclude": ["node_modules", "lib/analysis.test.ts"]
+  "exclude": ["node_modules", "**/*.test.ts"]
 }
