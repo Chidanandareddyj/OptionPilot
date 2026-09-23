@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { UserButton } from "@neondatabase/auth-ui";
+import { usePageTransition } from "@/app/components/loading-overlay";
 
 function Mark({ className }: { className?: string }) {
   return (
@@ -65,16 +66,25 @@ function MarketClock() {
 }
 
 export default function DashboardHeader({ name }: { name?: string | null }) {
+  const { navigateWithLoader } = usePageTransition();
+
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-6 py-3.5 bg-[#051a44]">
+    <header className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-6 py-3.5 bg-[#051a44]/85 backdrop-blur-md">
       {/* Brand & Terminal Label */}
       <div className="flex items-center gap-6">
-        <Link href="/" className="flex items-center gap-2 text-white hover:text-white/80 transition-colors">
+        <a
+          href="/"
+          onClick={(e) => {
+            e.preventDefault();
+            navigateWithLoader("/", "Loading OptionPilot...");
+          }}
+          className="flex items-center gap-2 text-white hover:text-white/80 transition-colors cursor-pointer"
+        >
           <Mark className="size-5 text-white" />
           <span className="font-sans text-[16px] font-semibold tracking-tight">
             OptionPilot
           </span>
-        </Link>
+        </a>
         <div className="h-4 w-px bg-white/15 hidden sm:block" />
         <div className="hidden sm:block">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePageTransition } from "@/app/components/loading-overlay";
 
 const NAV = ["Overview", "Strategies", "Analyze", "Insights", "Pricing", "Access"];
 const BADGES = ["NSE", "BSE", "F&O"];
@@ -74,7 +75,18 @@ function Mark({ className }: { className?: string }) {
   );
 }
 
-export default function LandingPage() {
+export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
+  const { navigateWithLoader } = usePageTransition();
+
+  const handleAuthClick = (e: React.MouseEvent, fallbackHref: string) => {
+    e.preventDefault();
+    if (isLoggedIn) {
+      navigateWithLoader("/dashboard", "Entering Strategy Terminal...");
+    } else {
+      navigateWithLoader(fallbackHref, "Loading OptionPilot...");
+    }
+  };
+
   return (
     <main className="relative text-white select-none">
       <section id="top" className="sky relative min-h-screen overflow-hidden">
@@ -109,12 +121,13 @@ export default function LandingPage() {
             <Mark className="size-4" />
             OptionPilot
           </Link>
-          <Link
+          <a
             href="/auth/sign-in"
-            className="rounded-[5px] bg-white px-4 py-2 text-[12px] font-medium text-[#0a1f5c] hover:bg-white/90"
+            onClick={(e) => handleAuthClick(e, "/auth/sign-in")}
+            className="rounded-[5px] bg-white px-4 py-2 text-[12px] font-medium text-[#0a1f5c] hover:bg-white/90 cursor-pointer"
           >
             Sign in
-          </Link>
+          </a>
         </div>
       </header>
 
@@ -214,18 +227,20 @@ export default function LandingPage() {
               </span>
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
+              <a
                 href="/auth/sign-in"
-                className="rounded-[5px] bg-white px-4 py-2 text-[12px] font-medium text-[#0a1f5c] hover:bg-white/90"
+                onClick={(e) => handleAuthClick(e, "/auth/sign-in")}
+                className="rounded-[5px] bg-white px-4 py-2 text-[12px] font-medium text-[#0a1f5c] hover:bg-white/90 cursor-pointer"
               >
                 Sign in
-              </Link>
-              <Link
+              </a>
+              <a
                 href="/auth/sign-up"
-                className="rounded-[5px] border border-white/40 px-4 py-2 text-[12px] font-medium text-white hover:bg-white/10"
+                onClick={(e) => handleAuthClick(e, "/auth/sign-up")}
+                className="rounded-[5px] border border-white/40 px-4 py-2 text-[12px] font-medium text-white hover:bg-white/10 cursor-pointer"
               >
                 Create account
-              </Link>
+              </a>
             </div>
           </div>
         </section>
@@ -237,9 +252,14 @@ export default function LandingPage() {
         </a>
         {NAV.map((n) => (
           n === "Access" ? (
-            <Link key={n} href="/auth/sign-in" className="px-3 py-1.5 text-white/90 hover:text-white">
+            <a
+              key={n}
+              href="/auth/sign-in"
+              onClick={(e) => handleAuthClick(e, "/auth/sign-in")}
+              className="px-3 py-1.5 text-white/90 hover:text-white cursor-pointer"
+            >
               {n}
-            </Link>
+            </a>
           ) : (
             <a
               key={n}
@@ -250,9 +270,13 @@ export default function LandingPage() {
             </a>
           )
         ))}
-        <Link href="/auth/sign-up" className="ml-1 rounded-full bg-[#2b2b30] px-4 py-2 text-white max-sm:hidden">
+        <a
+          href="/auth/sign-up"
+          onClick={(e) => handleAuthClick(e, "/auth/sign-up")}
+          className="ml-1 rounded-full bg-[#2b2b30] px-4 py-2 text-white max-sm:hidden cursor-pointer"
+        >
           Sign up
-        </Link>
+        </a>
       </nav>
     </main>
   );

@@ -6,8 +6,5 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const { data: session } = await auth.getSession();
-  if (session?.user) {
-    redirect("/dashboard");
-  }
-  return <LandingPage />;
+  return <LandingPage isLoggedIn={Boolean(session?.user)} />;
 }
