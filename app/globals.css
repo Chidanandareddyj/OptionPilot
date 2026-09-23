@@ -113,29 +113,9 @@ body {
 
 .hero-sphere {
   top: clamp(11rem, 31vh, 18rem);
-  width: clamp(3.5rem, 6vw, 4.75rem);
-  height: auto;
-  aspect-ratio: 1;
   transform: translateX(-50%);
   transform-origin: center;
-  opacity: 0.58;
-  animation: sphere-rotate 48s linear infinite;
-}
-
-@keyframes sphere-rotate {
-  from {
-    transform: translateX(-50%) rotate(0deg);
-  }
-
-  to {
-    transform: translateX(-50%) rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-sphere {
-    animation: none;
-  }
+  opacity: 0.9;
 }
 
 @media (max-width: 640px) {
@@ -161,7 +141,6 @@ body {
 
   .hero-sphere {
     top: clamp(9rem, 26vh, 14rem);
-    width: clamp(3.25rem, 14vw, 3.75rem);
   }
 
   /* Scale the mountain up so it keeps the same visual weight it has on desktop:

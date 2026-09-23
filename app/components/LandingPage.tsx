@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePageTransition } from "@/app/components/loading-overlay";
 
+import { ThinkingOrb } from "thinking-orbs";
+
 const NAV = ["Overview", "Strategies", "Analyze", "Insights", "Pricing", "Access"];
 const BADGES = ["NSE", "BSE", "F&O"];
 
@@ -35,17 +37,6 @@ const STEPS = [
 
 const RIDGE_LINE =
   "-520,585 -440,560 -360,572 -280,540 -200,548 -120,510 -60,470 0,395 28,360 55,398 95,384 175,381 230,348 285,314 340,284 400,238 450,204 485,174 500,162 520,174 560,204 600,239 645,284 680,319 700,344 730,318 760,289 795,269 820,261 845,284 875,314 905,349 930,329 955,294 975,319 1000,398 1024,468";
-
-const SPHERE: [number, number, number][] = [];
-for (let lat = -75; lat <= 75; lat += 15) {
-  const r = 40 * Math.cos((lat * Math.PI) / 180);
-  const cy = 40 * Math.sin((lat * Math.PI) / 180);
-  const n = Math.max(6, Math.round(r / 3.2));
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2;
-    SPHERE.push([+(r * Math.cos(a)).toFixed(2), +(cy + r * 0.28 * Math.sin(a)).toFixed(2), Math.sin(a) > 0 ? 1.4 : 0.8]);
-  }
-}
 
 function Clock() {
   const [time, setTime] = useState<string | null>(null);
@@ -90,63 +81,65 @@ export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boole
   return (
     <main className="relative text-white select-none">
       <section id="top" className="sky relative min-h-screen overflow-hidden">
-      <div className="cloud" style={{ top: "3%", right: "-6%", width: "50vw", height: "14vh", opacity: 0.7, transform: "rotate(-7deg)", filter: "blur(18px)" }} />
-      <div className="cloud" style={{ top: "15%", right: "8%", width: "34vw", height: "6vh", opacity: 0.5, transform: "rotate(-5deg)", filter: "blur(14px)" }} />
-      <div className="cloud" style={{ top: "22%", right: "-4%", width: "26vw", height: "5vh", opacity: 0.4, transform: "rotate(-4deg)", filter: "blur(14px)" }} />
-      <div className="cloud" style={{ bottom: "-16%", left: "6%", width: "70vw", height: "42vh", opacity: 0.95 }} />
-      <div className="cloud" style={{ bottom: "0%", left: "-16%", width: "48vw", height: "30vh", opacity: 0.55 }} />
-      <div className="cloud" style={{ bottom: "-8%", right: "-14%", width: "52vw", height: "38vh", opacity: 0.9 }} />
-      <div className="cloud" style={{ bottom: "14%", right: "4%", width: "46vw", height: "18vh", opacity: 0.55 }} />
-      <div className="cloud" style={{ bottom: "20%", left: "26%", width: "26vw", height: "10vh", opacity: 0.4 }} />
+        <div className="cloud" style={{ top: "3%", right: "-6%", width: "50vw", height: "14vh", opacity: 0.7, transform: "rotate(-7deg)", filter: "blur(18px)" }} />
+        <div className="cloud" style={{ top: "15%", right: "8%", width: "34vw", height: "6vh", opacity: 0.5, transform: "rotate(-5deg)", filter: "blur(14px)" }} />
+        <div className="cloud" style={{ top: "22%", right: "-4%", width: "26vw", height: "5vh", opacity: 0.4, transform: "rotate(-4deg)", filter: "blur(14px)" }} />
+        <div className="cloud" style={{ bottom: "-16%", left: "6%", width: "70vw", height: "42vh", opacity: 0.95 }} />
+        <div className="cloud" style={{ bottom: "0%", left: "-16%", width: "48vw", height: "30vh", opacity: 0.55 }} />
+        <div className="cloud" style={{ bottom: "-8%", right: "-14%", width: "52vw", height: "38vh", opacity: 0.9 }} />
+        <div className="cloud" style={{ bottom: "14%", right: "4%", width: "46vw", height: "18vh", opacity: 0.55 }} />
+        <div className="cloud" style={{ bottom: "20%", left: "26%", width: "26vw", height: "10vh", opacity: 0.4 }} />
 
-      <div className="hero-photo pointer-events-none absolute bottom-0 right-0">
-        <img src="/everest.jpg" alt="Mount Everest" className="h-full w-full select-none object-cover" />
-        <svg viewBox="0 0 1024 682" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
-          <polyline points={RIDGE_LINE} fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="1" vectorEffect="non-scaling-stroke" transform="translate(0 26)" />
-          <polyline points={RIDGE_LINE} fill="none" stroke="white" strokeOpacity="0.9" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
-        </svg>
-      </div>
-
-      <header className="hero-header relative flex items-start justify-between px-10 pt-7">
-        <h1 className="hero-title font-serif text-[clamp(52px,6.6vw,96px)] leading-[0.92] tracking-[-0.015em]">
-          Options built to
-          <br />
-          withstand any
-          <br />
-          <em>volatility</em>
-        </h1>
-        <div className="hero-meta flex items-center gap-10 pt-1">
-          <Clock />
-          <Link href="/" className="flex items-center gap-2 text-[14px] font-medium">
-            <Mark className="size-4" />
-            OptionPilot
-          </Link>
-          <a
-            href="/auth/sign-in"
-            onClick={(e) => handleAuthClick(e, "/auth/sign-in")}
-            className="rounded-[5px] bg-white px-4 py-2 text-[12px] font-medium text-[#0a1f5c] hover:bg-white/90 cursor-pointer"
-          >
-            Sign in
-          </a>
+        <div className="hero-photo pointer-events-none absolute bottom-0 right-0">
+          <img src="/everest.jpg" alt="Mount Everest" className="h-full w-full select-none object-cover" />
+          <svg viewBox="0 0 1024 682" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
+            <polyline points={RIDGE_LINE} fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="1" vectorEffect="non-scaling-stroke" transform="translate(0 26)" />
+            <polyline points={RIDGE_LINE} fill="none" stroke="white" strokeOpacity="0.9" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
+          </svg>
         </div>
-      </header>
 
-      <svg viewBox="-45 -45 90 90" className="hero-sphere absolute left-1/2 opacity-75">
-        {SPHERE.map(([x, y, r]) => (
-          <circle key={`${x}-${y}`} cx={x} cy={y} r={r} fill="white" />
-        ))}
-      </svg>
+        <header className="hero-header relative flex items-start justify-between px-10 pt-7">
+          <h1 className="hero-title font-serif text-[clamp(52px,6.6vw,96px)] leading-[0.92] tracking-[-0.015em]">
+            Options built to
+            <br />
+            withstand any
+            <br />
+            <em>volatility</em>
+          </h1>
+          <div className="hero-meta flex items-center gap-10 pt-1">
+            <Clock />
+            <Link href="/" className="flex items-center gap-2 text-[14px] font-medium">
+              <Mark className="size-4" />
+              OptionPilot
+            </Link>
+            <a
+              href="/auth/sign-in"
+              onClick={(e) => handleAuthClick(e, "/auth/sign-in")}
+              className="rounded-[5px] bg-white px-4 py-2 text-[12px] font-medium text-[#0a1f5c] hover:bg-white/90 cursor-pointer"
+            >
+              Sign in
+            </a>
+          </div>
+        </header>
 
-      <div className="hero-badges absolute bottom-7 left-10 flex gap-1.5">
-        {BADGES.map((b) => (
-          <span
-            key={b}
-            className="flex size-11 items-center justify-center rounded-full border border-white/80 text-[10px] font-semibold tracking-wide"
-          >
-            {b}
-          </span>
-        ))}
-      </div>
+        <ThinkingOrb
+          state="searching"
+          size={64}
+          theme="dark"
+          className="hero-sphere absolute left-1/2"
+          style={{ width: 125, height: 125 }}
+        />
+
+        <div className="hero-badges absolute bottom-7 left-10 flex gap-1.5">
+          {BADGES.map((b) => (
+            <span
+              key={b}
+              className="flex size-11 items-center justify-center rounded-full border border-white/80 text-[10px] font-semibold tracking-wide"
+            >
+              {b}
+            </span>
+          ))}
+        </div>
       </section>
 
       <div className="sky-content relative">
