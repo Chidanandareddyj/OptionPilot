@@ -53,8 +53,37 @@ test("normalizeStrategy normalizes Long Straddle data", () => {
   assert.equal(normalized.maxLoss, 216);
   assert.deepEqual(normalized.breakevens, [22284, 22716]);
   assert.equal(normalized.payoffTable.length, 3);
-  assert.equal(normalized.strikes.length, 2);
-  assert.equal(normalized.strikes[0].action, "Buy");
+  assert.equal(normalized.legs.length, 2);
+  assert.equal(normalized.legs[0].action, "Buy");
+  assert.equal(normalized.legs[0].premium, 120.5);
+  assert.equal(normalized.legs[1].instrumentKey, "NSE_FO|12346");
+});
+
+test("normalizeStrategy reads condor and bear put spread legs", () => {
+  const condor = normalizeStrategy("put_condor", {
+    lower_strike: 22300,
+    lower_middle_strike: 22400,
+    upper_middle_strike: 22600,
+    upper_strike: 22700,
+    lower_middle_put_premium: 40,
+  });
+  assert.deepEqual(condor?.legs.map((l) => [l.action, l.strike, l.type]), [
+    ["Buy", 22300, "put"],
+    ["Sell", 22400, "put"],
+    ["Sell", 22600, "put"],
+    ["Buy", 22700, "put"],
+  ]);
+  assert.equal(condor?.legs[1].premium, 40);
+
+  const bearPut = normalizeStrategy("bear_put_spread", { long_put_strike: 22600, short_put_strike: 22400 });
+  assert.deepEqual(bearPut?.legs.map((l) => [l.action, l.strike]), [["Buy", 22600], ["Sell", 22400]]);
+});
+
+test("normalizeStrategy treats short straddle loss as unlimited", () => {
+  const s = normalizeStrategy("short_straddle", { strike_price: 22500, total_premium: 216 });
+  assert.equal(s?.maxProfit, 216);
+  assert.equal(s?.maxLoss, "Unlimited");
+  assert.equal(s?.costOrCredit.label, "Credit received");
 });
 
 test("normalizeStrategy normalizes Bull Call Spread data", () => {
@@ -81,7 +110,7 @@ test("normalizeStrategy normalizes Bull Call Spread data", () => {
   assert.equal(normalized.maxProfit, 90);
   assert.equal(normalized.maxLoss, 110);
   assert.deepEqual(normalized.breakevens, [22510]);
-  assert.equal(normalized.strikes.length, 2);
-  assert.equal(normalized.strikes[0].action, "Buy");
-  assert.equal(normalized.strikes[1].action, "Sell");
+  assert.equal(normalized.legs.length, 2);
+  assert.equal(normalized.legs[0].action, "Buy");
+  assert.equal(normalized.legs[1].action, "Sell");
 });

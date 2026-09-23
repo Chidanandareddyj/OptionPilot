@@ -17,26 +17,14 @@ export default async function DashboardPage() {
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
     take: 20,
-    select: {
-      id: true,
-      company: true,
-      result: true,
-      createdAt: true,
-    },
+    select: { id: true, company: true, result: true, createdAt: true },
   });
 
   return (
     <main className="relative min-h-screen text-white">
       <DashboardBackground />
       <DashboardHeader name={session.user.name} />
-      <AnalyzePanel
-        history={history.map((row) => ({
-          id: row.id,
-          company: row.company,
-          createdAt: row.createdAt.toISOString(),
-          result: row.result,
-        }))}
-      />
+      <AnalyzePanel history={history} />
     </main>
   );
 }

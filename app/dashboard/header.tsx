@@ -14,54 +14,34 @@ function Mark({ className }: { className?: string }) {
   );
 }
 
-function getIST12h() {
-  const d = new Date();
-  const utc = d.getTime() + d.getTimezoneOffset() * 60000;
-  const ist = new Date(utc + 5.5 * 3600000);
-  let hours = ist.getHours();
-  const minutes = ist.getMinutes();
-  const seconds = ist.getSeconds();
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12;
-  hours = hours ? hours : 12;
-  const mm = minutes < 10 ? `0${minutes}` : `${minutes}`;
-  const ss = seconds < 10 ? `0${seconds}` : `${seconds}`;
-  return {
-    hm: `${hours}:${mm}`,
-    s: `:${ss}`,
-    ampm,
-  };
-}
-
-function MarketClock() {
-  const [time, setTime] = useState<{ hm: string; s: string; ampm: string } | null>(null);
-
+function Clock() {
+  const [time, setTime] = useState<string | null>(null);
   useEffect(() => {
-    setTime(getIST12h());
-    const id = setInterval(() => setTime(getIST12h()), 1000);
+    const tick = () =>
+      setTime(
+        new Date().toLocaleTimeString("en-US", {
+          timeZone: "Asia/Kolkata",
+          hour: "numeric",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
+      );
+    tick();
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
 
   return (
-    <div
-      suppressHydrationWarning
-      className="flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[13px] tracking-wide shrink-0"
-    >
-      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
-      <span className="text-white/60 font-sans text-[11px] font-semibold uppercase tracking-wider mr-1">
-        NSE
+    <span className="flex shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[13px] tabular-nums">
+      <span className="size-1.5 rounded-full bg-emerald-400" />
+      <span className="font-sans text-[11px] font-semibold text-white/60">NSE</span>
+      <span>
+        {time ? time.slice(0, -6) : "--:--"}
+        <span className="text-white/40 max-sm:hidden">{time ? time.slice(-6, -3) : ":--"}</span>
       </span>
-      <span className="text-white font-medium tabular-nums">
-        {time ? time.hm : "--:--"}
-      </span>
-      <span className="text-white/40 tabular-nums">
-        {time ? time.s : ":--"}
-      </span>
-      <span className="text-[10px] text-sky-300 font-sans font-semibold uppercase ml-1">
-        {time ? time.ampm : ""}
-      </span>
-      <span className="text-[10px] text-white/40 font-sans ml-0.5">IST</span>
-    </div>
+      <span className="font-sans text-[10px] font-semibold text-sky-300">{time?.slice(-2)}</span>
+      <span className="font-sans text-[10px] text-white/40 max-sm:hidden">IST</span>
+    </span>
   );
 }
 
@@ -69,38 +49,26 @@ export default function DashboardHeader({ name }: { name?: string | null }) {
   const { navigateWithLoader } = usePageTransition();
 
   return (
-    <header className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-6 py-3.5 bg-[#051a44]/85 backdrop-blur-md">
-      {/* Brand & Terminal Label */}
-      <div className="flex items-center gap-6">
-        <a
+    <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-white/10 bg-[#051a44]/85 px-4 py-3 backdrop-blur-md sm:px-6">
+      <div className="flex min-w-0 items-center gap-5">
+        <Link
           href="/"
           onClick={(e) => {
             e.preventDefault();
             navigateWithLoader("/", "Loading OptionPilot...");
           }}
-          className="flex items-center gap-2 text-white hover:text-white/80 transition-colors cursor-pointer"
+          className="flex items-center gap-2 text-[16px] font-semibold tracking-tight hover:text-white/80"
         >
-          <Mark className="size-5 text-white" />
-          <span className="font-sans text-[16px] font-semibold tracking-tight">
-            OptionPilot
-          </span>
-        </a>
-        <div className="h-4 w-px bg-white/15 hidden sm:block" />
-        <div className="hidden sm:block">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">
-            Strategy Terminal
-          </p>
-        </div>
+          <Mark className="size-5" />
+          <span className="max-[380px]:hidden">OptionPilot</span>
+        </Link>
+        <span className="border-l border-white/15 pl-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45 max-md:hidden">
+          Strategy Terminal
+        </span>
       </div>
-
-      {/* Clock & User controls */}
-      <div className="flex items-center gap-4">
-        <MarketClock />
-        {name && (
-          <span className="hidden md:inline font-sans text-xs text-white/70">
-            {name}
-          </span>
-        )}
+      <div className="flex items-center gap-3 sm:gap-4">
+        <Clock />
+        {name && <span className="text-xs text-white/70 max-lg:hidden">{name}</span>}
         <UserButton size="icon" />
       </div>
     </header>

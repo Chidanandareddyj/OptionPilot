@@ -1,323 +1,138 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { PayoffRow } from "./types";
+import { useEffect, useRef, useState } from "react";
+import { inr, type PayoffRow } from "./types";
 
-interface PayoffChartProps {
-  payoffTable: PayoffRow[];
-  spotPrice: number;
-  breakevens?: number[];
-  height?: number;
-}
+const HEIGHT = 250;
+const PAD = { top: 20, right: 16, bottom: 32, left: 48 };
 
 export default function PayoffChart({
   payoffTable,
   spotPrice,
-  breakevens = [],
-  height = 250,
-}: PayoffChartProps) {
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  breakevens,
+}: {
+  payoffTable: PayoffRow[];
+  spotPrice: number;
+  breakevens: number[];
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(740);
+  const [hover, setHover] = useState<number | null>(null);
 
-  const { points, minX, maxX, minY, maxY, zeroY, spotX, width, chartHeight, padding } =
-    useMemo(() => {
-      const width = 740;
-      const chartHeight = height;
-      const padding = { top: 20, right: 28, bottom: 32, left: 52 };
+  const empty = payoffTable.length === 0;
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [empty]);
 
-      if (!payoffTable || payoffTable.length === 0) {
-        return {
-          points: [],
-          minX: 0,
-          maxX: 1,
-          minY: -10,
-          maxY: 10,
-          zeroY: chartHeight / 2,
-          spotX: width / 2,
-          width,
-          chartHeight,
-          padding,
-        };
-      }
-
-      const xValues = payoffTable.map((p) => p.closing_price);
-      const yValues = payoffTable.map((p) => p.net_pl);
-
-      const rawMinX = Math.min(...xValues);
-      const rawMaxX = Math.max(...xValues);
-      const rawMinY = Math.min(...yValues);
-      const rawMaxY = Math.max(...yValues);
-
-      const effectiveMinY = Math.min(rawMinY, 0) - Math.abs(rawMaxY - rawMinY || 10) * 0.12;
-      const effectiveMaxY = Math.max(rawMaxY, 0) + Math.abs(rawMaxY - rawMinY || 10) * 0.12;
-
-      const innerWidth = width - padding.left - padding.right;
-      const innerHeight = chartHeight - padding.top - padding.bottom;
-
-      const scaleX = (x: number) => {
-        if (rawMaxX === rawMinX) return padding.left + innerWidth / 2;
-        return padding.left + ((x - rawMinX) / (rawMaxX - rawMinX)) * innerWidth;
-      };
-
-      const scaleY = (y: number) => {
-        if (effectiveMaxY === effectiveMinY) return padding.top + innerHeight / 2;
-        return (
-          padding.top +
-          (1 - (y - effectiveMinY) / (effectiveMaxY - effectiveMinY)) * innerHeight
-        );
-      };
-
-      const mappedPoints = payoffTable.map((row, idx) => ({
-        index: idx,
-        x: scaleX(row.closing_price),
-        y: scaleY(row.net_pl),
-        price: row.closing_price,
-        netPl: row.net_pl,
-        raw: row,
-      }));
-
-      const zeroY = scaleY(0);
-      const spotX = scaleX(spotPrice);
-
-      return {
-        points: mappedPoints,
-        minX: rawMinX,
-        maxX: rawMaxX,
-        minY: effectiveMinY,
-        maxY: effectiveMaxY,
-        zeroY,
-        spotX,
-        width,
-        chartHeight,
-        padding,
-      };
-    }, [payoffTable, spotPrice, height]);
-
-  if (points.length === 0) {
+  if (empty) {
     return (
-      <div className="flex h-44 items-center justify-center rounded-lg border border-white/10 bg-white/[0.02] text-xs font-mono text-white/40">
+      <div className="flex h-44 items-center justify-center rounded-lg border border-white/10 font-mono text-xs text-white/40">
         NO PAYOFF DATA
       </div>
     );
   }
 
-  const linePath = points.reduce((acc, curr, idx) => {
-    return `${acc} ${idx === 0 ? "M" : "L"} ${curr.x.toFixed(1)},${curr.y.toFixed(1)}`;
-  }, "");
+  const xs = payoffTable.map((r) => r.closing_price);
+  const ys = payoffTable.map((r) => r.net_pl);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const pad = (Math.max(...ys) - Math.min(...ys) || 10) * 0.12;
+  const minY = Math.min(...ys, 0) - pad;
+  const maxY = Math.max(...ys, 0) + pad;
 
-  const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(1)},${zeroY.toFixed(1)} L ${points[0].x.toFixed(1)},${zeroY.toFixed(1)} Z`;
+  const scaleX = (x: number) => PAD.left + ((x - minX) / (maxX - minX || 1)) * (width - PAD.left - PAD.right);
+  const scaleY = (y: number) => PAD.top + (1 - (y - minY) / (maxY - minY)) * (HEIGHT - PAD.top - PAD.bottom);
 
-  const hoveredPoint = hoverIndex !== null ? points[hoverIndex] : null;
+  const points = payoffTable.map((r) => ({ x: scaleX(r.closing_price), y: scaleY(r.net_pl), price: r.closing_price, pl: r.net_pl }));
+  const line = points.map((p, i) => `${i ? "L" : "M"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const zeroY = scaleY(0);
+  const spotX = scaleX(spotPrice);
+  const hovered = hover === null ? null : points[hover];
+  const xTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => points[Math.round(f * (points.length - 1))]);
+  const yTicks = [...new Set([maxY, maxY / 2, 0, minY / 2, minY])];
 
-  const yTicks = [
-    maxY,
-    maxY * 0.5,
-    0,
-    minY * 0.5,
-    minY,
-  ].filter((v, i, arr) => arr.indexOf(v) === i);
-
-  const xTicks = [
-    points[0],
-    points[Math.floor(points.length * 0.25)],
-    points[Math.floor(points.length * 0.5)],
-    points[Math.floor(points.length * 0.75)],
-    points[points.length - 1],
-  ].filter(Boolean);
-
-  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const mouseX = ((e.clientX - rect.left) / rect.width) * width;
-
-    let closestIdx = 0;
-    let minDistance = Infinity;
-    points.forEach((pt, idx) => {
-      const dist = Math.abs(pt.x - mouseX);
-      if (dist < minDistance) {
-        minDistance = dist;
-        closestIdx = idx;
-      }
+  function onPointerMove(e: React.PointerEvent<SVGSVGElement>) {
+    const x = e.clientX - e.currentTarget.getBoundingClientRect().left;
+    let closest = 0;
+    points.forEach((p, i) => {
+      if (Math.abs(p.x - x) < Math.abs(points[closest].x - x)) closest = i;
     });
-
-    setHoverIndex(closestIdx);
+    setHover(closest);
   }
 
   return (
-    <div className="rounded-lg border border-white/10 bg-[#031536] p-4">
-      {/* Top Status & Legend Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-3 text-xs">
-        <div className="flex items-center gap-4 text-[11px] font-mono uppercase tracking-wider">
-          <div className="flex items-center gap-1.5 text-emerald-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            <span>Profit Zone</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-rose-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-            <span>Loss Zone</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-sky-400">
-            <span className="h-0.5 w-2.5 bg-sky-400" />
-            <span>Spot ({spotPrice.toFixed(1)})</span>
-          </div>
+    <div className="rounded-lg border border-white/10 bg-[#031536] p-3 sm:p-4">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-white/10 pb-3 font-mono text-[11px] uppercase tracking-wider">
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <span className="text-emerald-400">● Profit</span>
+          <span className="text-rose-400">● Loss</span>
+          <span className="text-sky-400">┆ Spot {spotPrice.toFixed(1)}</span>
         </div>
-
-        {hoveredPoint ? (
-          <div className="flex items-center gap-3 font-mono text-[12px] tabular-nums">
-            <span className="text-white/60">
-              Strike: <strong className="text-white">₹{hoveredPoint.price.toLocaleString("en-IN")}</strong>
+        {hovered ? (
+          <span className="normal-case tabular-nums text-white/60">
+            ₹{hovered.price.toLocaleString("en-IN")} →{" "}
+            <span className={hovered.pl >= 0 ? "text-emerald-300" : "text-rose-300"}>
+              {hovered.pl >= 0 ? "+" : ""}
+              {inr(hovered.pl)}
             </span>
-            <span
-              className={`rounded px-1.5 py-0.5 font-medium ${
-                hoveredPoint.netPl >= 0
-                  ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/25"
-                  : "bg-rose-500/15 text-rose-300 border border-rose-500/25"
-              }`}
-            >
-              P&L: {hoveredPoint.netPl >= 0 ? "+" : ""}
-              ₹{hoveredPoint.netPl.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-            </span>
-          </div>
-        ) : (
-          <span className="font-mono text-[11px] text-white/40">
-            Hover to inspect strike P&L
           </span>
+        ) : (
+          <span className="normal-case text-white/40">Hover or tap to inspect</span>
         )}
       </div>
 
-      {/* SVG Chart */}
-      <div className="relative w-full pt-2">
+      <div ref={ref} className="overflow-hidden pt-2">
         <svg
-          viewBox={`0 0 ${width} ${chartHeight}`}
-          className="w-full cursor-crosshair select-none"
-          onMouseMove={handleMouseMove}
-          onMouseLeave={() => setHoverIndex(null)}
+          width={width}
+          height={HEIGHT}
+          className="block cursor-crosshair select-none"
+          onPointerMove={onPointerMove}
+          onPointerDown={onPointerMove}
+          onPointerLeave={() => setHover(null)}
         >
-          {/* Subtle area fill */}
-          <path d={areaPath} fill="rgba(56, 189, 248, 0.05)" />
+          <path d={`${line} L${points.at(-1)!.x},${zeroY} L${points[0].x},${zeroY} Z`} fill="rgba(56,189,248,0.05)" />
 
-          {/* Grid lines */}
-          {yTicks.map((tickVal, i) => {
-            const innerHeight = chartHeight - padding.top - padding.bottom;
-            const y =
-              padding.top +
-              (1 - (tickVal - minY) / (maxY - minY || 1)) * innerHeight;
-            return (
-              <g key={`ytick-${i}`}>
-                <line
-                  x1={padding.left}
-                  y1={y}
-                  x2={width - padding.right}
-                  y2={y}
-                  stroke="rgba(255,255,255,0.06)"
-                  strokeDasharray="2 3"
-                />
-                <text
-                  x={padding.left - 8}
-                  y={y + 3}
-                  textAnchor="end"
-                  className="fill-white/35 font-mono text-[10px] tabular-nums"
-                >
-                  {tickVal > 0 ? `+${Math.round(tickVal)}` : Math.round(tickVal)}
-                </text>
-              </g>
-            );
-          })}
-
-          {/* Zero reference line */}
-          <line
-            x1={padding.left}
-            y1={zeroY}
-            x2={width - padding.right}
-            y2={zeroY}
-            stroke="rgba(255, 255, 255, 0.28)"
-            strokeWidth="1"
-          />
-
-          {/* Payoff line */}
-          <path
-            d={linePath}
-            fill="none"
-            stroke="#38bdf8"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Spot price vertical line */}
-          {spotX >= padding.left && spotX <= width - padding.right && (
-            <g>
-              <line
-                x1={spotX}
-                y1={padding.top}
-                x2={spotX}
-                y2={chartHeight - padding.bottom}
-                stroke="#38bdf8"
-                strokeWidth="1.2"
-                strokeDasharray="3 3"
-              />
-              <text
-                x={spotX}
-                y={padding.top - 5}
-                textAnchor="middle"
-                className="fill-sky-300 font-mono text-[9px] font-bold tracking-wider"
-              >
-                SPOT
+          {yTicks.map((v) => (
+            <g key={v}>
+              <line x1={PAD.left} x2={width - PAD.right} y1={scaleY(v)} y2={scaleY(v)} stroke="rgba(255,255,255,0.06)" strokeDasharray="2 3" />
+              <text x={PAD.left - 6} y={scaleY(v) + 3} textAnchor="end" className="fill-white/35 font-mono text-[10px]">
+                {v > 0 ? "+" : ""}
+                {Math.round(v)}
               </text>
             </g>
+          ))}
+
+          <line x1={PAD.left} x2={width - PAD.right} y1={zeroY} y2={zeroY} stroke="rgba(255,255,255,0.28)" />
+          <path d={line} fill="none" stroke="#38bdf8" strokeWidth="1.8" strokeLinejoin="round" />
+
+          {spotPrice >= minX && spotPrice <= maxX && (
+            <line x1={spotX} x2={spotX} y1={PAD.top} y2={HEIGHT - PAD.bottom} stroke="#38bdf8" strokeWidth="1.2" strokeDasharray="3 3" />
           )}
 
-          {/* Breakeven indicators */}
-          {breakevens.map((be, idx) => {
-            if (be < minX || be > maxX) return null;
-            const innerWidth = width - padding.left - padding.right;
-            const beX = padding.left + ((be - minX) / (maxX - minX || 1)) * innerWidth;
-            return (
-              <g key={`be-${idx}`}>
-                <circle cx={beX} cy={zeroY} r="3" fill="#fbbf24" />
-                <text
-                  x={beX}
-                  y={zeroY + 13}
-                  textAnchor="middle"
-                  className="fill-amber-300 font-mono text-[9px] tabular-nums font-medium"
-                >
+          {breakevens
+            .filter((be) => be >= minX && be <= maxX)
+            .map((be) => (
+              <g key={be}>
+                <circle cx={scaleX(be)} cy={zeroY} r="3" fill="#fbbf24" />
+                <text x={scaleX(be)} y={zeroY + 13} textAnchor="middle" className="fill-amber-300 font-mono text-[9px]">
                   BE {be}
                 </text>
               </g>
-            );
-          })}
+            ))}
 
-          {/* X axis strike labels */}
-          {xTicks.map((pt, idx) => (
-            <text
-              key={`xtick-${idx}`}
-              x={pt.x}
-              y={chartHeight - padding.bottom + 16}
-              textAnchor="middle"
-              className="fill-white/40 font-mono text-[10px] tabular-nums"
-            >
-              ₹{pt.price}
+          {xTicks.map((p, i) => (
+            <text key={i} x={p.x} y={HEIGHT - PAD.bottom + 16} textAnchor="middle" className="fill-white/40 font-mono text-[10px]">
+              {p.price}
             </text>
           ))}
 
-          {/* Crosshair indicator */}
-          {hoveredPoint && (
+          {hovered && (
             <g>
-              <line
-                x1={hoveredPoint.x}
-                y1={padding.top}
-                x2={hoveredPoint.x}
-                y2={chartHeight - padding.bottom}
-                stroke="rgba(255,255,255,0.4)"
-                strokeWidth="1"
-                strokeDasharray="2 2"
-              />
-              <circle
-                cx={hoveredPoint.x}
-                cy={hoveredPoint.y}
-                r="4"
-                fill={hoveredPoint.netPl >= 0 ? "#10b981" : "#f43f5e"}
-                stroke="#ffffff"
-                strokeWidth="1.5"
-              />
+              <line x1={hovered.x} x2={hovered.x} y1={PAD.top} y2={HEIGHT - PAD.bottom} stroke="rgba(255,255,255,0.4)" strokeDasharray="2 2" />
+              <circle cx={hovered.x} cy={hovered.y} r="4" fill={hovered.pl >= 0 ? "#10b981" : "#f43f5e"} stroke="#fff" strokeWidth="1.5" />
             </g>
           )}
         </svg>
