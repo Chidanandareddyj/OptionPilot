@@ -1,0 +1,1 @@
+{"token":"GG1MnFME9o8dW9Ne5fi4jyVY200JvLlm","user":{"name":"Probe","email":"probe@example.com","emailVerified":false,"image":null,"createdAt":"2026-09-24T07:26:02.904Z","updatedAt":"2026-09-24T07:26:02.904Z","role":"user","banned":false,"banReason":null,"banExpires":null,"id":"bd3aa49b-b337-4875-a030-f41e50802320"}}

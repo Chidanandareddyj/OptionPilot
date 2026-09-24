@@ -33,6 +33,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       onSessionChange={() => router.refresh()}
       Link={AuthLink}
       redirectTo="/dashboard"
+      defaultTheme="dark"
+      social={{ providers: ["google"] }}
+      emailOTP
+      avatar
+      organization
     >
       {children}
     </NeonAuthUIProvider>
