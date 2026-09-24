@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ThinkingOrb } from "thinking-orbs";
 import StrategyExplorer from "./strategy-explorer";
 
 type Snapshot = {
@@ -63,8 +64,11 @@ export default function AnalyzePanel({ history }: { history: Snapshot[] }) {
             <button
               type="submit"
               disabled={pending}
-              className="rounded-[5px] bg-white px-5 py-2 text-[12px] font-medium text-[#0a1f5c] hover:bg-white/90 disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-[5px] bg-white px-5 py-2 text-[12px] font-medium text-[#0a1f5c] hover:bg-white/90 disabled:opacity-70"
             >
+              {pending && (
+                <ThinkingOrb state="listening" size={20} theme="light" color="#0a1f5c" aria-label="Listening…" />
+              )}
               {pending ? "Calculating…" : "Analyze"}
             </button>
           </form>
