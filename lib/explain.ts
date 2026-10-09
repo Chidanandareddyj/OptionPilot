@@ -1,4 +1,4 @@
-const MODEL = "inclusionai/ling-3.1-flash";
+const MODEL = "qwen/qwen3.8-27b";
 
 const SYSTEM = `You explain options strategy recommendations for Indian retail traders (NSE, rupees).
 You receive a JSON decision computed by a quant model. Use ONLY the numbers and reasons in it; never invent prices, strikes or probabilities.
@@ -10,33 +10,55 @@ Write plain text in exactly these sections, each starting with a line "## <title
 ## Other strategies — one "- " bullet per other strategy in ranked order: "<Name> (score N, viable|not viable): <short reason>".
 Use simple language, explain jargon briefly the first time, no markdown bold or tables. End with one line: "This is not financial advice."`;
 
+const messages = (decision: unknown) => [
+  { role: "system" as const, content: SYSTEM },
+  { role: "user" as const, content: JSON.stringify(decision) },
+];
+
 export async function explainDecision(decision: unknown) {
-  if (!process.env.OPENROUTER_API_KEY) return null;
+  if (!process.env.GROQ_API_KEY) return null;
   const request = () =>
-    fetch("https://openrouter.ai/api/v1/chat/completions", {
+    fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model: MODEL,
         temperature: 0.2,
-        max_tokens: 2000,
-        // Ling is a reasoning model; left on, it spends the whole token budget thinking and returns no content.
-        reasoning: { enabled: false },
-        messages: [
-          { role: "system", content: SYSTEM },
-          { role: "user", content: JSON.stringify(decision) },
-        ],
+        max_completion_tokens: 1200,
+        // Qwen3.8 default is no reasoning; keep it off so free-tier TPM isn't spent thinking.
+        reasoning_effort: "none",
+        messages: messages(decision),
       }),
-      signal: AbortSignal.timeout(45_000),
+      signal: AbortSignal.timeout(30_000),
     });
+
+  // OpenRouter (Ling) — left in place; Mercury Decide still uses OpenRouter separately.
+  // if (!process.env.OPENROUTER_API_KEY) return null;
+  // const request = () =>
+  //   fetch("https://openrouter.ai/api/v1/chat/completions", {
+  //     method: "POST",
+  //     headers: {
+  //       Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify({
+  //       model: "inclusionai/ling-3.1-flash",
+  //       temperature: 0.2,
+  //       max_tokens: 2000,
+  //       reasoning: { enabled: false },
+  //       messages: messages(decision),
+  //     }),
+  //     signal: AbortSignal.timeout(45_000),
+  //   });
+
   try {
     let response = await request();
-    // Free models share an upstream pool that 429s in bursts; one delayed retry usually clears it.
     if (response.status === 429) {
-      await new Promise((r) => setTimeout(r, 3000));
+      const wait = Number(response.headers.get("retry-after") ?? 3) * 1000;
+      await new Promise((r) => setTimeout(r, Number.isFinite(wait) ? wait : 3000));
       response = await request();
     }
     if (!response.ok) {
