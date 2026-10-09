@@ -17,7 +17,7 @@ export default async function DashboardPage() {
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
     take: 20,
-    select: { id: true, company: true, result: true, createdAt: true },
+    select: { id: true, company: true, result: true, decision: true, createdAt: true },
   });
 
   return (

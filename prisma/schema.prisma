@@ -12,6 +12,7 @@ model Analysis {
   userId    String
   company   String
   result    Json
+  decision  Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

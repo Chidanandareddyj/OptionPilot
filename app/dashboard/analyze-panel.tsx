@@ -10,6 +10,7 @@ type Snapshot = {
   company: string;
   createdAt?: Date;
   result: unknown;
+  decision?: unknown;
 };
 
 const QUICK = ["NIFTY", "BANKNIFTY", "RELIANCE", "TCS", "HDFCBANK", "INFY"];
@@ -34,7 +35,8 @@ export default function AnalyzePanel({ history }: { history: Snapshot[] }) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Analysis failed");
-      setActive({ company: target, result: data });
+      const { id, ...result } = data;
+      setActive({ id, company: target, result });
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -105,7 +107,13 @@ export default function AnalyzePanel({ history }: { history: Snapshot[] }) {
             </div>
           </div>
         ) : active ? (
-          <StrategyExplorer key={active.id ?? "latest"} data={active.result} company={active.company} />
+          <StrategyExplorer
+            key={active.id ?? "latest"}
+            data={active.result}
+            company={active.company}
+            analysisId={active.id}
+            decision={active.decision}
+          />
         ) : (
           <div className="mt-10 rounded-xl border border-dashed border-white/10 p-10 text-center">
             <h3 className="font-serif text-lg">No option chain loaded</h3>

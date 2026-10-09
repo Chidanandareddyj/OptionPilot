@@ -3,10 +3,14 @@ import { CATEGORY_BADGE, keyMetrics, type NormalizedStrategy } from "./types";
 export default function StrategyCard({
   strategy,
   selected,
+  decision,
+  recommended,
   onSelect,
 }: {
   strategy: NormalizedStrategy;
   selected: boolean;
+  decision?: { score: number; viable: boolean; rank: number };
+  recommended?: boolean;
   onSelect: () => void;
 }) {
   return (
@@ -16,9 +20,21 @@ export default function StrategyCard({
       className={`group flex flex-col rounded-lg border p-4 text-left transition-colors ${
         selected
           ? "border-sky-400/80 bg-[#092257] ring-1 ring-sky-400/40"
-          : "border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]"
+          : recommended
+            ? "border-emerald-400/50 bg-emerald-500/[0.06] hover:bg-emerald-500/10"
+            : "border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]"
       }`}
     >
+      {decision && (
+        <div className="mb-2.5 flex items-center justify-between gap-2 font-mono text-[11px]">
+          <span className={recommended ? "font-semibold text-emerald-300" : "text-white/45"}>
+            {recommended ? "★ Recommended" : `#${decision.rank}`}
+          </span>
+          <span className={decision.viable ? "text-emerald-300" : "text-rose-300"}>
+            {decision.viable ? "viable" : "not viable"} · <span className="text-white">{decision.score.toFixed(0)}</span>/100
+          </span>
+        </div>
+      )}
       <div className="flex items-center justify-between gap-2">
         <span className={`rounded border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${CATEGORY_BADGE[strategy.category]}`}>
           {strategy.category}

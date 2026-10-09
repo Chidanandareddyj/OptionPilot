@@ -72,14 +72,14 @@ export async function POST(request: Request) {
       options: result.long_straddle.payoff_table,
     };
 
-    await prisma.analysis.create({
+    const row = await prisma.analysis.create({
       data: {
         ...toAnalysisRow(userId, company, payload),
         result: payload as Prisma.InputJsonValue,
       },
     });
 
-    return NextResponse.json(payload);
+    return NextResponse.json({ ...payload, id: row.id });
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

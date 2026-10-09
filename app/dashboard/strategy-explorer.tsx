@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import RecommendationPanel, { type Decision } from "./recommendation-panel";
 import StrategyCard from "./strategy-card";
 import StrategyDetail from "./strategy-detail";
 import { normalizeStrategy, STRATEGY_DEFINITIONS, type Category } from "./types";
@@ -20,8 +21,19 @@ type Payload = {
   [key: string]: unknown;
 };
 
-export default function StrategyExplorer({ data: result, company }: { data: unknown; company: string }) {
+export default function StrategyExplorer({
+  data: result,
+  company,
+  analysisId,
+  decision: savedDecision,
+}: {
+  data: unknown;
+  company: string;
+  analysisId?: string;
+  decision?: unknown;
+}) {
   const data = (result ?? {}) as Payload;
+  const [decision, setDecision] = useState((savedDecision as Decision | null | undefined) ?? null);
   const [filter, setFilter] = useState<Category | "all">("all");
   const [query, setQuery] = useState("");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -31,11 +43,18 @@ export default function StrategyExplorer({ data: result, company }: { data: unkn
   const spot = data.underlying_spot_price ?? 0;
   const strategies = Object.keys(STRATEGY_DEFINITIONS).flatMap((key) => normalizeStrategy(key, data[key], spot) ?? []);
   const active = strategies.find((s) => s.key === selectedKey) ?? strategies[0];
-  const visible = strategies.filter(
-    (s) =>
-      (filter === "all" || s.category === filter) &&
-      `${s.name} ${s.tagline}`.toLowerCase().includes(query.trim().toLowerCase()),
-  );
+  const ranked = new Map(decision?.strategies.map((s, i) => [s.key, { ...s, rank: i + 1 }]));
+  const visible = strategies
+    .filter(
+      (s) =>
+        (filter === "all" || s.category === filter) &&
+        `${s.name} ${s.tagline}`.toLowerCase().includes(query.trim().toLowerCase()),
+    )
+    .sort((a, b) => (ranked.get(a.key)?.rank ?? 99) - (ranked.get(b.key)?.rank ?? 99));
+  const select = (key: string) => {
+    setSelectedKey(key);
+    detailRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
   const symbol = data.underlying_key?.replace(/^NSE_(INDEX|EQ)\|/, "") || company;
 
   return (
@@ -83,6 +102,8 @@ export default function StrategyExplorer({ data: result, company }: { data: unkn
         )}
       </div>
 
+      <RecommendationPanel analysisId={analysisId} decision={decision} onDecision={setDecision} onSelect={select} />
+
       {active && (
         <div ref={detailRef} className="scroll-mt-20">
           <StrategyDetail strategy={active} />
@@ -123,10 +144,9 @@ export default function StrategyExplorer({ data: result, company }: { data: unkn
               key={s.key}
               strategy={s}
               selected={active?.key === s.key}
-              onSelect={() => {
-                setSelectedKey(s.key);
-                detailRef.current?.scrollIntoView({ behavior: "smooth" });
-              }}
+              decision={ranked.get(s.key)}
+              recommended={decision?.best?.key === s.key}
+              onSelect={() => select(s.key)}
             />
           ))}
         </div>
