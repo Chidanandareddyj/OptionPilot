@@ -6,7 +6,34 @@ import { ThinkingOrb } from "thinking-orbs";
 import type { rankDecision } from "@/lib/decision";
 import { inr, STRATEGY_DEFINITIONS, type Category } from "./types";
 
-export type Decision = ReturnType<typeof rankDecision>;
+export type Decision = ReturnType<typeof rankDecision> & { summary?: string | null };
+
+function Summary({ text }: { text: string }) {
+  return (
+    <div className="space-y-1.5 rounded-lg border border-sky-400/20 bg-sky-500/[0.05] p-4 text-[13px] leading-relaxed text-white/80">
+      {text.split("\n").map((line, i) => {
+        const t = line.trim();
+        if (!t) return null;
+        if (t.startsWith("#")) {
+          return (
+            <h4 key={i} className="pt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-300 first:pt-0">
+              {t.replace(/^#+\s*/, "")}
+            </h4>
+          );
+        }
+        if (/^[-*•]\s/.test(t)) {
+          return (
+            <p key={i} className="flex gap-2 pl-1">
+              <span className="text-sky-300/70">•</span>
+              <span>{t.replace(/^[-*•]\s+/, "").replaceAll("**", "")}</span>
+            </p>
+          );
+        }
+        return <p key={i}>{t.replaceAll("**", "")}</p>;
+      })}
+    </div>
+  );
+}
 
 const VIEWS: Category[] = ["bullish", "bearish", "neutral", "volatile"];
 const pct = (n: number | null | undefined) => (n == null ? "—" : `${(n * 100).toFixed(1)}%`);
@@ -156,6 +183,12 @@ export default function RecommendationPanel({
             <p className="rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-200">
               No strategy is viable for this view and loss budget. Expand the rows below to see why.
             </p>
+          )}
+
+          {decision.summary ? (
+            <Summary text={decision.summary} />
+          ) : (
+            <p className="font-mono text-[11px] text-white/40">Plain-language explanation unavailable for this run.</p>
           )}
 
           <ol className="divide-y divide-white/5 rounded-lg border border-white/10">

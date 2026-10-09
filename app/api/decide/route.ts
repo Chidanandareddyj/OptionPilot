@@ -4,6 +4,7 @@ import { getOptions } from "@/upstoxservices/getOptions";
 
 import { BadRequestError, parseDecideInput, requireUserId, UnauthorizedError } from "@/lib/analysis";
 import { expiryMsLeft, rankDecision, scoreStrategies } from "@/lib/decision";
+import { explainDecision } from "@/lib/explain";
 import { askMercury } from "@/lib/mercury";
 import { auth } from "@/lib/auth/server";
 import { prisma } from "@/lib/db";
@@ -50,7 +51,8 @@ export async function POST(request: Request) {
       },
       scored.strategies.map(({ key }) => key),
     );
-    const decision = rankDecision(scored, llm);
+    const ranked = rankDecision(scored, llm);
+    const decision = { ...ranked, summary: await explainDecision(ranked) };
 
     await prisma.analysis.update({
       where: { id: analysis.id },
