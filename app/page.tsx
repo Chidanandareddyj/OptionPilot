@@ -5,11 +5,15 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const { data: session } = await auth.getSession();
-  // Authenticated users belong in the app. Without this, a post-OAuth
-  // redirect that lands on "/" strands a logged-in user on the landing page.
-  if (session?.user) {
-    redirect("/dashboard");
+  // Wrap in try/catch: a stale or corrupt session cookie (common in regular browsers
+  // after a token refresh) should NOT crash the page — treat it as logged out instead.
+  let session = null;
+  try {
+    const result = await auth.getSession();
+    session = result.data;
+  } catch {
+    // Stale/invalid cookie — fall through and show the landing page
   }
-  return <LandingPage />;
+  return <LandingPage isLoggedIn={!!session?.user} />;
 }
+

@@ -6,10 +6,14 @@ import { usePageTransition } from "@/app/components/loading-overlay";
 
 import { ThinkingOrb } from "thinking-orbs";
 
-const NAV = ["Overview", "Strategies", "Analyze", "Insights", "Pricing", "Access"];
+const NAV = ["Strategies", "Analyze", "Insights", "Pricing"];
 const BADGES = ["NSE", "BSE", "F&O"];
-
-const SECTIONS: Record<string, string> = { Overview: "overview", Strategies: "strategies", Analyze: "analyze" };
+const SECTIONS: Record<string, string> = {
+  Strategies: "strategies",
+  Analyze: "analyze",
+  Insights: "insights",
+  Pricing: "pricing",
+};
 
 const FACTS = [
   { k: "Defined risk", v: "Every structure caps its own downside before you ever enter it." },
@@ -98,7 +102,33 @@ export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boole
           </svg>
         </div>
 
-        <header className="hero-header relative flex items-start justify-between px-10 pt-7">
+        {/* Top Header Bar */}
+        <div className="relative z-20 flex items-center justify-between px-6 pt-6 sm:px-10 sm:pt-7">
+          <Link
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="flex items-center gap-2.5 text-[19px] sm:text-[22px] font-semibold tracking-tight text-white hover:text-white/80 transition-colors cursor-pointer"
+          >
+            <Mark className="size-5 sm:size-6 text-sky-400" />
+            <span>OptionPilot</span>
+          </Link>
+          <div className="hero-meta flex items-center gap-4 sm:gap-8">
+            <Clock />
+            <a
+              href={isLoggedIn ? "/dashboard" : "/auth/sign-in"}
+              onClick={(e) => handleAuthClick(e, "/auth/sign-in")}
+              className="rounded-[5px] bg-white px-4 py-2 text-[12px] font-medium text-[#0a1f5c] hover:bg-white/90 cursor-pointer shadow-sm transition-all"
+            >
+              {isLoggedIn ? "Dashboard" : "Sign in"}
+            </a>
+          </div>
+        </div>
+
+        {/* Hero Title */}
+        <header className="hero-header relative px-6 pt-8 sm:px-10 sm:pt-10">
           <h1 className="hero-title font-serif text-[clamp(52px,6.6vw,96px)] leading-[0.92] tracking-[-0.015em]">
             Options built to
             <br />
@@ -106,20 +136,6 @@ export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boole
             <br />
             <em>volatility</em>
           </h1>
-          <div className="hero-meta flex items-center gap-10 pt-1">
-            <Clock />
-            <Link href="/" className="flex items-center gap-2 text-[14px] font-medium">
-              <Mark className="size-4" />
-              OptionPilot
-            </Link>
-            <a
-              href="/auth/sign-in"
-              onClick={(e) => handleAuthClick(e, "/auth/sign-in")}
-              className="rounded-[5px] bg-white px-4 py-2 text-[12px] font-medium text-[#0a1f5c] hover:bg-white/90 cursor-pointer"
-            >
-              Sign in
-            </a>
-          </div>
         </header>
 
         <ThinkingOrb
@@ -192,7 +208,7 @@ export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boole
           </div>
         </section>
 
-        <section id="analyze" className="section pb-44">
+        <section id="analyze" className="section">
           <p className="eyebrow">Analyze</p>
           <h2 className="font-serif text-[clamp(34px,4.6vw,60px)] leading-[1.04] tracking-[-0.015em]">
             Every strategy, scored by an <em>LLM analyst.</em>
@@ -237,39 +253,108 @@ export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boole
             </div>
           </div>
         </section>
+
+        <section id="insights" className="section">
+          <p className="eyebrow">Insights</p>
+          <h2 className="font-serif text-[clamp(34px,4.6vw,60px)] leading-[1.04] tracking-[-0.015em]">
+            Real-time volatility intelligence &amp; <em>quant edge.</em>
+          </h2>
+          <p className="section-lead">
+            OptionPilot synthesizes implied volatility versus 30-day realized volatility, calculating statistical expected values and probability of profit across every liquid strike.
+          </p>
+          <div className="mt-14 grid gap-6 sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/12 bg-white/[0.04] p-6">
+              <div className="font-serif text-[22px] text-sky-300">Expected Value (EV)</div>
+              <p className="mt-2 text-[14px] leading-relaxed text-white/60">
+                Mathematical expectation in rupees per lot, evaluating win/loss probabilities against maximum payoff targets.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/12 bg-white/[0.04] p-6">
+              <div className="font-serif text-[22px] text-emerald-300">Probability of Profit (POP)</div>
+              <p className="mt-2 text-[14px] leading-relaxed text-white/60">
+                Integrated log-normal probability distribution between calculated breakeven thresholds at expiry.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/12 bg-white/[0.04] p-6">
+              <div className="font-serif text-[22px] text-indigo-300">IV vs Realized Vol Ratio</div>
+              <p className="mt-2 text-[14px] leading-relaxed text-white/60">
+                Identifies whether options are overpricing or underpricing recent movement to score net debit versus credit advantage.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="pricing" className="section pb-44">
+          <p className="eyebrow">Pricing</p>
+          <h2 className="font-serif text-[clamp(34px,4.6vw,60px)] leading-[1.04] tracking-[-0.015em]">
+            Professional options tooling. <em>Zero subscriptions.</em>
+          </h2>
+          <p className="section-lead">
+            Built for Indian retail traders to level the playing field against institutions. All defined-risk strategies, live NSE &amp; BSE option chains, and quant modeling are completely free.
+          </p>
+          <div className="mt-14 grid gap-6 sm:grid-cols-2">
+            <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/[0.06] p-7">
+              <div className="flex items-baseline justify-between">
+                <h3 className="font-serif text-[24px]">Community Trader</h3>
+                <span className="font-mono text-2xl font-bold text-emerald-300">₹0 <span className="text-xs font-normal text-white/50">/ forever</span></span>
+              </div>
+              <p className="mt-2 text-xs text-white/60">Full access to the strategy terminal, live option chains, and all 12 defined-risk structures.</p>
+              <ul className="mt-6 space-y-2 text-xs text-white/70">
+                <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Live NSE &amp; BSE F&amp;O Option Chains</li>
+                <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> All 12 Defined-Risk Strategies</li>
+                <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Complete Lot Size Payoffs &amp; Breakevens</li>
+                <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> AI Strategy Explanations &amp; Quant Scoring</li>
+                <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Saved Snapshots &amp; Analysis History</li>
+              </ul>
+              <div className="mt-8">
+                <a
+                  href={isLoggedIn ? "/dashboard" : "/auth/sign-in"}
+                  onClick={(e) => handleAuthClick(e, "/auth/sign-in")}
+                  className="inline-block rounded-[5px] bg-white px-5 py-2.5 text-[12px] font-semibold text-[#0a1f5c] hover:bg-white/90 cursor-pointer"
+                >
+                  {isLoggedIn ? "Open Strategy Terminal" : "Get Started Free"}
+                </a>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/12 bg-white/[0.04] p-7 flex flex-col justify-between">
+              <div>
+                <div className="flex items-baseline justify-between">
+                  <h3 className="font-serif text-[24px]">Open Source &amp; Serverless</h3>
+                  <span className="font-mono text-xs font-semibold text-sky-300">MIT / Open</span>
+                </div>
+                <p className="mt-2 text-xs text-white/60">Built on Next.js, Neon Serverless PostgreSQL, and Upstox market APIs. Deployable anywhere.</p>
+                <ul className="mt-6 space-y-2 text-xs text-white/70">
+                  <li className="flex items-center gap-2"><span className="text-sky-400">✓</span> Direct broker API integration (Upstox V2)</li>
+                  <li className="flex items-center gap-2"><span className="text-sky-400">✓</span> Neon PostgreSQL storage for session &amp; analysis rows</li>
+                  <li className="flex items-center gap-2"><span className="text-sky-400">✓</span> Self-hostable on Vercel or cloud VPS</li>
+                </ul>
+              </div>
+              <div className="mt-8">
+                <a
+                  href="https://github.com/Chidanandareddyj/OptionPilot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block rounded-[5px] border border-white/20 bg-white/5 px-5 py-2.5 text-[12px] font-medium text-white hover:bg-white/10"
+                >
+                  View on GitHub →
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
 
-      <nav className="hero-nav fixed bottom-6 left-1/2 z-50 flex items-center gap-1 rounded-full bg-[#0b0b0e] p-1.5 pr-1.5 text-[12px] shadow-2xl">
-        <a href="#top" className="mr-2 flex size-9 items-center justify-center rounded-full bg-white text-black">
-          <Mark className="size-4" />
-        </a>
+      <nav className="hero-nav fixed top-5 left-1/2 z-50 flex items-center gap-1 rounded-full bg-[#0b0b0e] p-1.5 px-3 text-[12px] shadow-2xl border border-white/10 backdrop-blur-md">
         {NAV.map((n) => (
-          n === "Access" ? (
-            <a
-              key={n}
-              href="/auth/sign-in"
-              onClick={(e) => handleAuthClick(e, "/auth/sign-in")}
-              className="px-3 py-1.5 text-white/90 hover:text-white cursor-pointer"
-            >
-              {n}
-            </a>
-          ) : (
-            <a
-              key={n}
-              href={SECTIONS[n] ? `#${SECTIONS[n]}` : "#top"}
-              className={`px-3 py-1.5 text-white/90 hover:text-white ${SECTIONS[n] ? "" : "max-sm:hidden"}`}
-            >
-              {n}
-            </a>
-          )
+          <a
+            key={n}
+            href={SECTIONS[n] ? `#${SECTIONS[n]}` : "#top"}
+            className="rounded-full px-3 py-1.5 text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            {n}
+          </a>
         ))}
-        <a
-          href="/auth/sign-up"
-          onClick={(e) => handleAuthClick(e, "/auth/sign-up")}
-          className="ml-1 rounded-full bg-[#2b2b30] px-4 py-2 text-white max-sm:hidden cursor-pointer"
-        >
-          Sign up
-        </a>
       </nav>
     </main>
   );

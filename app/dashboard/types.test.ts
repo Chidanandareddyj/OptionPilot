@@ -114,3 +114,29 @@ test("normalizeStrategy normalizes Bull Call Spread data", () => {
   assert.equal(normalized.legs[0].action, "Buy");
   assert.equal(normalized.legs[1].action, "Sell");
 });
+
+test("normalizeStrategy scales profit, loss, cost, and payoff table by lot size", () => {
+  const mockBullCallSpread = {
+    spot_price: 280,
+    lower_strike: 280,
+    higher_strike: 290,
+    net_debit: 4.8,
+    max_profit: 5.2,
+    max_loss: 4.8,
+    breakeven: 284.8,
+    payoff_table: [
+      { closing_price: 270, net_pl: -4.8 },
+      { closing_price: 300, net_pl: 5.2 },
+    ],
+  };
+
+  const lotSize = 1600;
+  const normalized = normalizeStrategy("bull_call_spread", mockBullCallSpread, 280, lotSize);
+  assert.ok(normalized);
+  assert.equal(normalized.lotSize, 1600);
+  assert.equal(normalized.maxProfit, 8320);
+  assert.equal(normalized.maxLoss, 7680);
+  assert.equal(normalized.costOrCredit.amount, 7680);
+  assert.equal(normalized.payoffTable[0].net_pl, -7680);
+  assert.equal(normalized.payoffTable[1].net_pl, 8320);
+});

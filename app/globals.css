@@ -88,6 +88,7 @@ body {
   filter: blur(28px);
 }
 
+
 .hero-nav {
   transform: translateX(-50%);
 }
@@ -167,7 +168,8 @@ body {
   /* On mobile only the logo + real sections show (placeholders/More hidden),
      so the pill fits; center it and let it shrink to its content. */
   .hero-nav {
-    bottom: 1rem;
+    top: 4.8rem;
+    bottom: auto;
     left: 50%;
     width: max-content;
     max-width: calc(100vw - 2rem);

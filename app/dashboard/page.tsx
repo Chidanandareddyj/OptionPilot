@@ -8,9 +8,17 @@ import DashboardBackground from "./dashboard-background";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const { data: session } = await auth.getSession();
+  // Wrap in try/catch: a stale or corrupt session cookie should redirect to sign-in,
+  // not crash the page with a Next.js cookies() error.
+  let session = null;
+  try {
+    const result = await auth.getSession();
+    session = result.data;
+  } catch {
+    // Stale/invalid cookie — redirect to landing page
+  }
   if (!session?.user) {
-    redirect("/auth/sign-in");
+    redirect("/");
   }
 
   const history = await prisma.analysis.findMany({

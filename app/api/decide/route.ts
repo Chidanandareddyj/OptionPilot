@@ -56,7 +56,10 @@ export async function POST(request: Request) {
 
     await prisma.analysis.update({
       where: { id: analysis.id },
-      data: { decision: decision as Prisma.InputJsonValue },
+      data: {
+        decision: decision as Prisma.InputJsonValue,
+        updatedAt: new Date(),
+      },
     });
 
     return NextResponse.json(decision);
