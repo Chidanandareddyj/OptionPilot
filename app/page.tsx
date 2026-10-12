@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth/server";
 import LandingPage from "@/app/components/LandingPage";
-import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 

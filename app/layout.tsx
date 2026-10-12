@@ -30,9 +30,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <AuthProvider>
-          <PageLoadingProvider>{children}</PageLoadingProvider>
-        </AuthProvider>
+        <PageLoadingProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </PageLoadingProvider>
       </body>
     </html>
   );
