@@ -55,6 +55,7 @@ export function PageLoadingProvider({ children }: { children: React.ReactNode })
 
       startTransition(() => {
         router.push(href);
+        router.refresh();
       });
 
       const timer = setTimeout(() => {

@@ -25,6 +25,7 @@ export type NormalizedStrategy = {
   tagline: string;
   description: string;
   spotPrice: number;
+  lotSize: number;
   legs: Leg[];
   costOrCredit: { label: string; amount: number };
   maxProfit: Limit;
@@ -161,11 +162,14 @@ export const inr = (n: number) => `₹${n.toLocaleString("en-IN", { minimumFract
 
 const formatLimit = (v: Limit) => (typeof v === "number" ? inr(v) : v ?? "—");
 
+const round = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
 export function keyMetrics(s: NormalizedStrategy) {
+  const lotSuffix = s.lotSize > 1 ? ` (${s.lotSize.toLocaleString("en-IN")} lot)` : "";
   return [
-    { label: s.costOrCredit.label, value: inr(s.costOrCredit.amount), tone: "text-white" },
-    { label: "Max profit", value: formatLimit(s.maxProfit), tone: "text-emerald-400" },
-    { label: "Max loss", value: formatLimit(s.maxLoss), tone: "text-rose-400" },
+    { label: `${s.costOrCredit.label}${lotSuffix}`, value: inr(s.costOrCredit.amount), tone: "text-white" },
+    { label: `Max profit${lotSuffix}`, value: formatLimit(s.maxProfit), tone: "text-emerald-400" },
+    { label: `Max loss${lotSuffix}`, value: formatLimit(s.maxLoss), tone: "text-rose-400" },
     {
       label: s.breakevens.length > 1 ? "Breakevens" : "Breakeven",
       value: s.breakevens.map(inr).join(" / ") || "—",
@@ -176,10 +180,12 @@ export function keyMetrics(s: NormalizedStrategy) {
 
 const num = (v: unknown) => (typeof v === "number" ? v : undefined);
 
-export function normalizeStrategy(key: string, raw: unknown, fallbackSpot = 0): NormalizedStrategy | null {
+export function normalizeStrategy(key: string, raw: unknown, fallbackSpot = 0, lotSize = 1): NormalizedStrategy | null {
   const def = STRATEGY_DEFINITIONS[key];
   if (!def || !raw || typeof raw !== "object") return null;
   const data = raw as Record<string, unknown>;
+
+  const effectiveLotSize = Math.max(1, lotSize);
 
   const legs: Leg[] = def.legs.flatMap(([action, strikeField, prefix, qty = 1]) => {
     const strike = num(data[strikeField]);
@@ -200,28 +206,52 @@ export function normalizeStrategy(key: string, raw: unknown, fallbackSpot = 0): 
   const premium = num(data.total_premium);
   const costOrCredit =
     num(data.net_credit) !== undefined
-      ? { label: "Net credit", amount: num(data.net_credit)! }
-      : { label: isShort ? "Credit received" : "Net debit", amount: num(data.net_debit) ?? premium ?? 0 };
+      ? { label: "Net credit", amount: round(num(data.net_credit)! * effectiveLotSize) }
+      : { label: isShort ? "Credit received" : "Net debit", amount: round((num(data.net_debit) ?? premium ?? 0) * effectiveLotSize) };
 
   // Straddles and strangles don't report max P&L; the premium bounds one side, the other is open.
   const unbounded = premium !== undefined && num(data.max_profit) === undefined;
-  const maxProfit = num(data.max_profit) ?? (unbounded ? (isShort ? premium : "Unlimited") : null);
-  const maxLoss = num(data.max_loss) ?? (unbounded ? (isShort ? "Unlimited" : premium) : null);
+  const rawMaxProfit = num(data.max_profit) ?? (unbounded ? (isShort ? premium : "Unlimited") : null);
+  const rawMaxLoss = num(data.max_loss) ?? (unbounded ? (isShort ? "Unlimited" : premium) : null);
+
+  const maxProfit: Limit =
+    typeof rawMaxProfit === "number"
+      ? round(rawMaxProfit * effectiveLotSize)
+      : rawMaxProfit;
+  const maxLoss: Limit =
+    typeof rawMaxLoss === "number"
+      ? round(rawMaxLoss * effectiveLotSize)
+      : rawMaxLoss;
 
   const breakevens = [data.breakeven, data.lower_breakeven, data.upper_breakeven]
     .map(num)
     .filter((b) => b !== undefined)
     .sort((a, b) => a - b);
 
+  const rawTable = (Array.isArray(data.payoff_table) ? data.payoff_table : []) as PayoffRow[];
+  const payoffTable: PayoffRow[] = rawTable.map((row) => {
+    if (!row || typeof row !== "object") return row;
+    const scaled: PayoffRow = {
+      closing_price: row.closing_price,
+      net_pl: typeof row.net_pl === "number" ? round(row.net_pl * effectiveLotSize) : row.net_pl,
+    };
+    for (const [k, v] of Object.entries(row)) {
+      if (k === "closing_price" || k === "net_pl") continue;
+      scaled[k] = typeof v === "number" ? round(v * effectiveLotSize) : v;
+    }
+    return scaled;
+  });
+
   return {
     key,
     ...def,
     spotPrice: num(data.spot_price) ?? fallbackSpot,
+    lotSize: effectiveLotSize,
     legs,
     costOrCredit,
     maxProfit,
     maxLoss,
     breakevens,
-    payoffTable: Array.isArray(data.payoff_table) ? data.payoff_table : [],
+    payoffTable,
   };
 }

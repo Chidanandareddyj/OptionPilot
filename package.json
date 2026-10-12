@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node -r dotenv/config ./node_modules/prisma/build/index.js generate && next dev",
     "build": "node -r dotenv/config ./node_modules/prisma/build/index.js generate && next build",
     "start": "next start",
     "lint": "eslint",

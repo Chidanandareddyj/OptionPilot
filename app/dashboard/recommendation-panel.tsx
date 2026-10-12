@@ -171,11 +171,14 @@ export default function RecommendationPanel({
               {best.metrics && (
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-white/70">
                   <span>POP {pct(best.metrics.pop)}</span>
-                  <span>EV {inr(best.metrics.ev_per_lot)}/lot</span>
-                  <span className="text-rose-300">Max loss {inr(best.metrics.max_loss_per_lot)}/lot</span>
+                  <span>EV {inr(best.metrics.ev_per_lot)}</span>
+                  <span className="text-rose-300">Max loss {inr(best.metrics.max_loss_per_lot)}</span>
                   <span className="text-emerald-300">
-                    Max profit {best.metrics.max_profit_per_lot == null ? "Unlimited" : `${inr(best.metrics.max_profit_per_lot)}/lot`}
+                    Max profit {best.metrics.max_profit_per_lot == null ? "Unlimited" : inr(best.metrics.max_profit_per_lot)}
                   </span>
+                  {best.metrics.lot_size && best.metrics.lot_size > 1 && (
+                    <span className="text-sky-300/80">Lot size {best.metrics.lot_size.toLocaleString("en-IN")}</span>
+                  )}
                 </div>
               )}
             </button>

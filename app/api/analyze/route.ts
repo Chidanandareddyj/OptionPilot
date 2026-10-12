@@ -1,5 +1,6 @@
 import { getAtmStrike } from "@/upstoxservices/getAtmStrike";
 import { getInstrumentId } from "@/upstoxservices/getInstrumentId";
+import { getLotSize } from "@/upstoxservices/getLotSize";
 import { getOptions } from "@/upstoxservices/getOptions";
 
 import { calculateLongStraddle } from "@/strategies/LongStraddle";
@@ -40,6 +41,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const lot_size =
+      typeof instruments[0]?.lot_size === "number" && instruments[0].lot_size > 0
+        ? instruments[0].lot_size
+        : await getLotSize(underlying_key, expiry_date).catch(() => 1);
+
     const options = await getOptions(underlying_key, expiry_date);
     const atmStrike = getAtmStrike(options);
 
@@ -52,7 +58,9 @@ export async function POST(request: Request) {
 
     const result = {
       underlying_key,
+      company_name: instruments[0]?.name,
       expiry_date,
+      lot_size,
       underlying_spot_price: atmStrike.underlying_spot_price,
       long_straddle: calculateLongStraddle(options, 10),
       bull_call_spread: calculateBullCallSpread(options, 10),
@@ -74,16 +82,20 @@ export async function POST(request: Request) {
 
     const row = await prisma.analysis.create({
       data: {
+        id: crypto.randomUUID(),
         ...toAnalysisRow(userId, company, payload),
         result: payload as Prisma.InputJsonValue,
+        updatedAt: new Date(),
       },
     });
 
     return NextResponse.json({ ...payload, id: row.id });
   } catch (error) {
+    console.error("[/api/analyze error]:", error);
     if (error instanceof UnauthorizedError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

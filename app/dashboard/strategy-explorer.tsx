@@ -41,7 +41,13 @@ export default function StrategyExplorer({
   const detailRef = useRef<HTMLDivElement>(null);
 
   const spot = data.underlying_spot_price ?? 0;
-  const strategies = Object.keys(STRATEGY_DEFINITIONS).flatMap((key) => normalizeStrategy(key, data[key], spot) ?? []);
+  const lotSize =
+    typeof data.lot_size === "number" && data.lot_size > 0
+      ? data.lot_size
+      : typeof decision?.lot_size === "number" && decision.lot_size > 0
+        ? decision.lot_size
+        : 1;
+  const strategies = Object.keys(STRATEGY_DEFINITIONS).flatMap((key) => normalizeStrategy(key, data[key], spot, lotSize) ?? []);
   const active = strategies.find((s) => s.key === selectedKey) ?? strategies[0];
   const ranked = new Map(decision?.strategies.map((s, i) => [s.key, { ...s, rank: i + 1 }]));
   const visible = strategies
@@ -55,7 +61,9 @@ export default function StrategyExplorer({
     setSelectedKey(key);
     detailRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-  const symbol = data.underlying_key?.replace(/^NSE_(INDEX|EQ)\|/, "") || company;
+  const instrumentId = data.underlying_key?.replace(/^NSE_(INDEX|EQ)\|/, "") || "";
+  const companySymbol = company.toUpperCase().trim();
+  const companyFullName = (typeof data.company_name === "string" ? data.company_name : "").trim();
 
   return (
     <div className="mt-6 space-y-5">
@@ -64,18 +72,36 @@ export default function StrategyExplorer({
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">Option chain</p>
             <div className="mt-1 flex flex-wrap items-baseline gap-x-3">
-              <h2 className="font-serif text-3xl tracking-tight">{symbol}</h2>
+              <h2 className="font-serif text-2xl sm:text-3xl tracking-tight">
+                <span>{companySymbol}</span>
+                {instrumentId && instrumentId !== companySymbol && (
+                  <>
+                    <span className="mx-2 text-white/35 font-sans font-light">||</span>
+                    <span className="font-mono text-xl sm:text-2xl text-sky-200/90">{instrumentId}</span>
+                  </>
+                )}
+              </h2>
               {spot > 0 && (
                 <span className="font-mono text-xl tabular-nums text-sky-300">
                   ₹{spot.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               )}
             </div>
-            {data.expiry_date && (
-              <p className="mt-1 text-xs text-white/60">
-                Expiry <span className="font-mono text-white">{data.expiry_date}</span>
-              </p>
+            {companyFullName && companyFullName !== companySymbol && (
+              <p className="mt-0.5 text-xs text-white/55 font-medium">{companyFullName}</p>
             )}
+            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/60">
+              {data.expiry_date && (
+                <p>
+                  Expiry <span className="font-mono text-white">{data.expiry_date}</span>
+                </p>
+              )}
+              {lotSize > 1 && (
+                <p>
+                  Lot size <span className="font-mono font-semibold text-sky-300">{lotSize.toLocaleString("en-IN")}</span>
+                </p>
+              )}
+            </div>
           </div>
           <button
             type="button"

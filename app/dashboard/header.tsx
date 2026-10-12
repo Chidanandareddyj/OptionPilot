@@ -57,7 +57,7 @@ export default function DashboardHeader({ name }: { name?: string | null }) {
             e.preventDefault();
             navigateWithLoader("/", "Loading OptionPilot...");
           }}
-          className="flex items-center gap-2 text-[16px] font-semibold tracking-tight hover:text-white/80"
+          className="flex items-center gap-2 text-[16px] font-semibold tracking-tight hover:text-white/80 cursor-pointer"
         >
           <Mark className="size-5" />
           <span className="max-[380px]:hidden">OptionPilot</span>

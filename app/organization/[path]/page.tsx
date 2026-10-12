@@ -18,7 +18,7 @@ export default async function OrganizationPage({
 }) {
   const { data: session } = await auth.getSession();
   if (!session?.user) {
-    redirect("/auth/sign-in");
+    redirect("/");
   }
 
   const { path } = await params;
