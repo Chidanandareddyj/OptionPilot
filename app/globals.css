@@ -31,13 +31,13 @@ body {
   position: relative;
   margin: 0 auto;
   max-width: 72rem;
-  padding: 7rem 2.5rem;
-  scroll-margin-top: 2rem;
+  padding: 2.75rem 1.5rem;
+  scroll-margin-top: 4.5rem;
 }
 
 .eyebrow {
-  margin-bottom: 1.25rem;
-  font-size: 12px;
+  margin-bottom: 0.5rem;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.2em;
@@ -45,16 +45,17 @@ body {
 }
 
 .section-lead {
-  margin-top: 1.5rem;
+  margin-top: 0.75rem;
   max-width: 42rem;
-  font-size: 17px;
-  line-height: 1.7;
+  font-size: 15.5px;
+  line-height: 1.6;
   color: rgba(255, 255, 255, 0.72);
 }
 
 @media (max-width: 640px) {
   .section {
-    padding: 4.5rem 1.25rem;
+    padding: 2rem 1.25rem;
+    scroll-margin-top: 4rem;
   }
 }
 
@@ -88,7 +89,6 @@ body {
   filter: blur(28px);
 }
 
-
 .hero-nav {
   transform: translateX(-50%);
 }
@@ -119,6 +119,12 @@ body {
   opacity: 0.9;
 }
 
+@media (max-width: 1023px) {
+  .hero-photo {
+    width: min(72vw, 680px);
+  }
+}
+
 @media (max-width: 640px) {
   .sky {
     min-height: 100svh;
@@ -126,67 +132,40 @@ body {
 
   .hero-header {
     display: block;
-    padding: 1.25rem 1.25rem 0;
+    padding: 4.25rem 1.25rem 0;
   }
 
   .hero-title {
     max-width: 13ch;
-    font-size: clamp(3rem, 15vw, 4.5rem);
+    font-size: clamp(2.35rem, 10.5vw, 3.5rem);
   }
 
   .hero-meta {
     justify-content: space-between;
-    gap: 1rem;
-    padding-top: 1.5rem;
+    gap: 0.75rem;
   }
 
   .hero-sphere {
-    top: clamp(9rem, 26vh, 14rem);
+    top: clamp(10rem, 26vh, 13.5rem);
   }
 
   /* Scale the mountain up so it keeps the same visual weight it has on desktop:
      wider than the viewport, anchored bottom-right, its extra width bleeding off
      the left edge (clipped by the hero's overflow-hidden). */
   .hero-photo {
-    width: min(155vw, 620px);
+    width: min(150vw, 600px);
   }
 
-  /* On mobile the mountain fills the bottom-left, so lift the badges into the
-     clear sky below the header where they stay legible. */
+  /* Lift the badges into the clear sky below the title */
   .hero-badges {
-    top: clamp(13rem, 32vh, 17rem);
+    top: clamp(15rem, 37vh, 18.5rem);
     bottom: auto;
     left: 1.25rem;
   }
 
   .hero-badges span {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.25rem;
+    height: 2.25rem;
     font-size: 0.55rem;
-  }
-
-  /* On mobile only the logo + real sections show (placeholders/More hidden),
-     so the pill fits; center it and let it shrink to its content. */
-  .hero-nav {
-    top: 4.8rem;
-    bottom: auto;
-    left: 50%;
-    width: max-content;
-    max-width: calc(100vw - 2rem);
-    overflow-x: auto;
-    justify-content: center;
-    transform: translateX(-50%) !important;
-    scrollbar-width: none;
-    white-space: nowrap;
-  }
-
-  .hero-nav::-webkit-scrollbar {
-    display: none;
-  }
-
-  .hero-nav a {
-    flex: 0 0 auto;
-    padding-right: 0.65rem;
-    padding-left: 0.65rem;
   }
 }

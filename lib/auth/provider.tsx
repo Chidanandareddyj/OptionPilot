@@ -4,6 +4,7 @@ import { NeonAuthUIProvider } from "@neondatabase/auth-ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ComponentProps } from "react";
+import { usePageTransition } from "@/app/components/loading-overlay";
 import { authClient } from "./client";
 
 type ProviderSocialSignIn = NonNullable<
@@ -74,12 +75,19 @@ function AuthLink({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { showLoading } = usePageTransition();
 
   return (
     <NeonAuthUIProvider
       authClient={authClient as ComponentProps<typeof NeonAuthUIProvider>["authClient"]}
-      navigate={(href) => router.push(href)}
-      replace={(href) => router.replace(href)}
+      navigate={(href) => {
+        showLoading(href.includes("dashboard") ? "Entering Strategy Terminal..." : "Loading OptionPilot...");
+        router.push(href);
+      }}
+      replace={(href) => {
+        showLoading(href.includes("dashboard") ? "Entering Strategy Terminal..." : "Loading OptionPilot...");
+        router.replace(href);
+      }}
       onSessionChange={() => router.refresh()}
       Link={AuthLink}
       redirectTo="/dashboard"
