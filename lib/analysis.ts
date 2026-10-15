@@ -23,6 +23,27 @@ export function requireUserId(session: { user?: { id?: string } | null } | null 
   return userId;
 }
 
+export const MAX_DERIVATIVE_SYMBOLS = 8;
+
+export function parseSymbols(body: unknown) {
+  if (!body || typeof body !== "object" || !("symbols" in body)) {
+    throw new BadRequestError("symbols is required");
+  }
+  const symbols = (body as { symbols: unknown }).symbols;
+  if (!Array.isArray(symbols) || symbols.length === 0) {
+    throw new BadRequestError("symbols must be a non-empty array");
+  }
+  if (symbols.length > MAX_DERIVATIVE_SYMBOLS) {
+    throw new BadRequestError(`symbols is limited to ${MAX_DERIVATIVE_SYMBOLS}`);
+  }
+  return symbols.map((symbol) => {
+    if (typeof symbol !== "string" || !symbol.trim()) {
+      throw new BadRequestError("symbols must be non-empty strings");
+    }
+    return symbol.trim();
+  });
+}
+
 export function parseCompany(body: unknown) {
   if (!body || typeof body !== "object" || !("company" in body)) {
     throw new Error("Company is required");

@@ -5,5 +5,5 @@ export default auth.middleware({
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/api/analyze"],
+  matcher: ["/dashboard/:path*", "/api/analyze", "/api/derivatives"],
 };
