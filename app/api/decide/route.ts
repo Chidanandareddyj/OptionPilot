@@ -2,7 +2,7 @@ import { getDailyCloses } from "@/upstoxservices/getDailyCloses";
 import { getLotSize } from "@/upstoxservices/getLotSize";
 import { getOptions } from "@/upstoxservices/getOptions";
 
-import { BadRequestError, parseDecideInput, requireUserId, UnauthorizedError } from "@/lib/analysis";
+import { BadRequestError, mergeCompareDecision, parseDecideInput, requireUserId, UnauthorizedError } from "@/lib/analysis";
 import { expiryMsLeft, rankDecision, scoreStrategies } from "@/lib/decision";
 import { explainDecision } from "@/lib/explain";
 import { askMercury } from "@/lib/mercury";
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const { data: session } = await auth.getSession();
     const userId = requireUserId(session);
 
-    const { analysisId, view, maxLoss } = parseDecideInput(await request.json().catch(() => null));
+    const { analysisId, view, maxLoss, pane } = parseDecideInput(await request.json().catch(() => null));
 
     const analysis = await prisma.analysis.findFirst({ where: { id: analysisId, userId } });
     if (!analysis) {
@@ -54,10 +54,12 @@ export async function POST(request: Request) {
     const ranked = rankDecision(scored, llm);
     const decision = { ...ranked, summary: await explainDecision(ranked) };
 
+    const stored = pane ? mergeCompareDecision(analysis.decision, pane, decision) : decision;
+
     await prisma.analysis.update({
       where: { id: analysis.id },
       data: {
-        decision: decision as Prisma.InputJsonValue,
+        decision: stored as Prisma.InputJsonValue,
         updatedAt: new Date(),
       },
     });
