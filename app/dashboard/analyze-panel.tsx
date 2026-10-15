@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ThinkingOrb } from "thinking-orbs";
+import { filterSymbols, NSE_FO_SYMBOLS, POPULAR_COMPANIES, QUICK, type Suggestion } from "./fo-symbols";
 import StrategyExplorer from "./strategy-explorer";
 
 type Snapshot = {
@@ -13,229 +14,17 @@ type Snapshot = {
   decision?: unknown;
 };
 
-type Suggestion = {
+type DerivativeQuote = {
   symbol: string;
-  name: string;
-  sector?: string;
+  available: boolean;
+  name: string | null;
+  expiry: string | null;
+  spot: number | null;
+  underlying_key: string | null;
 };
 
-// Quick-access chips displayed directly below the search bar
-const QUICK = ["NIFTY", "BANKNIFTY", "RELIANCE", "TCS", "HDFCBANK", "INFY"];
+const DERIVATIVE_CHUNK = 8;
 
-// Popular / Trending companies shown in the dropdown before user types anything
-// (Curated to be DIFFERENT from the QUICK chips above)
-const POPULAR_COMPANIES: Suggestion[] = [
-  { symbol: "ICICIBANK",  name: "ICICI Bank",                   sector: "Banking" },
-  { symbol: "SBIN",       name: "State Bank of India",          sector: "Banking" },
-  { symbol: "BHARTIARTL", name: "Bharti Airtel",                sector: "Telecom" },
-  { symbol: "LT",         name: "Larsen & Toubro",              sector: "Capital Goods" },
-  { symbol: "TATAMOTORS", name: "Tata Motors",                  sector: "Automobile" },
-  { symbol: "BAJFINANCE", name: "Bajaj Finance",                sector: "Financial" },
-  { symbol: "MARUTI",     name: "Maruti Suzuki",                sector: "Automobile" },
-  { symbol: "SUNPHARMA",  name: "Sun Pharmaceutical",           sector: "Pharma" },
-  { symbol: "ITC",        name: "ITC Limited",                  sector: "FMCG" },
-  { symbol: "TATASTEEL",  name: "Tata Steel",                   sector: "Metals" },
-  { symbol: "AXISBANK",   name: "Axis Bank",                    sector: "Banking" },
-  { symbol: "KOTAKBANK",  name: "Kotak Mahindra Bank",          sector: "Banking" },
-];
-
-// Comprehensive NSE F&O symbol catalog
-const NSE_FO_SYMBOLS: Suggestion[] = [
-  // Major Indices
-  { symbol: "NIFTY",        name: "Nifty 50 Index",                  sector: "Index" },
-  { symbol: "BANKNIFTY",    name: "Bank Nifty Index",                sector: "Index" },
-  { symbol: "FINNIFTY",     name: "Nifty Financial Services",        sector: "Index" },
-  { symbol: "MIDCPNIFTY",   name: "Nifty Midcap Select",             sector: "Index" },
-  { symbol: "SENSEX",       name: "BSE Sensex Index",                sector: "Index" },
-
-  // Banking & Financial Services
-  { symbol: "HDFCBANK",     name: "HDFC Bank",                       sector: "Banking" },
-  { symbol: "ICICIBANK",    name: "ICICI Bank",                      sector: "Banking" },
-  { symbol: "SBIN",         name: "State Bank of India",             sector: "Banking" },
-  { symbol: "AXISBANK",     name: "Axis Bank",                       sector: "Banking" },
-  { symbol: "KOTAKBANK",    name: "Kotak Mahindra Bank",             sector: "Banking" },
-  { symbol: "INDUSINDBK",   name: "IndusInd Bank",                   sector: "Banking" },
-  { symbol: "BANKBARODA",   name: "Bank of Baroda",                  sector: "Banking" },
-  { symbol: "PNB",          name: "Punjab National Bank",            sector: "Banking" },
-  { symbol: "CANBK",        name: "Canara Bank",                     sector: "Banking" },
-  { symbol: "FEDERALBNK",   name: "Federal Bank",                    sector: "Banking" },
-  { symbol: "IDFCFIRSTB",   name: "IDFC First Bank",                 sector: "Banking" },
-  { symbol: "BANDHANBNK",   name: "Bandhan Bank",                    sector: "Banking" },
-  { symbol: "AUBANK",       name: "AU Small Finance Bank",           sector: "Banking" },
-  { symbol: "RBLBANK",      name: "RBL Bank",                        sector: "Banking" },
-  { symbol: "BAJFINANCE",   name: "Bajaj Finance",                   sector: "Financial" },
-  { symbol: "BAJAJFINSV",   name: "Bajaj Finserv",                   sector: "Financial" },
-  { symbol: "CHOLAFIN",     name: "Cholamandalam Investment",        sector: "Financial" },
-  { symbol: "SHRIRAMFIN",   name: "Shriram Finance",                 sector: "Financial" },
-  { symbol: "MUTHOOTFIN",   name: "Muthoot Finance",                 sector: "Financial" },
-  { symbol: "PFC",          name: "Power Finance Corporation",       sector: "Financial" },
-  { symbol: "RECLTD",       name: "REC Limited",                     sector: "Financial" },
-  { symbol: "IRFC",         name: "Indian Railway Finance Corp",     sector: "Financial" },
-  { symbol: "HDFCLIFE",     name: "HDFC Life Insurance",             sector: "Insurance" },
-  { symbol: "SBILIFE",      name: "SBI Life Insurance",              sector: "Insurance" },
-  { symbol: "LICHSGFIN",    name: "LIC Housing Finance",             sector: "Financial" },
-  { symbol: "JIOFIN",       name: "Jio Financial Services",          sector: "Financial" },
-
-  // Information Technology
-  { symbol: "TCS",          name: "Tata Consultancy Services",       sector: "IT" },
-  { symbol: "INFY",         name: "Infosys",                         sector: "IT" },
-  { symbol: "HCLTECH",      name: "HCL Technologies",                sector: "IT" },
-  { symbol: "WIPRO",        name: "Wipro",                           sector: "IT" },
-  { symbol: "TECHM",        name: "Tech Mahindra",                   sector: "IT" },
-  { symbol: "LTIM",         name: "LTIMindtree",                     sector: "IT" },
-  { symbol: "PERSISTENT",   name: "Persistent Systems",              sector: "IT" },
-  { symbol: "COFORGE",      name: "Coforge",                         sector: "IT" },
-  { symbol: "MPHASIS",      name: "Mphasis",                         sector: "IT" },
-  { symbol: "OFSS",         name: "Oracle Financial Services",       sector: "IT" },
-
-  // Energy, Oil, Gas & Utilities
-  { symbol: "RELIANCE",     name: "Reliance Industries",             sector: "Energy" },
-  { symbol: "ONGC",         name: "Oil & Natural Gas Corp",          sector: "Energy" },
-  { symbol: "NTPC",         name: "NTPC Limited",                    sector: "Power" },
-  { symbol: "POWERGRID",    name: "Power Grid Corp of India",        sector: "Power" },
-  { symbol: "COALINDIA",    name: "Coal India",                      sector: "Mining" },
-  { symbol: "BPCL",         name: "Bharat Petroleum",                sector: "Energy" },
-  { symbol: "IOC",          name: "Indian Oil Corporation",          sector: "Energy" },
-  { symbol: "HINDPETRO",    name: "Hindustan Petroleum",             sector: "Energy" },
-  { symbol: "GAIL",         name: "GAIL India",                      sector: "Gas" },
-  { symbol: "IGL",          name: "Indraprastha Gas",                sector: "Gas" },
-  { symbol: "MGL",          name: "Mahanagar Gas",                   sector: "Gas" },
-  { symbol: "TATAPOWER",    name: "Tata Power",                      sector: "Power" },
-  { symbol: "ADANIENT",     name: "Adani Enterprises",               sector: "Conglomerate" },
-  { symbol: "ADANIPORTS",   name: "Adani Ports & SEZ",               sector: "Infrastructure" },
-
-  // Automobiles & Auto Ancillaries
-  { symbol: "TATAMOTORS",   name: "Tata Motors",                     sector: "Automobile" },
-  { symbol: "MARUTI",       name: "Maruti Suzuki India",             sector: "Automobile" },
-  { symbol: "M&M",          name: "Mahindra & Mahindra",             sector: "Automobile" },
-  { symbol: "BAJAJ-AUTO",   name: "Bajaj Auto",                      sector: "Automobile" },
-  { symbol: "EICHERMOT",    name: "Eicher Motors",                   sector: "Automobile" },
-  { symbol: "HEROMOTOCO",   name: "Hero MotoCorp",                   sector: "Automobile" },
-  { symbol: "TVSMOTOR",     name: "TVS Motor Company",               sector: "Automobile" },
-  { symbol: "BHARATFORG",   name: "Bharat Forge",                    sector: "Auto Ancillary" },
-  { symbol: "BALKRISIND",   name: "Balkrishna Industries",           sector: "Auto Ancillary" },
-  { symbol: "APOLLOTYRE",   name: "Apollo Tyres",                    sector: "Auto Ancillary" },
-  { symbol: "MRF",          name: "MRF Limited",                     sector: "Auto Ancillary" },
-  { symbol: "MOTHERSON",    name: "Samvardhana Motherson",           sector: "Auto Ancillary" },
-
-  // Metals & Mining
-  { symbol: "TATASTEEL",    name: "Tata Steel",                      sector: "Metals" },
-  { symbol: "JSWSTEEL",     name: "JSW Steel",                       sector: "Metals" },
-  { symbol: "HINDALCO",     name: "Hindalco Industries",             sector: "Metals" },
-  { symbol: "VEDL",         name: "Vedanta Limited",                 sector: "Metals" },
-  { symbol: "SAIL",         name: "Steel Authority of India",        sector: "Metals" },
-  { symbol: "NMDC",         name: "NMDC Limited",                    sector: "Mining" },
-  { symbol: "JINDALSTEL",   name: "Jindal Steel & Power",            sector: "Metals" },
-  { symbol: "NATIONALUM",   name: "National Aluminium",              sector: "Metals" },
-
-  // Healthcare & Pharmaceuticals
-  { symbol: "SUNPHARMA",    name: "Sun Pharmaceutical",              sector: "Pharma" },
-  { symbol: "CIPLA",        name: "Cipla",                           sector: "Pharma" },
-  { symbol: "DRREDDY",      name: "Dr Reddy's Laboratories",         sector: "Pharma" },
-  { symbol: "DIVISLAB",     name: "Divi's Laboratories",             sector: "Pharma" },
-  { symbol: "APOLLOHOSP",   name: "Apollo Hospitals",                sector: "Healthcare" },
-  { symbol: "AUROPHARMA",   name: "Aurobindo Pharma",                sector: "Pharma" },
-  { symbol: "LUPIN",        name: "Lupin Limited",                   sector: "Pharma" },
-  { symbol: "TORNTPHARM",   name: "Torrent Pharmaceuticals",         sector: "Pharma" },
-  { symbol: "BIOCON",       name: "Biocon Limited",                  sector: "Biotech" },
-
-  // FMCG, Retail & Consumer
-  { symbol: "HINDUNILVR",   name: "Hindustan Unilever",              sector: "FMCG" },
-  { symbol: "ITC",          name: "ITC Limited",                     sector: "FMCG" },
-  { symbol: "NESTLEIND",    name: "Nestle India",                    sector: "FMCG" },
-  { symbol: "BRITANNIA",    name: "Britannia Industries",            sector: "FMCG" },
-  { symbol: "TATACONSUM",   name: "Tata Consumer Products",          sector: "FMCG" },
-  { symbol: "DABUR",        name: "Dabur India",                     sector: "FMCG" },
-  { symbol: "MARICO",       name: "Marico Limited",                  sector: "FMCG" },
-  { symbol: "COLPAL",       name: "Colgate-Palmolive India",         sector: "FMCG" },
-  { symbol: "GODREJCP",     name: "Godrej Consumer Products",        sector: "FMCG" },
-  { symbol: "TITAN",        name: "Titan Company",                   sector: "Consumer" },
-  { symbol: "TRENT",        name: "Trent Limited (Westside/Zudio)",  sector: "Retail" },
-  { symbol: "DMART",        name: "Avenue Supermarts (DMart)",       sector: "Retail" },
-  { symbol: "PAGEIND",      name: "Page Industries (Jockey)",        sector: "Apparel" },
-  { symbol: "ASIANPAINT",   name: "Asian Paints",                    sector: "Paints" },
-  { symbol: "BERGEPAINT",   name: "Berger Paints",                   sector: "Paints" },
-  { symbol: "PIDILITIND",   name: "Pidilite Industries (Fevicol)",   sector: "Chemicals" },
-  { symbol: "HAVELLS",      name: "Havells India",                   sector: "Electricals" },
-  { symbol: "POLYCAB",      name: "Polycab India",                   sector: "Cables" },
-  { symbol: "VOLTAS",       name: "Voltas",                          sector: "Appliances" },
-  { symbol: "DIXON",        name: "Dixon Technologies",              sector: "Electronics" },
-
-  // Capital Goods, Defense & Infrastructure
-  { symbol: "LT",           name: "Larsen & Toubro",                 sector: "Capital Goods" },
-  { symbol: "HAL",          name: "Hindustan Aeronautics",           sector: "Defense" },
-  { symbol: "BEL",          name: "Bharat Electronics",              sector: "Defense" },
-  { symbol: "SIEMENS",      name: "Siemens India",                   sector: "Capital Goods" },
-  { symbol: "ABB",          name: "ABB India",                       sector: "Capital Goods" },
-  { symbol: "BHEL",         name: "Bharat Heavy Electricals",        sector: "Capital Goods" },
-  { symbol: "ULTRACEMCO",   name: "UltraTech Cement",                sector: "Cement" },
-  { symbol: "GRASIM",       name: "Grasim Industries",               sector: "Cement" },
-  { symbol: "DLF",          name: "DLF Limited",                     sector: "Realty" },
-  { symbol: "GODREJPROP",   name: "Godrej Properties",               sector: "Realty" },
-  { symbol: "OBEROIRLTY",   name: "Oberoi Realty",                   sector: "Realty" },
-  { symbol: "PRESTIGE",     name: "Prestige Estates",                sector: "Realty" },
-  { symbol: "GMRINFRA",     name: "GMR Airports Infrastructure",     sector: "Infrastructure" },
-  { symbol: "CONCOR",       name: "Container Corp of India",         sector: "Logistics" },
-  { symbol: "IRCTC",        name: "Indian Railway Catering (IRCTC)", sector: "Services" },
-  { symbol: "INDIGO",       name: "InterGlobe Aviation (IndiGo)",    sector: "Aviation" },
-
-  // Telecom & Tech Internet
-  { symbol: "BHARTIARTL",   name: "Bharti Airtel",                   sector: "Telecom" },
-  { symbol: "ZOMATO",       name: "Zomato Limited",                  sector: "Internet" },
-  { symbol: "NAUKRI",       name: "Info Edge (Naukri)",              sector: "Internet" },
-  { symbol: "INDIAMART",    name: "IndiaMART InterMESH",             sector: "Internet" },
-  { symbol: "PAYTM",        name: "One97 Communications (Paytm)",    sector: "Fintech" },
-  { symbol: "NYKAA",        name: "FSN E-Commerce (Nykaa)",          sector: "E-Commerce" },
-];
-
-// Ranked local search across the symbol catalog
-function filterSymbols(query: string): Suggestion[] {
-  const trimmed = query.trim();
-  if (!trimmed) {
-    return POPULAR_COMPANIES;
-  }
-
-  const q = trimmed.toUpperCase();
-  const exact: Suggestion[] = [];
-  const symbolStarts: Suggestion[] = [];
-  const symbolContains: Suggestion[] = [];
-  const nameStarts: Suggestion[] = [];
-  const nameContains: Suggestion[] = [];
-
-  const seen = new Set<string>();
-
-  for (const item of NSE_FO_SYMBOLS) {
-    const sym = item.symbol.toUpperCase();
-    const name = item.name.toUpperCase();
-
-    if (sym === q || name === q) {
-      exact.push(item);
-      seen.add(item.symbol);
-    } else if (sym.startsWith(q)) {
-      symbolStarts.push(item);
-      seen.add(item.symbol);
-    } else if (sym.includes(q)) {
-      symbolContains.push(item);
-      seen.add(item.symbol);
-    } else if (name.startsWith(q)) {
-      nameStarts.push(item);
-      seen.add(item.symbol);
-    } else if (name.includes(q)) {
-      nameContains.push(item);
-      seen.add(item.symbol);
-    }
-  }
-
-  const combined = [
-    ...exact,
-    ...symbolStarts,
-    ...symbolContains,
-    ...nameStarts,
-    ...nameContains,
-  ];
-
-  return combined.slice(0, 10);
-}
 
 // ---------------------------------------------------------------------------
 // SymbolSearch — Interactive combobox with autocomplete & instant suggestions
@@ -421,6 +210,140 @@ function SymbolSearch({
   );
 }
 
+function formatSpot(spot: number | null | undefined) {
+  if (spot == null || !Number.isFinite(spot)) return null;
+  return `₹${spot.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatExpiry(expiry: string | null | undefined) {
+  if (!expiry) return null;
+  const parsed = new Date(`${expiry.slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return expiry;
+  return parsed.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function DerivativeCatalog({
+  quotes,
+  query,
+  onQuery,
+  pending,
+  onOpen,
+}: {
+  quotes: Record<string, DerivativeQuote>;
+  query: string;
+  onQuery: (value: string) => void;
+  pending: boolean;
+  onOpen: (symbol: string) => void;
+}) {
+  const needle = query.trim().toUpperCase();
+  const rows = NSE_FO_SYMBOLS.filter((item) => {
+    if (!needle) return true;
+    return (
+      item.symbol.toUpperCase().includes(needle) ||
+      item.name.toUpperCase().includes(needle) ||
+      (item.sector ?? "").toUpperCase().includes(needle)
+    );
+  });
+  const loaded = NSE_FO_SYMBOLS.filter((item) => quotes[item.symbol]).length;
+
+  return (
+    <div className="mt-6 overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">NSE F&O catalog</p>
+          <p className="mt-1 font-mono text-[11px] text-white/45">
+            {loaded}/{NSE_FO_SYMBOLS.length} quotes
+            {loaded < NSE_FO_SYMBOLS.length ? " · loading spot and expiry" : ""}
+          </p>
+        </div>
+        <input
+          value={query}
+          onChange={(e) => onQuery(e.target.value)}
+          placeholder="Filter symbol, name, or sector"
+          aria-label="Filter derivatives"
+          className="w-full rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-white/35 focus:border-sky-400 focus:outline-none sm:w-64"
+        />
+      </div>
+      <div className="max-h-[36rem] overflow-auto">
+        <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
+          <thead className="sticky top-0 z-10 bg-[#06183d] text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">
+            <tr>
+              <th className="px-4 py-2 font-semibold">Symbol</th>
+              <th className="px-3 py-2 font-semibold">Name</th>
+              <th className="px-3 py-2 font-semibold">Sector</th>
+              <th className="px-3 py-2 text-right font-semibold">Spot</th>
+              <th className="px-4 py-2 font-semibold">Expiry</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((item) => {
+              const quote = quotes[item.symbol];
+              const unavailable = quote?.available === false;
+              const spot = formatSpot(quote?.spot);
+              const expiry = formatExpiry(quote?.expiry);
+              return (
+                <tr
+                  key={item.symbol}
+                  tabIndex={unavailable ? -1 : 0}
+                  aria-disabled={unavailable || undefined}
+                  onClick={() => {
+                    if (unavailable || pending) return;
+                    onOpen(item.symbol);
+                  }}
+                  onKeyDown={(e) => {
+                    if (unavailable || pending) return;
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onOpen(item.symbol);
+                    }
+                  }}
+                  className={`border-t border-white/5 ${
+                    unavailable
+                      ? "cursor-not-allowed opacity-45"
+                      : "cursor-pointer hover:bg-white/[0.05] focus:bg-sky-500/15 focus:outline-none"
+                  }`}
+                  title={unavailable ? "No F&O contract from Upstox" : `Open ${item.symbol}`}
+                >
+                  <td className="px-4 py-2.5 font-mono text-[13px] font-bold text-sky-300">{item.symbol}</td>
+                  <td className="max-w-[16rem] truncate px-3 py-2.5 text-xs text-white/75">{item.name}</td>
+                  <td className="px-3 py-2.5">
+                    {item.sector && (
+                      <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-medium text-white/45">{item.sector}</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5 text-right font-mono text-xs tabular-nums text-white">
+                    {quote == null ? (
+                      <span className="inline-block h-3 w-16 animate-pulse rounded bg-white/10" />
+                    ) : unavailable ? (
+                      <span className="text-white/40">No F&O</span>
+                    ) : (
+                      (spot ?? "—")
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5 font-mono text-xs text-white/80">
+                    {quote == null ? (
+                      <span className="inline-block h-3 w-20 animate-pulse rounded bg-white/10" />
+                    ) : (
+                      (expiry ?? "—")
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-xs text-white/45">
+                  No catalog match for “{query.trim()}”
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // AnalyzePanel
 // ---------------------------------------------------------------------------
@@ -430,10 +353,82 @@ export default function AnalyzePanel({ history }: { history: Snapshot[] }) {
   const [active, setActive] = useState<Snapshot | null>(history[0] ?? null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [browse, setBrowse] = useState(false);
+  const [quotes, setQuotes] = useState<Record<string, DerivativeQuote>>({});
+  const [browseQuery, setBrowseQuery] = useState("");
+  const browseGeneration = useRef(0);
+
+  useEffect(() => {
+    const generation = ++browseGeneration.current;
+    if (!browse) return;
+
+    // ponytail: sequential chunks, ~20 round trips / ~30–60s; upgrade is higher concurrency or an instruments master file.
+    const symbols = NSE_FO_SYMBOLS.map((item) => item.symbol);
+    const received = new Set<string>();
+    let cancelled = false;
+
+    async function loadQuotes() {
+      for (let index = 0; index < symbols.length; index += DERIVATIVE_CHUNK) {
+        if (cancelled || browseGeneration.current !== generation) return;
+        const chunk = symbols.slice(index, index + DERIVATIVE_CHUNK);
+        try {
+          const response = await fetch("/api/derivatives", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ symbols: chunk }),
+          });
+          const data = await response.json().catch(() => null);
+          if (cancelled || browseGeneration.current !== generation) return;
+          if (!response.ok) {
+            if (response.status === 401) {
+              setError("Sign in to load live derivative quotes.");
+              return;
+            }
+            continue;
+          }
+          const rows = Array.isArray(data?.derivatives) ? (data.derivatives as DerivativeQuote[]) : [];
+          for (const row of rows) received.add(row.symbol);
+          setQuotes((current) => {
+            const next = { ...current };
+            for (const row of rows) next[row.symbol] = row;
+            return next;
+          });
+        } catch {
+          if (cancelled || browseGeneration.current !== generation) return;
+        }
+      }
+
+      if (cancelled || browseGeneration.current !== generation) return;
+      const missing = symbols.filter((symbol) => !received.has(symbol));
+      if (missing.length === 0) return;
+      setError("Some derivative quotes could not be loaded.");
+      setQuotes((current) => {
+        const next = { ...current };
+        for (const symbol of missing) {
+          if (next[symbol]) continue;
+          next[symbol] = {
+            symbol,
+            available: true,
+            name: null,
+            expiry: null,
+            spot: null,
+            underlying_key: null,
+          };
+        }
+        return next;
+      });
+    }
+
+    void loadQuotes();
+    return () => {
+      cancelled = true;
+    };
+  }, [browse]);
 
   async function analyze(target: string) {
     target = target.trim();
     if (!target) return;
+    setBrowse(false);
     setCompany(target);
     setError(null);
     setPending(true);
@@ -502,6 +497,20 @@ export default function AnalyzePanel({ history }: { history: Snapshot[] }) {
                 {sym}
               </button>
             ))}
+            <span className="mx-1 hidden h-3 w-px bg-white/15 sm:inline-block" aria-hidden />
+            <button
+              type="button"
+              aria-pressed={browse}
+              disabled={pending}
+              onClick={() => setBrowse((on) => !on)}
+              className={`rounded border px-2.5 py-0.5 text-[11px] font-medium ${
+                browse
+                  ? "border-sky-300 bg-sky-500/25 text-white"
+                  : "border-sky-400/40 bg-sky-500/10 text-sky-100 hover:bg-sky-500/20"
+              } disabled:opacity-50`}
+            >
+              Show all derivatives values
+            </button>
           </div>
         </div>
 
@@ -509,7 +518,17 @@ export default function AnalyzePanel({ history }: { history: Snapshot[] }) {
           <p className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 font-mono text-xs text-rose-200">{error}</p>
         )}
 
-        {pending ? (
+        {browse && !pending ? (
+          <DerivativeCatalog
+            quotes={quotes}
+            query={browseQuery}
+            onQuery={setBrowseQuery}
+            pending={pending}
+            onOpen={(symbol) => {
+              void analyze(symbol);
+            }}
+          />
+        ) : pending ? (
           <div className="mt-6 animate-pulse space-y-3 rounded-xl border border-white/10 p-4 sm:p-6">
             <div className="h-16 rounded bg-white/5" />
             <div className="h-56 rounded bg-white/5" />
@@ -549,7 +568,10 @@ export default function AnalyzePanel({ history }: { history: Snapshot[] }) {
               <li key={item.id} className="w-44 shrink-0 lg:w-auto">
                 <button
                   type="button"
-                  onClick={() => setActive(item)}
+                  onClick={() => {
+                    setBrowse(false);
+                    setActive(item);
+                  }}
                   className={`w-full rounded-lg border p-3 text-left transition-colors ${
                     active?.id === item.id
                       ? "border-sky-400/70 bg-[#082054]"
