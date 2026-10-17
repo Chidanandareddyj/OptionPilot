@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ThinkingOrb } from "thinking-orbs";
+import DerivativesBoard from "./derivatives-board";
 import StrategyExplorer from "./strategy-explorer";
 
 type Snapshot = {
@@ -430,10 +431,12 @@ export default function AnalyzePanel({ history }: { history: Snapshot[] }) {
   const [active, setActive] = useState<Snapshot | null>(history[0] ?? null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [showBoard, setShowBoard] = useState(false);
 
   async function analyze(target: string) {
     target = target.trim();
     if (!target) return;
+    setShowBoard(false);
     setCompany(target);
     setError(null);
     setPending(true);
@@ -502,14 +505,25 @@ export default function AnalyzePanel({ history }: { history: Snapshot[] }) {
                 {sym}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setShowBoard((v) => !v)}
+              className={`ml-auto rounded border px-2.5 py-0.5 text-[11px] font-medium ${
+                showBoard ? "border-sky-400/70 bg-sky-500/25 text-white" : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+              }`}
+            >
+              {showBoard ? "Hide all derivatives" : "Show all derivatives"}
+            </button>
           </div>
         </div>
+
+        {showBoard && <DerivativesBoard onAnalyze={analyze} />}
 
         {error && (
           <p className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 font-mono text-xs text-rose-200">{error}</p>
         )}
 
-        {pending ? (
+        {showBoard ? null : pending ? (
           <div className="mt-6 animate-pulse space-y-3 rounded-xl border border-white/10 p-4 sm:p-6">
             <div className="h-16 rounded bg-white/5" />
             <div className="h-56 rounded bg-white/5" />

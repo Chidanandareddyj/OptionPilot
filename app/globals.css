@@ -27,6 +27,20 @@ body {
   );
 }
 
+/* Live board: a changed price cell lights up briefly. */
+@keyframes tick-flash {
+  from {
+    background-color: rgba(56, 189, 248, 0.45);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.tick-flash {
+  animation: tick-flash 0.9s ease-out;
+}
+
 .section {
   position: relative;
   margin: 0 auto;
