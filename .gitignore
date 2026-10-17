@@ -3,6 +3,7 @@
 # dependencies
 /node_modules
 /showreel/node_modules
+/relay/node_modules
 /showreel/frames
 /showreel/out
 /.pnp
