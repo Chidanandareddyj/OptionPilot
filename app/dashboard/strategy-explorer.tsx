@@ -48,18 +48,21 @@ export default function StrategyExplorer({
   const stored = parseStoredDecision(savedDecision);
   const [compareMode, setCompareMode] = useState(stored.mode === "compare");
   const [single, setSingle] = useState<Decision | null>(stored.mode === "single" ? asDecision(stored.single) : null);
-  const [left, setLeft] = useState<Decision | null>(stored.mode === "compare" ? asDecision(stored.left) : null);
+  const [left, setLeft] = useState<Decision | null>(
+    stored.mode === "compare" ? asDecision(stored.left) : (stored.mode === "single" ? asDecision(stored.single) : null)
+  );
   const [right, setRight] = useState<Decision | null>(stored.mode === "compare" ? asDecision(stored.right) : null);
   const [focusPane, setFocusPane] = useState<Pane>("left");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [selectedByPane, setSelectedByPane] = useState<{ left: string | null; right: string | null }>({
-    left: stored.mode === "compare" ? (asDecision(stored.left)?.best?.key ?? null) : null,
+    left: stored.mode === "compare" ? (asDecision(stored.left)?.best?.key ?? null) : (stored.mode === "single" ? (asDecision(stored.single)?.best?.key ?? null) : null),
     right: stored.mode === "compare" ? (asDecision(stored.right)?.best?.key ?? null) : null,
   });
   const [filter, setFilter] = useState<Category | "all">("all");
   const [query, setQuery] = useState("");
   const [showJson, setShowJson] = useState(false);
   const detailRef = useRef<HTMLDivElement>(null);
+  const compareDetailRef = useRef<HTMLDivElement>(null);
 
   const rankedDecision = compareMode ? (focusPane === "left" ? left : right) : single;
   const spot = data.underlying_spot_price ?? 0;
@@ -67,8 +70,8 @@ export default function StrategyExplorer({
   const strategies = Object.keys(STRATEGY_DEFINITIONS).flatMap((key) => normalizeStrategy(key, data[key], spot, lotSize) ?? []);
   const pick = (key: string | null) => strategies.find((s) => s.key === key) ?? null;
   const active = pick(selectedKey) ?? strategies[0];
-  const leftActive = pick(selectedByPane.left);
-  const rightActive = pick(selectedByPane.right);
+  const leftActive = pick(selectedByPane.left) ?? (strategies.length > 0 ? strategies[0] : null);
+  const rightActive = pick(selectedByPane.right) ?? (strategies.length > 1 ? strategies[1] : strategies[0] ?? null);
   const ranked = new Map(rankedDecision?.strategies.map((s, i) => [s.key, { ...s, rank: i + 1 }]));
   const visible = strategies
     .filter(
@@ -77,11 +80,23 @@ export default function StrategyExplorer({
         `${s.name} ${s.tagline}`.toLowerCase().includes(query.trim().toLowerCase()),
     )
     .sort((a, b) => (ranked.get(a.key)?.rank ?? 99) - (ranked.get(b.key)?.rank ?? 99));
+  const handleCompareMode = (on: boolean) => {
+    setCompareMode(on);
+    if (on && single && !left) {
+      setLeft(single);
+      setSelectedByPane((prev) => ({
+        ...prev,
+        left: prev.left ?? single.best?.key ?? (strategies.length > 0 ? strategies[0].key : null),
+      }));
+    }
+  };
+
   const select = (key: string, pane?: Pane) => {
     if (compareMode) {
       const target = pane ?? focusPane;
       setFocusPane(target);
       setSelectedByPane((prev) => ({ ...prev, [target]: key }));
+      compareDetailRef.current?.scrollIntoView({ behavior: "smooth" });
       return;
     }
     setSelectedKey(key);
@@ -96,7 +111,7 @@ export default function StrategyExplorer({
       if (!left && single) setLeft(single);
     }
     setSelectedByPane((prev) => {
-      const next = { ...prev, [pane]: prev[pane] ?? decision.best?.key ?? null };
+      const next = { ...prev, [pane]: decision.best?.key ?? prev[pane] ?? null };
       const other = pane === "left" ? "right" : "left";
       if (!next[other] && single?.best?.key) next[other] = single.best.key;
       return next;
@@ -105,16 +120,20 @@ export default function StrategyExplorer({
   const instrumentId = data.underlying_key?.replace(/^NSE_(INDEX|EQ)\|/, "") || "";
   const companySymbol = company.toUpperCase().trim();
   const companyFullName = (typeof data.company_name === "string" ? data.company_name : "").trim();
+  const atmStrike =
+    (data.atm_strike as number | undefined) ??
+    (data.long_straddle as { strike_price?: number } | undefined)?.strike_price ??
+    (data.short_straddle as { strike_price?: number } | undefined)?.strike_price;
   const gridSelectedKey = compareMode ? selectedByPane[focusPane] : active?.key;
 
   return (
     <div className="mt-6 space-y-5">
-      <div className="rounded-xl border border-white/12 bg-[#051d4d] p-4 sm:p-5">
+      <div className="rounded-xl border border-white/12 bg-white/[0.04] p-4 sm:p-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">Option chain</p>
             <div className="mt-1 flex flex-wrap items-baseline gap-x-3">
-              <h2 className="font-serif text-2xl sm:text-3xl tracking-tight">
+              <h2 className="font-serif text-2xl sm:text-3xl tracking-tight text-white">
                 <span>{companySymbol}</span>
                 {instrumentId && instrumentId !== companySymbol && (
                   <>
@@ -124,31 +143,45 @@ export default function StrategyExplorer({
                 )}
               </h2>
               {spot > 0 && (
-                <span className="font-mono text-xl tabular-nums text-sky-300">
-                  ₹{spot.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                <span className="font-serif text-2xl sm:text-3xl tracking-tight text-sky-300">
+                  <span className="font-mono tabular-nums font-semibold">₹{spot.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                 </span>
               )}
             </div>
             {companyFullName && companyFullName !== companySymbol && (
               <p className="mt-0.5 text-xs text-white/55 font-medium">{companyFullName}</p>
             )}
-            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/60">
+            <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs font-mono tabular-nums">
+              {spot > 0 && (
+                <div className="rounded-[5px] border border-white/15 bg-white/5 px-2.5 py-1 text-white/80">
+                  <span className="font-sans text-[10px] uppercase tracking-wider text-white/45 mr-1.5">Spot</span>
+                  <span className="font-semibold text-sky-300">₹{spot.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                </div>
+              )}
+              {atmStrike != null && (
+                <div className="rounded-[5px] border border-white/15 bg-white/5 px-2.5 py-1 text-white/80">
+                  <span className="font-sans text-[10px] uppercase tracking-wider text-white/45 mr-1.5">ATM Strike</span>
+                  <span className="font-semibold text-white">₹{Number(atmStrike).toLocaleString("en-IN")}</span>
+                </div>
+              )}
               {data.expiry_date && (
-                <p>
-                  Expiry <span className="font-mono text-white">{data.expiry_date}</span>
-                </p>
+                <div className="rounded-[5px] border border-white/15 bg-white/5 px-2.5 py-1 text-white/80">
+                  <span className="font-sans text-[10px] uppercase tracking-wider text-white/45 mr-1.5">Expiry</span>
+                  <span className="text-white">{data.expiry_date}</span>
+                </div>
               )}
               {lotSize > 1 && (
-                <p>
-                  Lot size <span className="font-mono font-semibold text-sky-300">{lotSize.toLocaleString("en-IN")}</span>
-                </p>
+                <div className="rounded-[5px] border border-white/15 bg-white/5 px-2.5 py-1 text-white/80">
+                  <span className="font-sans text-[10px] uppercase tracking-wider text-white/45 mr-1.5">Lot Size</span>
+                  <span className="font-semibold text-emerald-300">{lotSize.toLocaleString("en-IN")}</span>
+                </div>
               )}
             </div>
           </div>
           <button
             type="button"
             onClick={() => setShowJson(!showJson)}
-            className="rounded border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70 hover:bg-white/10 hover:text-white"
+            className="rounded-[5px] border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70 hover:border-white/25 hover:bg-white/10 hover:text-white transition-all"
           >
             {showJson ? "Hide JSON" : "Raw JSON"}
           </button>
@@ -163,7 +196,7 @@ export default function StrategyExplorer({
             >
               Copy
             </button>
-            <pre className="max-h-64 overflow-auto rounded border border-white/10 bg-[#020d24] p-3 font-mono text-[11px] leading-relaxed text-sky-200/80">
+            <pre className="max-h-64 overflow-auto rounded-xl border border-white/10 bg-[#020d24] p-3 font-mono text-[11px] leading-relaxed text-sky-200/80">
               {JSON.stringify(data, null, 2)}
             </pre>
           </div>
@@ -173,7 +206,7 @@ export default function StrategyExplorer({
       <RecommendationPanel
         analysisId={analysisId}
         compareMode={compareMode}
-        onCompareMode={setCompareMode}
+        onCompareMode={handleCompareMode}
         single={single}
         left={left}
         right={right}
@@ -183,21 +216,62 @@ export default function StrategyExplorer({
       />
 
       {compareMode ? (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {leftActive ? (
-            <StrategyDetail strategy={leftActive} />
-          ) : (
-            <div className="rounded-xl border border-dashed border-white/10 p-6 text-center font-mono text-xs text-white/40">
-              Score this view to compare.
+        <div ref={compareDetailRef} className="grid grid-cols-1 lg:grid-cols-2 gap-5 scroll-mt-20">
+          <div
+            onClick={() => setFocusPane("left")}
+            className={`space-y-2 rounded-xl transition-all cursor-pointer ${
+              focusPane === "left"
+                ? "ring-2 ring-emerald-400/40 p-1"
+                : "opacity-85 hover:opacity-100 p-1"
+            }`}
+          >
+            <div className="flex items-center justify-between px-1">
+              <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
+                Left Pane {left?.view ? `(${left.view} view)` : ""}
+              </span>
+              {focusPane === "left" && (
+                <span className="rounded-[4px] border border-sky-400/50 bg-[#0a276b] px-2 py-0.5 font-mono text-[10px] text-white">
+                  Active Target
+                </span>
+              )}
             </div>
-          )}
-          {rightActive ? (
-            <StrategyDetail strategy={rightActive} />
-          ) : (
-            <div className="rounded-xl border border-dashed border-white/10 p-6 text-center font-mono text-xs text-white/40">
-              Score this view to compare.
+            {leftActive ? (
+              <StrategyDetail strategy={leftActive} />
+            ) : (
+              <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center font-mono text-xs text-white/40">
+                Score the left view above to compare.
+              </div>
+            )}
+          </div>
+
+          <div
+            onClick={() => setFocusPane("right")}
+            className={`space-y-2 rounded-xl transition-all cursor-pointer ${
+              focusPane === "right"
+                ? "ring-2 ring-rose-400/40 p-1"
+                : "opacity-85 hover:opacity-100 p-1"
+            }`}
+          >
+            <div className="flex items-center justify-between px-1">
+              <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-rose-300 flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-rose-400 shadow-sm shadow-rose-400/50" />
+                Right Pane {right?.view ? `(${right.view} view)` : ""}
+              </span>
+              {focusPane === "right" && (
+                <span className="rounded-[4px] border border-sky-400/50 bg-[#0a276b] px-2 py-0.5 font-mono text-[10px] text-white">
+                  Active Target
+                </span>
+              )}
             </div>
-          )}
+            {rightActive ? (
+              <StrategyDetail strategy={rightActive} />
+            ) : (
+              <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center font-mono text-xs text-white/40">
+                Score the right view above to compare.
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         active && (
@@ -214,33 +288,41 @@ export default function StrategyExplorer({
               key={f.id}
               type="button"
               onClick={() => setFilter(f.id)}
-              className={`shrink-0 rounded border px-2.5 py-1 text-xs transition-colors ${
-                filter === f.id ? "border-sky-400/50 bg-[#0a276b] text-white" : "border-transparent text-white/60 hover:bg-white/5 hover:text-white"
+              className={`shrink-0 rounded-[5px] border px-3 py-1 text-xs font-medium transition-all ${
+                filter === f.id
+                  ? "border-sky-400/50 bg-[#0a276b] text-white shadow-sm"
+                  : "border-white/15 bg-white/5 text-white/70 hover:border-white/25 hover:bg-white/10 hover:text-white"
               }`}
             >
               {f.label}{" "}
-              <span className="font-mono text-[10px] text-white/50">
+              <span className="font-mono tabular-nums text-[10.5px] opacity-60">
                 {f.id === "all" ? strategies.length : strategies.filter((s) => s.category === f.id).length}
               </span>
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           {compareMode && (
-            <div className="flex items-center gap-1.5 text-xs text-white/55">
-              <span>Cards apply to</span>
-              {(["left", "right"] as const).map((pane) => (
-                <button
-                  key={pane}
-                  type="button"
-                  onClick={() => setFocusPane(pane)}
-                  className={`rounded border px-2 py-1 capitalize ${
-                    focusPane === pane ? "border-sky-400/50 bg-[#0a276b] text-white" : "border-white/10 text-white/60 hover:bg-white/5 hover:text-white"
-                  }`}
-                >
-                  {pane}
-                </button>
-              ))}
+            <div className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-xs">
+              <span className="font-semibold uppercase tracking-wider text-[10.5px] text-white/60">
+                Cards apply to:
+              </span>
+              <div className="inline-flex rounded-[5px] p-0.5 bg-[#020d24] border border-white/10">
+                {(["left", "right"] as const).map((pane) => (
+                  <button
+                    key={pane}
+                    type="button"
+                    onClick={() => setFocusPane(pane)}
+                    className={`rounded-[4px] px-3 py-1 font-medium text-xs capitalize transition-all ${
+                      focusPane === pane
+                        ? "border border-sky-400/50 bg-[#0a276b] text-white shadow-sm shadow-sky-500/20 font-semibold"
+                        : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"
+                    }`}
+                  >
+                    {pane === "left" ? "Left" : "Right"}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
           <input
@@ -248,7 +330,7 @@ export default function StrategyExplorer({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search strategy..."
-            className="w-full rounded border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-white/40 focus:border-sky-400 focus:outline-none sm:w-56"
+            className="w-full rounded-[5px] border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-white/40 focus:border-sky-400 focus:outline-none sm:w-56 transition-colors"
           />
         </div>
       </div>
@@ -267,7 +349,7 @@ export default function StrategyExplorer({
           ))}
         </div>
       ) : (
-        <p className="rounded border border-white/10 p-8 text-center font-mono text-xs text-white/40">NO MATCHING STRATEGIES</p>
+        <p className="rounded-xl border border-white/10 p-8 text-center font-mono text-xs text-white/40">NO MATCHING STRATEGIES</p>
       )}
     </div>
   );

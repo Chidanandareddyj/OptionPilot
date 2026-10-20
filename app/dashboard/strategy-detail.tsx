@@ -34,10 +34,10 @@ export default function StrategyDetail({ strategy }: { strategy: NormalizedStrat
   ];
 
   return (
-    <div className="rounded-xl border border-white/12 bg-[#041944] p-4 sm:p-5">
+    <div className="rounded-xl border border-white/12 bg-white/[0.04] p-4 sm:p-5">
       <div className="border-b border-white/10 pb-4">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="font-serif text-2xl tracking-tight sm:text-3xl">{name}</h2>
+          <h2 className="font-serif text-2xl tracking-tight sm:text-3xl text-white">{name}</h2>
           <span className={`rounded border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${CATEGORY_BADGE[category]}`}>
             {category}
           </span>
@@ -45,11 +45,11 @@ export default function StrategyDetail({ strategy }: { strategy: NormalizedStrat
         <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-white/65">{description}</p>
       </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6">
+      <dl className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-3 2xl:grid-cols-6">
         {metrics.map((m) => (
-          <div key={m.label} className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-            <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">{m.label}</dt>
-            <dd className={`mt-1 font-mono text-sm tabular-nums ${m.tone}`}>{m.value}</dd>
+          <div key={m.label} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">{m.label}</dt>
+            <dd className={`mt-1 font-mono text-sm tabular-nums font-semibold ${m.tone}`}>{m.value}</dd>
           </div>
         ))}
       </dl>
@@ -60,8 +60,10 @@ export default function StrategyDetail({ strategy }: { strategy: NormalizedStrat
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`shrink-0 rounded border px-3 py-1 text-xs font-medium transition-colors ${
-              tab === t.id ? "border-sky-400/40 bg-sky-500/15 text-sky-200" : "border-transparent text-white/60 hover:bg-white/5 hover:text-white"
+            className={`shrink-0 rounded-[5px] border px-3 py-1 text-xs font-medium transition-all ${
+              tab === t.id
+                ? "border-sky-400/50 bg-[#0a276b] text-white shadow-sm"
+                : "border-transparent text-white/60 hover:bg-white/5 hover:text-white"
             }`}
           >
             {t.label}
@@ -75,9 +77,9 @@ export default function StrategyDetail({ strategy }: { strategy: NormalizedStrat
         {tab === "payoff" && <PayoffChart payoffTable={payoffTable} spotPrice={spotPrice} breakevens={breakevens} />}
 
         {tab === "table" && (
-          <div className="max-h-96 overflow-auto rounded-lg border border-white/10 bg-[#031536] text-xs">
+          <div className="max-h-96 overflow-auto rounded-xl border border-white/12 bg-white/[0.03] text-xs">
             <table className="w-full whitespace-nowrap text-left">
-              <thead className="sticky top-0 border-b border-white/10 bg-[#061e4f] text-[10px] uppercase tracking-wider text-white/50">
+              <thead className="sticky top-0 border-b border-white/10 bg-[#061e4f] text-[10px] uppercase tracking-wider text-white/50 backdrop-blur-md">
                 <tr>
                   <th className={TH}>Closing price</th>
                   {legColumns.map((k) => (
@@ -108,12 +110,13 @@ export default function StrategyDetail({ strategy }: { strategy: NormalizedStrat
         )}
 
         {tab === "legs" && (
-          <div className="overflow-x-auto rounded-lg border border-white/10 bg-[#031536] text-xs">
+          <div className="overflow-x-auto rounded-xl border border-white/12 bg-white/[0.03] text-xs">
             <table className="w-full whitespace-nowrap text-left">
-              <thead className="border-b border-white/10 bg-[#061e4f] text-[10px] uppercase tracking-wider text-white/50">
+              <thead className="border-b border-white/10 bg-white/[0.03] text-[10px] font-semibold uppercase tracking-wider text-white/50">
                 <tr>
                   <th className={TH}>Leg</th>
                   <th className={TH}>Action</th>
+                  <th className={TH}>Type</th>
                   <th className={TH}>Strike</th>
                   <th className={TH}>Premium</th>
                   <th className={TH}>Instrument</th>
@@ -122,13 +125,20 @@ export default function StrategyDetail({ strategy }: { strategy: NormalizedStrat
               <tbody className="divide-y divide-white/5 font-mono tabular-nums">
                 {legs.map((leg) => (
                   <tr key={leg.label} className="hover:bg-white/[0.03]">
-                    <td className={`${TD} font-sans capitalize text-white`}>{leg.label}</td>
+                    <td className={`${TD} font-sans capitalize text-white font-medium`}>{leg.label}</td>
                     <td className={`${TD} font-sans font-semibold uppercase ${leg.action === "Buy" ? "text-emerald-300" : "text-amber-300"}`}>
                       {leg.action}
                       {leg.qty > 1 && ` ×${leg.qty}`}
                     </td>
-                    <td className={TD}>₹{leg.strike.toLocaleString("en-IN")}</td>
-                    <td className={TD}>{leg.premium === undefined ? "—" : `₹${leg.premium}`}</td>
+                    <td className={TD}>
+                      <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-sans font-semibold uppercase ${
+                        leg.type === "call" ? "bg-sky-500/15 text-sky-300 border border-sky-400/30" : "bg-indigo-500/15 text-indigo-300 border border-indigo-400/30"
+                      }`}>
+                        {leg.type === "call" ? "CE (Call)" : "PE (Put)"}
+                      </span>
+                    </td>
+                    <td className={`${TD} font-semibold text-white`}>₹{leg.strike.toLocaleString("en-IN")}</td>
+                    <td className={`${TD} text-sky-200`}>{leg.premium === undefined ? "—" : `₹${leg.premium.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}</td>
                     <td className={`${TD} text-[11px] text-white/40`}>{leg.instrumentKey ?? "—"}</td>
                   </tr>
                 ))}
