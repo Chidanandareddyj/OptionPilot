@@ -98,6 +98,9 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
         es.addEventListener("tick", (e) => {
           const t = JSON.parse((e as MessageEvent).data) as { rows: LiveRow[]; live: boolean; status: string; now: number };
           setConn("open");
+          if (typeof window !== "undefined" && t.status) {
+            window.dispatchEvent(new CustomEvent("market-status", { detail: t.status }));
+          }
           setFeed((prev) => {
             const rows = new Map(prev?.rows);
             for (const r of t.rows) rows.set(r.k, r);
@@ -160,10 +163,8 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
       : !feed
         ? { text: "Connecting…", tone: "text-white/50" }
         : !feed.live
-          ? { text: "Upstox feed down, retrying", tone: "text-amber-300" }
-          : !marketOpen
-            ? { text: `Market ${feed.status.toLowerCase().replace(/_/g, " ")} · showing last prices`, tone: "text-amber-300" }
-            : { text: "Live", tone: "text-emerald-300" };
+          ? { text: "Syncing…", tone: "text-amber-300" }
+          : null;
 
   const input = "rounded-md border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs text-white placeholder:text-white/40 focus:border-sky-400 focus:outline-none";
 
@@ -171,10 +172,12 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
     <div className="rounded-xl border border-white/12 bg-white/[0.04] p-4 sm:p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/10">
         <h2 className="font-serif text-xl tracking-tight text-white">All Derivatives</h2>
-        <span className={`inline-flex items-center gap-1.5 font-mono text-[11px] ${state.tone}`}>
-          <span className="size-1.5 rounded-full bg-current" />
-          {state.text}
-        </span>
+        {state && (
+          <span className={`inline-flex items-center gap-1.5 font-mono text-[11px] ${state.tone}`}>
+            <span className="size-1.5 rounded-full bg-current" />
+            {state.text}
+          </span>
+        )}
       </div>
 
       <div className="mt-3.5 flex flex-wrap items-center gap-2">
@@ -310,7 +313,7 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
               {!visible.length && (
                 <tr>
                   <td colSpan={COLUMNS.length + 1} className="py-10 text-center font-mono text-xs text-white/40">
-                    {feed ? "NO MATCHING COMPANIES" : "WAITING FOR LIVE PRICES"}
+                    {feed ? "NO MATCHING COMPANIES" : "WAITING FOR PRICES"}
                   </td>
                 </tr>
               )}

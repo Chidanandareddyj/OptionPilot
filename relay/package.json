@@ -1,1 +1,1 @@
-{"name":"optionpilot-relay","private":true,"type":"module","scripts":{"start":"node server.mjs","dev":"node --env-file=.env server.mjs"},"dependencies":{"protobufjs":"^7.4.0","ws":"^8.18.0"}}
+{"name":"optionpilot-relay","private":true,"type":"module","scripts":{"start":"node --env-file=.env server.mjs","dev":"node --env-file=.env server.mjs"},"dependencies":{"protobufjs":"^7.4.0","ws":"^8.18.0"}}
