@@ -243,7 +243,7 @@ body {
   color: rgba(255, 255, 255, 0.7) !important;
 }
 
-.auth-neon-scope input {
+.auth-neon-scope input:not([data-input-otp]):not([autocomplete="one-time-code"]):not([data-slot="input-otp"]) {
   background-color: rgba(3, 19, 53, 0.85) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 8px !important;
@@ -252,14 +252,66 @@ body {
   transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
-.auth-neon-scope input::placeholder {
+.auth-neon-scope input:not([data-input-otp]):not([autocomplete="one-time-code"]):not([data-slot="input-otp"])::placeholder {
   color: rgba(255, 255, 255, 0.35) !important;
 }
 
-.auth-neon-scope input:focus {
+.auth-neon-scope input:not([data-input-otp]):not([autocomplete="one-time-code"]):not([data-slot="input-otp"]):focus {
   border-color: rgba(56, 189, 248, 0.6) !important;
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25) !important;
+}
+
+/* OTP Screen: Hide the raw internal input so only clean character slot boxes are displayed */
+.auth-neon-scope input[data-input-otp],
+.auth-neon-scope input[autocomplete="one-time-code"],
+.auth-neon-scope [data-slot="input-otp"] input {
+  color: transparent !important;
+  background: transparent !important;
+  caret-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  letter-spacing: -0.5em !important;
+}
+
+/* Centered OTP Slots Container */
+.auth-neon-scope [data-slot="input-otp"] {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  margin: 0.75rem 0 !important;
+}
+
+.auth-neon-scope [data-slot="input-otp-group"] {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+/* Sleek Dark OptionPilot Digits Boxes */
+.auth-neon-scope [data-slot="input-otp-slot"] {
+  width: 2.75rem !important;
+  height: 3.25rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: rgba(3, 19, 53, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.15s ease !important;
+}
+
+.auth-neon-scope [data-slot="input-otp-slot"][data-active="true"] {
+  border-color: rgba(56, 189, 248, 0.9) !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25), 0 0 14px rgba(56, 189, 248, 0.35) !important;
 }
 
 /* Primary Action Button (Login / Continue / Create account) */
@@ -302,6 +354,12 @@ body {
 .auth-neon-scope [data-slot="card-content"] > button:not([type="submit"]):not([variant="link"]):hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* On Sign-Up page, hide redundant "Sign in with Email Code" button */
+.auth-signup-scope button:has(svg.lucide-mail):not([type="submit"]),
+.auth-signup-scope [data-slot="card-content"] > div.grid > button:has(svg.lucide-mail) {
+  display: none !important;
 }
 
 /* Dedicated Password Visibility Toggle Icon Button (Rightmost Vertical Center) */
