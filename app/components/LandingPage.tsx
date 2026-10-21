@@ -111,6 +111,10 @@ export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boole
 
   const handleNavClick = (sectionId: string) => {
     setMobileMenuOpen(false);
+    if (sectionId === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
@@ -496,7 +500,11 @@ export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boole
           <a
             key={n}
             href={SECTIONS[n] ? `#${SECTIONS[n]}` : "#top"}
-            className="rounded-full px-3.5 py-1.5 text-center text-[12px] font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors tracking-wide"
+            onClick={(e) => {
+              e.preventDefault();
+              handleNavClick(SECTIONS[n] || "top");
+            }}
+            className="rounded-full px-3.5 py-1.5 text-center text-[12px] font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors tracking-wide cursor-pointer"
           >
             {n}
           </a>

@@ -7,15 +7,21 @@ import { usePageTransition } from "@/app/components/loading-overlay";
 import { OptionPilotLogo } from "@/app/components/OptionPilotLogo";
 
 
-function MarketStatusBadge() {
-  const [data, setData] = useState<{
-    hm: string;
-    isOpen: boolean;
-  } | null>(null);
+function DashboardClock() {
+  const [time, setTime] = useState<string | null>(null);
+  const [scheduledOpen, setScheduledOpen] = useState(false);
+  const [feedStatus, setFeedStatus] = useState<boolean | null>(null);
 
   useEffect(() => {
     const tick = () => {
       const now = new Date();
+      setTime(
+        now.toLocaleTimeString("en-GB", {
+          timeZone: "Asia/Kolkata",
+          hour12: false,
+        })
+      );
+
       const formatter = new Intl.DateTimeFormat("en-US", {
         timeZone: "Asia/Kolkata",
         weekday: "short",
@@ -36,13 +42,7 @@ function MarketStatusBadge() {
       // NSE Trading Hours: Mon-Fri, 09:15 - 15:30 IST
       const isWeekday = weekday !== "Sat" && weekday !== "Sun";
       const totalMinutes = hour * 60 + minute;
-      const isOpen = isWeekday && totalMinutes >= 555 && totalMinutes < 930;
-
-      const pad = (n: number) => String(n).padStart(2, "0");
-      setData((prev) => ({
-        hm: `${pad(hour)}:${pad(minute)}`,
-        isOpen: prev !== null ? prev.isOpen : isOpen,
-      }));
+      setScheduledOpen(isWeekday && totalMinutes >= 555 && totalMinutes < 930);
     };
 
     tick();
@@ -55,42 +55,43 @@ function MarketStatusBadge() {
     const handleStatus = (e: Event) => {
       const status = (e as CustomEvent).detail;
       if (typeof status === "string") {
-        setData((prev) => (prev ? { ...prev, isOpen: status === "NORMAL_OPEN" } : prev));
+        setFeedStatus(status === "NORMAL_OPEN");
       }
     };
     window.addEventListener("market-status", handleStatus);
     return () => window.removeEventListener("market-status", handleStatus);
   }, []);
 
-  if (!data) return null;
-  const { hm, isOpen } = data;
-
-  if (isOpen) {
-    return (
-      <div
-        title="Market live · Trading active (NSE/IST)"
-        className="flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs text-white shadow-sm cursor-default select-none transition-colors hover:border-emerald-500/40"
-      >
-        <span className="relative flex size-2 shrink-0 items-center justify-center" aria-hidden="true">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex size-1.5 rounded-full bg-emerald-400" />
-        </span>
-        <span className="font-semibold text-emerald-300">Live</span>
-        <span className="text-white/40">·</span>
-        <span className="font-mono text-white/90 tabular-nums">{hm}</span>
-      </div>
-    );
-  }
+  const isOpen = feedStatus !== null ? feedStatus : scheduledOpen;
+  const hm = time ? time.slice(0, 5) : "--:--";
+  const s = time ? time.slice(5) : ":--";
 
   return (
     <div
-      title="Market closed · Showing last traded values (NSE/IST)"
-      className="flex shrink-0 items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/[0.08] px-2.5 py-1 text-xs text-white shadow-sm cursor-default select-none transition-colors hover:border-amber-500/40"
+      title={
+        isOpen
+          ? "Market live · Trading active (NSE/IST)"
+          : "Market closed · Showing last traded values (NSE/IST)"
+      }
+      className="flex shrink-0 items-center gap-2 select-none cursor-default"
     >
-      <span className="size-1.5 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
-      <span className="font-semibold text-amber-300">Closed</span>
-      <span className="text-white/40">·</span>
-      <span className="font-mono text-white/75 tabular-nums">{hm}</span>
+      <span
+        className="relative flex size-2 shrink-0 items-center justify-center"
+        aria-hidden="true"
+      >
+        {isOpen ? (
+          <>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex size-1.5 rounded-full bg-emerald-400" />
+          </>
+        ) : (
+          <span className="size-1.5 rounded-full bg-amber-400 shrink-0" />
+        )}
+      </span>
+      <span className="font-serif text-[15px] sm:text-[17px] tracking-wide text-white">
+        NSE {hm}
+        <span className="hidden sm:inline text-white/45">{s}</span>
+      </span>
     </div>
   );
 }
@@ -117,7 +118,7 @@ export default function DashboardHeader({ name }: { name?: string | null }) {
         </span>
       </div>
       <div className="flex shrink-0 items-center gap-2.5 sm:gap-4">
-        <MarketStatusBadge />
+        <DashboardClock />
         {name && (
           <span className="text-xs text-white/70 max-lg:hidden truncate max-w-[120px]">
             {name}

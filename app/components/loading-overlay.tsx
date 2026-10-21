@@ -137,8 +137,8 @@ export function PageLoadingProvider({ children }: { children: React.ReactNode })
         return;
       }
 
-      // Ignore pure hash anchors on the same page
-      if (href.startsWith("#")) {
+      // Ignore pure hash anchors or in-page hash anchors
+      if (href.startsWith("#") || href.startsWith("/#")) {
         return;
       }
 
@@ -175,7 +175,20 @@ export function PageLoadingProvider({ children }: { children: React.ReactNode })
       }
     };
 
+    let lastUrl = typeof window !== "undefined" ? window.location.href : "";
+
     const handlePopState = () => {
+      const currentUrl = window.location.href;
+      try {
+        const next = new URL(currentUrl);
+        const prev = new URL(lastUrl);
+        lastUrl = currentUrl;
+        if (next.pathname === prev.pathname && next.search === prev.search) {
+          return;
+        }
+      } catch {
+        // Ignore
+      }
       showLoading("Loading OptionPilot...");
     };
 
