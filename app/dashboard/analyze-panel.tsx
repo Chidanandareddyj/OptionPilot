@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ThinkingOrb } from "thinking-orbs";
+import { parseStoredDecision } from "@/lib/analysis";
 import DerivativesBoard from "./derivatives-board";
 import StrategyExplorer from "./strategy-explorer";
+import { STRATEGY_DEFINITIONS } from "./types";
 
 type Snapshot = {
   id?: string;
@@ -21,7 +23,7 @@ type Suggestion = {
 };
 
 // Quick-access chips displayed directly below the search bar
-const QUICK = ["NIFTY", "BANKNIFTY", "RELIANCE", "TCS", "HDFCBANK", "INFY"];
+const QUICK = ["NIFTY", "BANKNIFTY", "RELIANCE", "TCS", "INFY"];
 
 // Popular / Trending companies shown in the dropdown before user types anything
 // (Curated to be DIFFERENT from the QUICK chips above)
@@ -332,6 +334,9 @@ function SymbolSearch({
 
   return (
     <div ref={containerRef} className="relative flex-1">
+      <label htmlFor="fo-search-input" className="sr-only">
+        Search F&O symbol or company name
+      </label>
       <div className="relative flex items-center">
         {/* Search Icon */}
         <div className="pointer-events-none absolute left-3.5 text-white/40">
@@ -341,6 +346,8 @@ function SymbolSearch({
         </div>
 
         <input
+          id="fo-search-input"
+          name="symbol"
           ref={inputRef}
           value={value}
           onChange={handleInputChange}
@@ -353,6 +360,8 @@ function SymbolSearch({
           aria-autocomplete="list"
           aria-expanded={open}
           aria-haspopup="listbox"
+          aria-controls="fo-symbol-suggestions"
+          aria-label="Search F&O symbol or company name"
           className="w-full rounded-md border border-white/15 bg-white/5 py-2 pl-9 pr-8 text-sm text-white placeholder:text-white/40 focus:border-sky-400 focus:bg-white/[0.08] focus:outline-none disabled:opacity-60"
         />
 
@@ -361,8 +370,9 @@ function SymbolSearch({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-2.5 flex h-5 w-5 items-center justify-center rounded-full text-xs text-white/40 hover:bg-white/10 hover:text-white"
+            className="absolute right-2.5 flex h-5 w-5 items-center justify-center rounded-full text-xs text-white/40 hover:bg-white/10 hover:text-white cursor-pointer"
             title="Clear search"
+            aria-label="Clear search"
           >
             ✕
           </button>
@@ -380,10 +390,11 @@ function SymbolSearch({
           </div>
 
           {suggestions.length > 0 ? (
-            <ul role="listbox" className="max-h-72 overflow-y-auto divide-y divide-white/5 py-1">
+            <ul id="fo-symbol-suggestions" role="listbox" className="max-h-72 overflow-y-auto divide-y divide-white/5 py-1">
               {suggestions.map((s, i) => (
                 <li
                   key={s.symbol}
+                  id={`fo-suggestion-${s.symbol}`}
                   role="option"
                   aria-selected={i === activeIdx}
                   onPointerDown={(e) => {
@@ -432,11 +443,24 @@ export default function AnalyzePanel({ history }: { history: Snapshot[] }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showBoard, setShowBoard] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  useEffect(() => {
+    if (!historyOpen) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setHistoryOpen(false);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [historyOpen]);
 
   async function analyze(target: string) {
     target = target.trim();
     if (!target) return;
     setShowBoard(false);
+    setHistoryOpen(false);
     setCompany(target);
     setError(null);
     setPending(true);
@@ -459,38 +483,40 @@ export default function AnalyzePanel({ history }: { history: Snapshot[] }) {
   }
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:px-8">
-      <section className="min-w-0">
-        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              analyze(company);
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+      {/* Search & Command Card */}
+      <div className="rounded-xl border border-white/12 bg-white/[0.04] p-4 sm:p-5 shadow-sm">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            analyze(company);
+          }}
+          className="flex flex-col gap-2.5 sm:flex-row"
+        >
+          <SymbolSearch
+            value={company}
+            onChange={setCompany}
+            onSelect={(symbol) => {
+              analyze(symbol);
             }}
-            className="flex flex-col gap-2.5 sm:flex-row"
+            disabled={pending}
+          />
+          <button
+            type="submit"
+            disabled={pending}
+            className="inline-flex items-center justify-center gap-2 rounded-[5px] bg-white px-5 py-2 text-[12px] font-semibold text-[#0a1f5c] hover:bg-white/90 disabled:opacity-70 shadow-sm transition-all cursor-pointer"
           >
-            <SymbolSearch
-              value={company}
-              onChange={setCompany}
-              onSelect={(symbol) => {
-                analyze(symbol);
-              }}
-              disabled={pending}
-            />
-            <button
-              type="submit"
-              disabled={pending}
-              className="inline-flex items-center justify-center gap-2 rounded-[5px] bg-white px-5 py-2 text-[12px] font-medium text-[#0a1f5c] hover:bg-white/90 disabled:opacity-70"
-            >
-              {pending && (
-                <ThinkingOrb state="listening" size={20} theme="light" color="#0a1f5c" aria-label="Listening…" />
-              )}
-              {pending ? "Calculating…" : "Analyze"}
-            </button>
-          </form>
+            {pending && (
+              <ThinkingOrb state="listening" size={20} theme="light" color="#0a1f5c" aria-label="Listening…" />
+            )}
+            {pending ? "Calculating…" : "Analyze"}
+          </button>
+        </form>
 
-          {/* Quick-access chips */}
-          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        {/* Command Sub-Bar */}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
+          {/* Quick Tickers */}
+          <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Quick</span>
             {QUICK.map((sym) => (
               <button
@@ -500,86 +526,195 @@ export default function AnalyzePanel({ history }: { history: Snapshot[] }) {
                 onClick={() => {
                   analyze(sym);
                 }}
-                className="rounded border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[11px] text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-50"
+                className="rounded border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[11px] text-white/70 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {sym}
               </button>
             ))}
+          </div>
+
+          {/* Action Triggers */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setHistoryOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-[5px] border border-white/15 bg-white/5 px-3 py-1 text-[11.5px] font-medium text-white/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+            >
+              <svg className="size-3.5 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>History ({history.length})</span>
+            </button>
             <button
               type="button"
               onClick={() => setShowBoard((v) => !v)}
-              className={`ml-auto rounded border px-2.5 py-0.5 text-[11px] font-medium ${
-                showBoard ? "border-sky-400/70 bg-sky-500/25 text-white" : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+              className={`rounded-[5px] border px-3 py-1 text-[11.5px] font-medium transition-colors cursor-pointer ${
+                showBoard
+                  ? "border-sky-400/70 bg-sky-500/25 text-white"
+                  : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
               }`}
             >
               {showBoard ? "Hide all derivatives" : "Show all derivatives"}
             </button>
           </div>
         </div>
+      </div>
 
-        {showBoard && <DerivativesBoard onAnalyze={analyze} />}
+      {error && (
+        <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 font-mono text-xs text-rose-200">
+          {error}
+        </p>
+      )}
 
-        {error && (
-          <p className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 font-mono text-xs text-rose-200">{error}</p>
-        )}
+      {/* Strict Mutual Exclusivity: Live Market vs Analyze */}
+      {showBoard ? (
+        <DerivativesBoard onAnalyze={analyze} />
+      ) : pending ? (
+        <div className="animate-pulse space-y-3 rounded-xl border border-white/12 bg-white/[0.04] p-4 sm:p-6">
+          <div className="h-16 rounded bg-white/5" />
+          <div className="h-56 rounded bg-white/5" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="h-40 rounded bg-white/5" />
+            <div className="h-40 rounded bg-white/5" />
+          </div>
+        </div>
+      ) : active ? (
+        <StrategyExplorer
+          key={active.id ?? "latest"}
+          data={active.result}
+          company={active.company}
+          analysisId={active.id}
+          decision={active.decision}
+        />
+      ) : (
+        <div className="rounded-xl border border-dashed border-white/12 bg-white/[0.02] p-10 text-center">
+          <h3 className="font-serif text-lg text-white">No option chain loaded</h3>
+          <p className="mx-auto mt-1 max-w-sm text-xs text-white/50">
+            Enter an index or stock symbol above to price all 12 strategies and their payoffs.
+          </p>
+        </div>
+      )}
 
-        {showBoard ? null : pending ? (
-          <div className="mt-6 animate-pulse space-y-3 rounded-xl border border-white/10 p-4 sm:p-6">
-            <div className="h-16 rounded bg-white/5" />
-            <div className="h-56 rounded bg-white/5" />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="h-40 rounded bg-white/5" />
-              <div className="h-40 rounded bg-white/5" />
+      {/* Slide-Out History Glass Drawer */}
+      {historyOpen && (
+        <>
+          {/* Dark backdrop overlay */}
+          <div
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setHistoryOpen(false)}
+            aria-hidden="true"
+          />
+          {/* Sheet */}
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Analysis History"
+            className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-white/15 bg-[#07245c]/95 backdrop-blur-2xl shadow-2xl animate-in slide-in-from-right duration-200"
+          >
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <div>
+                <h2 className="font-serif text-xl tracking-tight text-white">Analysis History</h2>
+                <p className="text-[11px] text-white/50">
+                  {history.length} saved snapshot{history.length === 1 ? "" : "s"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHistoryOpen(false)}
+                aria-label="Close history drawer"
+                className="flex size-7 items-center justify-center rounded-lg border border-white/10 text-white/60 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+              {history.length === 0 ? (
+                <div className="py-16 text-center font-mono text-xs text-white/40">
+                  NO SAVED ANALYSES
+                </div>
+              ) : (
+                history.map((item) => {
+                  const stored = parseStoredDecision(item.decision);
+                  const singleDec =
+                    stored.mode === "single" && stored.single && typeof stored.single === "object"
+                      ? (stored.single as { view?: string; best?: { key?: string } | null })
+                      : null;
+                  const bestKey = singleDec?.best?.key;
+                  const bestName = bestKey ? (STRATEGY_DEFINITIONS[bestKey]?.name ?? bestKey) : null;
+                  const resObj = item.result && typeof item.result === "object" ? (item.result as Record<string, unknown>) : null;
+                  const spot =
+                    typeof resObj?.underlying_spot_price === "number"
+                      ? resObj.underlying_spot_price
+                      : typeof resObj?.spot_price === "number"
+                        ? resObj.spot_price
+                        : null;
+
+                  const createdAtDate = item.createdAt ? new Date(item.createdAt) : null;
+                  const formattedTime =
+                    createdAtDate && !isNaN(createdAtDate.getTime())
+                      ? createdAtDate.toLocaleString("en-IN", {
+                          timeZone: "Asia/Kolkata",
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : null;
+
+                  const isSelected = active?.id && item.id ? active.id === item.id : false;
+
+                  return (
+                    <button
+                      key={item.id ?? `${item.company}-${item.createdAt}`}
+                      type="button"
+                      onClick={() => {
+                        setActive(item);
+                        setShowBoard(false);
+                        setHistoryOpen(false);
+                      }}
+                      className={`w-full rounded-xl border p-3.5 text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? "border-sky-400/70 bg-[#082054] shadow-md shadow-sky-500/10"
+                          : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]"
+                      }`}
+                    >
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="font-mono text-base font-bold text-sky-300">{item.company}</span>
+                        {spot != null && (
+                          <span className="font-mono text-xs tabular-nums text-white/80">
+                            ₹{Number(spot).toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 2 })}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        {bestName && singleDec?.view ? (
+                          <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
+                            {singleDec.view} · {bestName}
+                          </span>
+                        ) : stored.mode === "compare" ? (
+                          <span className="rounded border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-300">
+                            Dual Compare View
+                          </span>
+                        ) : (
+                          <span className="rounded border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/50">
+                            12 Strategies
+                          </span>
+                        )}
+                      </div>
+                      {formattedTime && (
+                        <div className="mt-2 text-[10.5px] font-mono text-white/40">
+                          {formattedTime} IST
+                        </div>
+                      )}
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
-        ) : active ? (
-          <StrategyExplorer
-            key={active.id ?? "latest"}
-            data={active.result}
-            company={active.company}
-            analysisId={active.id}
-            decision={active.decision}
-          />
-        ) : (
-          <div className="mt-10 rounded-xl border border-dashed border-white/10 p-10 text-center">
-            <h3 className="font-serif text-lg">No option chain loaded</h3>
-            <p className="mx-auto mt-1 max-w-sm text-xs text-white/50">
-              Enter an index or stock symbol above to price all 12 strategies and their payoffs.
-            </p>
-          </div>
-        )}
-      </section>
-
-      <aside className="order-first min-w-0 rounded-xl border border-white/10 bg-white/[0.02] p-4 lg:order-none lg:self-start">
-        <h2 className="flex items-center justify-between border-b border-white/10 pb-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">
-          Saved snapshots
-          <span className="font-mono tracking-normal text-white/60">{history.length}</span>
-        </h2>
-        {history.length === 0 ? (
-          <p className="py-6 text-center font-mono text-xs text-white/40">NO SAVED ANALYSES</p>
-        ) : (
-          <ul className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:max-h-[32rem] lg:flex-col lg:overflow-y-auto lg:pb-0 lg:pr-1">
-            {history.map((item) => (
-              <li key={item.id} className="w-44 shrink-0 lg:w-auto">
-                <button
-                  type="button"
-                  onClick={() => setActive(item)}
-                  className={`w-full rounded-lg border p-3 text-left transition-colors ${
-                    active?.id === item.id
-                      ? "border-sky-400/70 bg-[#082054]"
-                      : "border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]"
-                  }`}
-                >
-                  <div className="truncate text-sm font-semibold">{item.company}</div>
-                  <div className="mt-1 font-mono text-[11px] text-white/40">
-                    {item.createdAt?.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </aside>
+        </>
+      )}
     </div>
   );
 }

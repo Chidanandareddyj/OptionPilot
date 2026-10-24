@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePageTransition } from "@/app/components/loading-overlay";
+import { OptionPilotLogo } from "@/app/components/OptionPilotLogo";
 
 import { ThinkingOrb } from "thinking-orbs";
 
@@ -62,14 +63,6 @@ function Clock() {
   );
 }
 
-function Mark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.6">
-      <path d="M12 2 22 12 12 22 2 12Z" />
-      <path d="M12 7v10M7 12h10" />
-    </svg>
-  );
-}
 
 export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   const { navigateWithLoader } = usePageTransition();
@@ -118,6 +111,10 @@ export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boole
 
   const handleNavClick = (sectionId: string) => {
     setMobileMenuOpen(false);
+    if (sectionId === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
@@ -143,7 +140,7 @@ export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boole
           }}
           className="flex items-center gap-2 text-[18px] sm:text-[19px] font-semibold tracking-tight text-white hover:text-white/80 transition-colors cursor-pointer"
         >
-          <Mark className="size-5 text-sky-400" />
+          <OptionPilotLogo variant="adaptive" className="size-7 sm:size-7.5 text-white shrink-0" />
           <span>OptionPilot</span>
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
@@ -258,7 +255,7 @@ export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boole
             }}
             className="flex items-center gap-2.5 text-[22px] font-semibold tracking-tight text-white hover:text-white/80 transition-colors cursor-pointer"
           >
-            <Mark className="size-6 text-sky-400" />
+            <OptionPilotLogo variant="adaptive" className="size-8 sm:size-8.5 text-white shrink-0" />
             <span>OptionPilot</span>
           </Link>
           <div className="hero-meta flex items-center gap-6">
@@ -503,7 +500,11 @@ export default function LandingPage({ isLoggedIn = false }: { isLoggedIn?: boole
           <a
             key={n}
             href={SECTIONS[n] ? `#${SECTIONS[n]}` : "#top"}
-            className="rounded-full px-3.5 py-1.5 text-center text-[12px] font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors tracking-wide"
+            onClick={(e) => {
+              e.preventDefault();
+              handleNavClick(SECTIONS[n] || "top");
+            }}
+            className="rounded-full px-3.5 py-1.5 text-center text-[12px] font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors tracking-wide cursor-pointer"
           >
             {n}
           </a>

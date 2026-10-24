@@ -1,13 +1,9 @@
-import React from "react";
+import { OptionPilotLogo } from "@/app/components/OptionPilotLogo";
 
 export function OptionPilotMark({ className = "size-8" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.6">
-      <path d="M12 2 22 12 12 22 2 12Z" />
-      <path d="M12 7v10M7 12h10" />
-    </svg>
-  );
+  return <OptionPilotLogo className={className} variant="adaptive" />;
 }
+
 
 export interface LoadingScreenProps {
   statusText?: string;
@@ -35,7 +31,7 @@ export default function LoadingScreen({
         {/* Glowing Logo Mark */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative animate-pulse">
-            <OptionPilotMark className="size-8 text-sky-200 drop-shadow-[0_0_16px_rgba(56,189,248,0.7)]" />
+            <OptionPilotMark className="size-10 text-white drop-shadow-[0_0_16px_rgba(37,180,182,0.8)]" />
           </div>
         </div>
       </div>

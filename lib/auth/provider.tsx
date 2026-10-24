@@ -81,10 +81,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <NeonAuthUIProvider
       authClient={authClient as ComponentProps<typeof NeonAuthUIProvider>["authClient"]}
       navigate={(href) => {
+        if (
+          typeof window !== "undefined" &&
+          (window.location.pathname.includes("email-verification") ||
+            window.location.pathname.includes("email-otp"))
+        ) {
+          window.dispatchEvent(
+            new CustomEvent("optionpilot-email-verified", {
+              detail: { nextUrl: "/auth/sign-in" },
+            })
+          );
+          return;
+        }
         showLoading(href.includes("dashboard") ? "Entering Strategy Terminal..." : "Loading OptionPilot...");
         router.push(href);
       }}
       replace={(href) => {
+        if (
+          typeof window !== "undefined" &&
+          (window.location.pathname.includes("email-verification") ||
+            window.location.pathname.includes("email-otp"))
+        ) {
+          window.dispatchEvent(
+            new CustomEvent("optionpilot-email-verified", {
+              detail: { nextUrl: "/auth/sign-in" },
+            })
+          );
+          return;
+        }
         showLoading(href.includes("dashboard") ? "Entering Strategy Terminal..." : "Loading OptionPilot...");
         router.replace(href);
       }}
@@ -93,7 +117,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       redirectTo="/dashboard"
       defaultTheme="dark"
       social={{ providers: ["google"], signIn: socialSignIn as ProviderSocialSignIn }}
-      emailOTP
+      credentials={{ confirmPassword: true }}
+      emailVerification={{ otp: true }}
+      localization={{
+        SIGN_UP_ACTION: "Next",
+        EMAIL_VERIFICATION_DESCRIPTION: "Please enter the OTP sent to your email",
+        EMAIL_VERIFICATION_SUCCESS:
+          "Email verified successfully! Welcome to OptionPilot. Please sign in to access your dashboard.",
+      }}
       avatar
       organization
     >
