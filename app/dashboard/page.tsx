@@ -2,8 +2,6 @@ import { auth } from "@/lib/auth/server";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import AnalyzePanel from "./analyze-panel";
-import DashboardHeader from "./header";
-import DashboardBackground from "./dashboard-background";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +26,6 @@ export default async function DashboardPage() {
     select: { id: true, company: true, result: true, decision: true, createdAt: true },
   });
 
-  return (
-    <main className="relative min-h-screen text-white">
-      <DashboardBackground />
-      <DashboardHeader name={session.user.name} />
-      <AnalyzePanel history={history} />
-    </main>
-  );
+  const { name, email, image } = session.user;
+  return <AnalyzePanel history={history} user={{ name, email, image }} />;
 }
