@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
 import { AuthView } from "@neondatabase/auth-ui";
 import { useRouter } from "next/navigation";
 import { usePageTransition } from "@/app/components/loading-overlay";
 import { authClient } from "@/lib/auth/client";
+import { Button } from "@/components/ui/button";
 
 const EYE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;pointer-events:none"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>`;
 
@@ -13,13 +15,6 @@ const EYE_OFF_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="
 const CHECK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block"><polyline points="20 6 9 17 4 12"/></svg>`;
 
 const CROSS_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-
-// Hide the browser's own "reveal password" icon (Edge/IE) so it never shows as a 2nd eye.
-const HIDE_NATIVE_REVEAL_CSS = `
-.auth-neon-scope input::-ms-reveal,
-.auth-neon-scope input::-ms-clear { display: none !important; }
-.auth-neon-scope input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events: none; position: absolute; right: 0; }
-`;
 
 const isOurToggle = (el: Element) => el.hasAttribute("data-password-toggle");
 
@@ -189,12 +184,12 @@ export default function AuthViewClient({ path }: { path: string }) {
           "border:0",
           "outline:none",
           "cursor:pointer",
-          "color:rgba(255,255,255,0.5)",
+          "color:var(--muted-foreground)",
           "z-index:30",
         ].join(";");
 
-        btn.addEventListener("mouseenter", () => (btn.style.color = "#fff"));
-        btn.addEventListener("mouseleave", () => (btn.style.color = "rgba(255,255,255,0.5)"));
+        btn.addEventListener("mouseenter", () => (btn.style.color = "var(--foreground)"));
+        btn.addEventListener("mouseleave", () => (btn.style.color = "var(--muted-foreground)"));
 
         const updateState = () => {
           const isShown = input.type === "text";
@@ -278,7 +273,7 @@ export default function AuthViewClient({ path }: { path: string }) {
                 errorEl = document.createElement("div");
                 errorEl.setAttribute("data-signup-custom-error", "true");
                 errorEl.style.cssText =
-                  "padding:10px 14px;border-radius:8px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;font-size:0.8rem;margin-bottom:12px;line-height:1.4;";
+                  "padding:8px 12px;border-radius:8px;background:var(--card);border:1px solid var(--destructive);color:var(--destructive);font-size:0.875rem;margin-bottom:12px;line-height:1.4;";
                 form.insertBefore(errorEl, form.firstChild);
               }
 
@@ -420,12 +415,12 @@ export default function AuthViewClient({ path }: { path: string }) {
             feedback.style.display = "flex";
             if (confirmVal === passVal) {
               feedback.innerHTML = `${CHECK_SVG} <span>Passwords match</span>`;
-              feedback.style.color = "#34d399"; // emerald-400
-              confirmInput.style.borderColor = "rgba(52, 211, 153, 0.6)";
+              feedback.style.color = "var(--profit)";
+              confirmInput.style.borderColor = "var(--profit)";
             } else {
               feedback.innerHTML = `${CROSS_SVG} <span>Passwords do not match</span>`;
-              feedback.style.color = "#f87171"; // rose-400
-              confirmInput.style.borderColor = "rgba(248, 113, 113, 0.6)";
+              feedback.style.color = "var(--loss)";
+              confirmInput.style.borderColor = "var(--loss)";
             }
           };
 
@@ -471,52 +466,39 @@ export default function AuthViewClient({ path }: { path: string }) {
   }, [path]);
 
   return (
-    <div ref={containerRef} className="dark auth-neon-scope w-full flex justify-center relative">
-      <style>{HIDE_NATIVE_REVEAL_CSS}</style>
-
+    <div ref={containerRef} className="auth-form relative flex w-full justify-center">
       <AuthView path={path} redirectTo={redirectTo} />
 
-      {/* On-screen email verified confirmation modal */}
       {showVerifiedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#020b1f]/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-sm rounded-2xl border border-cyan-500/30 bg-[#04173d]/95 p-6 sm:p-7 shadow-2xl shadow-cyan-950/60 text-center flex flex-col items-center relative overflow-hidden">
-            {/* Ambient inner glow */}
-            <div className="absolute -top-16 inset-x-0 h-32 bg-cyan-500/15 blur-2xl pointer-events-none" />
-
-            {/* Glowing checkmark badge */}
-            <div className="relative size-14 rounded-full bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mb-4 shadow-lg shadow-emerald-500/20">
-              <svg className="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="email-verified-title"
+            className="flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl bg-popover p-6 text-center ring-1 ring-foreground/10"
+          >
+            <CheckCircleIcon aria-hidden weight="fill" className="size-12 text-profit" />
+            <div className="flex flex-col gap-2">
+              <h3 id="email-verified-title" className="text-xl font-semibold tracking-tight">
+                Email verified
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Welcome to OptionPilot. Please sign in to access your dashboard.
+              </p>
             </div>
-
-            <h3 className="text-xl font-bold tracking-tight text-white mb-2">
-              Email Verified!
-            </h3>
-            <p className="text-sm text-white/80 leading-relaxed mb-6 font-sans">
-              Email verified successfully! Welcome to OptionPilot. Please sign in to access your dashboard.
+            <p role="status" className="num text-xs text-muted-foreground">
+              Redirecting to sign in in {countdown}s
             </p>
-
-            {/* Countdown indicator */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-cyan-300 font-mono mb-5">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-              </span>
-              Redirecting to login in {countdown}s...
-            </div>
-
-            {/* Direct action button */}
-            <button
-              type="button"
+            <Button
+              size="lg"
+              className="w-full font-semibold"
               onClick={() => {
                 showLoading("Loading OptionPilot...");
                 router.push("/auth/sign-in");
               }}
-              className="w-full py-2.5 px-4 rounded-lg bg-white hover:bg-white/90 text-[#07245c] font-semibold text-sm transition-all duration-150 cursor-pointer shadow-md hover:shadow-white/20 active:scale-[0.98]"
             >
-              Go to Login Now
-            </button>
+              Go to sign in now
+            </Button>
           </div>
         </div>
       )}
