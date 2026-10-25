@@ -105,6 +105,15 @@
 
   --animate-tick-flash: tick-flash 0.9s ease-out;
 
+  @keyframes loading-bar {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(300%);
+    }
+  }
+
   @keyframes tick-flash {
     from {
       background-color: color-mix(in srgb, var(--primary) 35%, transparent);
@@ -208,9 +217,17 @@
   height: 28px;
 }
 
+/* Hide the browser's own reveal icon so it never shows as a second eye. */
 .auth-form input::-ms-reveal,
 .auth-form input::-ms-clear {
-  display: none;
+  display: none !important;
+}
+
+.auth-form input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
 }
 
 .auth-form [data-slot="input-otp"] {

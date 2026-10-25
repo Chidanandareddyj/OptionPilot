@@ -1,50 +1,25 @@
-import { OptionPilotLogo } from "@/app/components/OptionPilotLogo";
-
-export function OptionPilotMark({ className = "size-8" }: { className?: string }) {
-  return <OptionPilotLogo className={className} variant="adaptive" />;
-}
-
+import { cn } from "@/lib/utils";
+import { Logo } from "./brand";
 
 export interface LoadingScreenProps {
   statusText?: string;
   className?: string;
 }
 
-export default function LoadingScreen({
-  statusText = "Loading OptionPilot...",
-  className = "",
-}: LoadingScreenProps) {
+export default function LoadingScreen({ statusText = "Loading OptionPilot...", className }: LoadingScreenProps) {
   return (
     <div
       role="status"
       aria-live="polite"
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#051a44]/95 backdrop-blur-md transition-opacity duration-300 select-none ${className}`}
+      className={cn("fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-4 bg-background/95 select-none", className)}
     >
-      {/* Subtle Ambient Radial Glow */}
-      <div className="absolute h-96 w-96 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
-
-      {/* Centered Mark with Rotating Halo */}
-      <div className="relative flex items-center justify-center">
-        {/* Outer spinning ring */}
-        <div className="h-20 w-20 rounded-full border-2 border-sky-400/20 border-t-sky-400 border-r-sky-300 animate-spin" />
-
-        {/* Glowing Logo Mark */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative animate-pulse">
-            <OptionPilotMark className="size-10 text-white drop-shadow-[0_0_16px_rgba(37,180,182,0.8)]" />
-          </div>
-        </div>
+      <Logo className="size-10 rounded-lg [&_svg]:size-6" />
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-base font-semibold text-foreground">OptionPilot</span>
+        <span className="text-sm text-muted-foreground">{statusText}</span>
       </div>
-
-      {/* Brand Name & Loading Message */}
-      <div className="mt-6 flex flex-col items-center gap-1.5 text-center">
-        <span className="font-sans text-[17px] font-semibold tracking-tight text-white">
-          OptionPilot
-        </span>
-        <div className="flex items-center gap-2 text-xs font-mono text-sky-200/70 tracking-wider">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
-          <span>{statusText}</span>
-        </div>
+      <div aria-hidden className="h-1 w-32 overflow-hidden rounded-full bg-accent">
+        <div className="h-full w-1/3 animate-[loading-bar_1.1s_ease-in-out_infinite] rounded-full bg-primary motion-reduce:animate-none" />
       </div>
     </div>
   );
