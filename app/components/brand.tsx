@@ -1,20 +1,24 @@
 import { cn } from "@/lib/utils";
+import { OptionPilotLogo } from "./OptionPilotLogo";
 
-export function Logo({ className }: { className?: string }) {
+/**
+ * The owner's brand mark in the variant meant for the active palette: "original" (navy ring) on Paper,
+ * "adaptive" (ring in the text colour) on Saffron. Both render so the swap is pure CSS and SSR-safe.
+ */
+export function BrandMark({ className }: { className?: string }) {
   return (
-    <span className={cn("grid size-6 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground", className)}>
-      <svg width={16} height={16} viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <path d="M2 12 L6 12 L10 4 L14 4" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </span>
+    <>
+      <OptionPilotLogo aria-hidden variant="original" className={cn("size-8 shrink-0 dark:hidden", className)} />
+      <OptionPilotLogo aria-hidden variant="adaptive" className={cn("hidden size-8 shrink-0 text-foreground dark:block", className)} />
+    </>
   );
 }
 
-/** Logo plus wordmark. `compact` hides the wordmark visually on small screens. */
+/** Brand mark plus wordmark. `compact` hides the wordmark visually on small screens. */
 export function Brand({ compact, className }: { compact?: boolean; className?: string }) {
   return (
     <span className={cn("flex items-center gap-2 text-base font-semibold text-foreground", className)}>
-      <Logo />
+      <BrandMark />
       <span className={cn(compact && "max-sm:sr-only")}>OptionPilot</span>
     </span>
   );

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Logo } from "./brand";
+import { BrandMark } from "./brand";
 
 export interface LoadingScreenProps {
   statusText?: string;
@@ -13,7 +13,7 @@ export default function LoadingScreen({ statusText = "Loading OptionPilot...", c
       aria-live="polite"
       className={cn("fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-4 bg-background/95 select-none", className)}
     >
-      <Logo className="size-10 rounded-lg [&_svg]:size-6" />
+      <BrandMark className="size-12" />
       <div className="flex flex-col items-center gap-2">
         <span className="text-base font-semibold text-foreground">OptionPilot</span>
         <span className="text-sm text-muted-foreground">{statusText}</span>

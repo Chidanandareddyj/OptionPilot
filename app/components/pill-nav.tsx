@@ -13,7 +13,7 @@ export function PillNav({ children, className, brandHref = "/" }: { children?: R
         className,
       )}
     >
-      <Link href={brandHref} className="rounded-full py-1 pr-3 pl-2 outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+      <Link href={brandHref} className="rounded-full py-0.5 pr-3 pl-2 outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
         <Brand compact />
       </Link>
       {children}
