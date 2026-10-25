@@ -23,7 +23,7 @@ export const STRATEGY_COLUMNS = [
   { label: "#" },
   { label: "Strategy" },
   { label: "View" },
-  { label: "Net debit or credit", numeric: true },
+  { label: "Debit or credit", numeric: true },
   { label: "Max profit", numeric: true },
   { label: "Max loss", numeric: true },
   { label: "Breakeven", numeric: true },
@@ -90,11 +90,13 @@ export default function StrategyRow({
         </div>
       </TableCell>
       <TableCell className="px-3">
-        <ViewBadge view={category} />
+        <ViewBadge view={category} className={cn(selected && "bg-background")} />
       </TableCell>
       <TableCell className="num px-3 text-right text-sm">
-        <span className="mr-2 font-sans text-xs text-muted-foreground">{costOrCredit.label}</span>
-        {inr(costOrCredit.amount)}
+        <div className="flex flex-col items-end">
+          {inr(costOrCredit.amount)}
+          <span className="font-sans text-xs text-muted-foreground">{costOrCredit.label}</span>
+        </div>
       </TableCell>
       <TableCell className="num px-3 text-right text-sm text-profit">
         {typeof maxProfit === "number" ? signedInr(maxProfit, 2) : (maxProfit ?? "—")}
@@ -119,7 +121,7 @@ export default function StrategyRow({
         )}
       </TableCell>
       <TableCell className="px-3">
-        <Sparkline points={payoffPoints(payoffTable)} width={88} height={32} />
+        <Sparkline points={payoffPoints(payoffTable)} width={72} height={32} />
       </TableCell>
     </TableRow>
   );

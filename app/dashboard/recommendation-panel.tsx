@@ -294,12 +294,12 @@ function RecommendationPane({
           >
             {decision.strategies.map((s, i) => (
               <AccordionItem key={s.key} value={s.key}>
-                <AccordionTrigger className="items-center gap-3 hover:no-underline">
+                <AccordionTrigger className="min-w-0 items-center gap-3 hover:no-underline">
                   <span className="num w-6 text-xs text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
                   <span className="min-w-0 flex-1 truncate">{nameOf(s.key)}</span>
                   <Badge variant="outline" className={cn("h-6 rounded-md px-2 font-normal", s.viable ? "text-profit" : "text-loss")}>
                     {s.viable ? <CheckIcon aria-hidden /> : <XIcon aria-hidden />}
-                    {s.viable ? "Viable" : "Not viable"}
+                    <span className="max-sm:sr-only">{s.viable ? "Viable" : "Not viable"}</span>
                   </Badge>
                   <span aria-hidden className={cn("h-1 w-24 overflow-hidden rounded-full bg-accent", compact ? "hidden xl:block" : "max-sm:hidden")}>
                     <span className="block h-full bg-primary" style={{ width: `${s.score}%` }} />

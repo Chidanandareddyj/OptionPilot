@@ -107,7 +107,7 @@ export function HistorySheet({
                   <div className="flex flex-col items-end gap-1">
                     {spot != null && (
                       <span className="num text-sm">
-                        ₹{Number(spot).toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 2 })}
+                        ₹{Number(spot).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     )}
                     {formattedTime && <span className="text-xs text-muted-foreground">{formattedTime} IST</span>}

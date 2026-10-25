@@ -177,7 +177,7 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
   const parseRupees = (s: string) => (s.trim() === "" || Number.isNaN(Number(s)) ? null : Number(s));
 
   const status =
-    conn === "reconnecting" ? "Reconnecting…" : !feed ? "Connecting…" : !feed.live ? "Syncing…" : null;
+    conn === "reconnecting" ? "Reconnecting…" : !feed ? "Connecting…" : !feed.live && marketOpen ? "Syncing…" : null;
 
   const count = `Showing ${visible.length} of ${evaluations.length} contracts${unavailable ? `, ${unavailable} unavailable` : ""}`;
 
