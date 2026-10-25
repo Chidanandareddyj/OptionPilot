@@ -1,3 +1,6 @@
+/* Neon Auth ships its own layer with a global border-color reset; keep it below utilities. */
+@layer theme, base, neon-auth, components, utilities;
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -254,4 +257,11 @@
 
 .settings-view input {
   background-color: var(--muted);
+}
+
+/* Neon Auth's toasts (sonner) pick their own light/dark theme; pin them to the active palette. */
+:root [data-sonner-toaster][data-sonner-theme] {
+  --normal-bg: var(--popover);
+  --normal-text: var(--popover-foreground);
+  --normal-border: var(--border);
 }
