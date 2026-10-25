@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Area, CartesianGrid, ComposedChart, Line, ReferenceDot, ReferenceLine, XAxis, YAxis } from "recharts";
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,24 @@ export type PayoffChartProps = {
   illustrative?: boolean;
   className?: string;
 };
+
+const MARGIN = { top: 36, right: 24, bottom: 8, left: 8 };
+// Rough glyph widths for the label fonts, used to keep labels from colliding.
+const SANS_12 = 6.6;
+const MONO_13 = 7.8;
+
+function useWidth() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return [ref, width] as const;
+}
 
 const HALO = { stroke: "var(--background)", strokeWidth: 4, style: { paintOrder: "stroke" } } as const;
 
@@ -162,9 +181,24 @@ export function PayoffChart({
   const lossSide = trough?.side === profitSide ? (profitSide === "right" ? "left" : "right") : (trough?.side ?? "left");
   const unboundedHint = (side: "left" | "right") => (side === "right" ? "Keeps growing as price rises" : "Keeps growing as price falls");
 
+  const [ref, width] = useWidth();
+  const plotWidth = Math.max(width - MARGIN.left - MARGIN.right - (illustrative ? 8 : 64), 1);
+  const px = (v: number) => ((v - xmin) / (xmax - xmin || 1)) * plotWidth;
+
   const visibleStrikes = strikes.filter((s) => s.price >= xmin && s.price <= xmax);
-  const staggered = visibleStrikes.length > 2;
+  const staggered = visibleStrikes.some((s, i) => {
+    const next = visibleStrikes[i + 1];
+    return next && px(next.price) - px(s.price) < ((s.label.length + next.label.length) * SANS_12) / 2 + 12;
+  });
   const visibleBreakevens = breakevens.filter((b) => b > xmin && b < xmax);
+  const breakevenText = (b: number) => (illustrative ? "Breakeven" : `Breakeven ${price(b, 2)}`);
+  const breakevenSide = (b: number, i: number): "left" | "right" => {
+    const preferred = visibleBreakevens.length > 1 ? (i === 0 ? "left" : "right") : spot !== undefined && b > spot ? "right" : "left";
+    const room = breakevenText(b).length * MONO_13 + 12;
+    if (preferred === "right" && px(b) + room > plotWidth) return "left";
+    if (preferred === "left" && px(b) - room < 0) return "right";
+    return preferred;
+  };
   const showSpot = spot !== undefined && spot >= xmin && spot <= xmax;
 
   const summary = illustrative
@@ -172,124 +206,126 @@ export function PayoffChart({
     : `Expiry payoff from ${price(xmin)} to ${price(xmax)}. ${limitText("profit", maxProfit ?? hi, false)}. ${limitText("loss", maxLoss ?? lo, false)}.`;
 
   return (
-    <ChartContainer
-      config={config}
-      role="img"
-      aria-label={summary}
-      className={cn("aspect-auto w-full [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground", className)}
-      style={{ height }}
-    >
-      <ComposedChart data={data} margin={{ top: 36, right: 24, bottom: 8, left: 8 }}>
-        <CartesianGrid vertical={false} stroke="var(--border)" />
-        <XAxis
-          type="number"
-          dataKey="price"
-          domain={[xmin, xmax]}
-          ticks={xticks}
-          tick={!illustrative}
-          tickLine={false}
-          axisLine={false}
-          tickMargin={8}
-          tickFormatter={(v: number) => price(v)}
-          height={staggered ? 72 : 52}
-          className="num"
-        />
-        <YAxis
-          type="number"
-          domain={y.domain}
-          ticks={y.ticks}
-          tick={!illustrative}
-          tickLine={false}
-          axisLine={false}
-          width={illustrative ? 8 : 64}
-          tickMargin={4}
-          tickFormatter={compactSigned}
-          className="num"
-        />
-        <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeOpacity={0.6} />
-        <Area dataKey="profit" type="linear" baseValue={0} fill="var(--color-profit)" fillOpacity={0.2} stroke="none" isAnimationActive={false} activeDot={false} />
-        <Area dataKey="loss" type="linear" baseValue={0} fill="var(--color-loss)" fillOpacity={0.2} stroke="none" isAnimationActive={false} activeDot={false} />
-        {visibleStrikes.map((s, i) => (
-          <ReferenceLine
-            key={s.price}
-            x={s.price}
-            stroke="var(--border)"
-            strokeDasharray="2 4"
-            label={(p: LabelProps) => <StrikeLabel viewBox={p.viewBox} text={s.label} row={staggered ? i % 2 : 0} />}
+    <div ref={ref} className="w-full min-w-0">
+      <ChartContainer
+        config={config}
+        role="img"
+        aria-label={summary}
+        className={cn("aspect-auto w-full [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground", className)}
+        style={{ height }}
+      >
+        <ComposedChart data={data} margin={MARGIN}>
+          <CartesianGrid vertical={false} stroke="var(--border)" />
+          <XAxis
+            type="number"
+            dataKey="price"
+            domain={[xmin, xmax]}
+            ticks={xticks}
+            tick={!illustrative}
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            tickFormatter={(v: number) => price(v)}
+            height={staggered ? 72 : 52}
+            className="num"
           />
-        ))}
-        {showSpot && (
-          <ReferenceLine
-            x={spot}
-            stroke="var(--primary)"
-            strokeWidth={1.5}
-            strokeDasharray="4 4"
-            label={(p: LabelProps) => <SpotLabel viewBox={p.viewBox} text={illustrative ? "Spot" : `Spot ${price(spot, 2)}`} />}
+          <YAxis
+            type="number"
+            domain={y.domain}
+            ticks={y.ticks}
+            tick={!illustrative}
+            tickLine={false}
+            axisLine={false}
+            width={illustrative ? 8 : 64}
+            tickMargin={4}
+            tickFormatter={compactSigned}
+            className="num"
           />
-        )}
-        {maxProfit !== null && (
-          <ReferenceLine
-            y={hi}
-            stroke="none"
-            label={(p: LabelProps) => (
-              <SideLabel
-                viewBox={p.viewBox}
-                value={limitText("profit", maxProfit ?? hi, illustrative)}
-                sub={maxProfit === "Unlimited" ? unboundedHint(profitSide) : illustrative ? undefined : peak?.hint}
-                color="var(--profit)"
-                side={profitSide}
-                dy={-24}
-              />
-            )}
-          />
-        )}
-        {maxLoss !== null && (
-          <ReferenceLine
-            y={lo}
-            stroke="none"
-            label={(p: LabelProps) => (
-              <SideLabel
-                viewBox={p.viewBox}
-                value={limitText("loss", maxLoss ?? lo, illustrative)}
-                sub={maxLoss === "Unlimited" ? unboundedHint(lossSide) : illustrative ? undefined : trough?.hint}
-                color="var(--loss)"
-                side={lossSide}
-                dy={28}
-              />
-            )}
-          />
-        )}
-        <Line
-          dataKey="pnl"
-          type="linear"
-          stroke="var(--color-pnl)"
-          strokeWidth={2}
-          dot={false}
-          isAnimationActive={false}
-          activeDot={illustrative ? false : { r: 5, fill: "var(--primary)", stroke: "var(--card)", strokeWidth: 2 }}
-        />
-        {visibleStrikes.map((s) => (
-          <ReferenceDot key={s.price} x={s.price} y={pnlAt(points, s.price)} r={5} fill="var(--card)" stroke="var(--foreground)" strokeWidth={2} />
-        ))}
-        {visibleBreakevens.map((b, i) => {
-          const side = visibleBreakevens.length > 1 ? (i === 0 ? "left" : "right") : spot !== undefined && b > spot ? "right" : "left";
-          return (
-            <ReferenceDot
-              key={b}
-              x={b}
-              y={0}
-              r={5}
-              fill="var(--foreground)"
-              stroke="var(--card)"
-              strokeWidth={2}
+          <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeOpacity={0.6} />
+          <Area dataKey="profit" type="linear" baseValue={0} fill="var(--color-profit)" fillOpacity={0.2} stroke="none" isAnimationActive={false} activeDot={false} />
+          <Area dataKey="loss" type="linear" baseValue={0} fill="var(--color-loss)" fillOpacity={0.2} stroke="none" isAnimationActive={false} activeDot={false} />
+          {visibleStrikes.map((s, i) => (
+            <ReferenceLine
+              key={s.price}
+              x={s.price}
+              stroke="var(--border)"
+              strokeDasharray="2 4"
+              label={(p: LabelProps) => <StrikeLabel viewBox={p.viewBox} text={s.label} row={staggered ? i % 2 : 0} />}
+            />
+          ))}
+          {showSpot && (
+            <ReferenceLine
+              x={spot}
+              stroke="var(--primary)"
+              strokeWidth={1.5}
+              strokeDasharray="4 4"
+              label={(p: LabelProps) => <SpotLabel viewBox={p.viewBox} text={illustrative ? "Spot" : `Spot ${price(spot, 2)}`} />}
+            />
+          )}
+          {maxProfit !== null && (
+            <ReferenceLine
+              y={hi}
+              stroke="none"
               label={(p: LabelProps) => (
-                <BreakevenLabel viewBox={p.viewBox} side={side} text={illustrative ? "Breakeven" : `Breakeven ${price(b, 2)}`} />
+                <SideLabel
+                  viewBox={p.viewBox}
+                  value={limitText("profit", maxProfit ?? hi, illustrative)}
+                  sub={maxProfit === "Unlimited" ? unboundedHint(profitSide) : illustrative ? undefined : peak?.hint}
+                  color="var(--profit)"
+                  side={profitSide}
+                  dy={-24}
+                />
               )}
             />
-          );
-        })}
-        {!illustrative && <ChartTooltip cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }} content={<Tip />} />}
-      </ComposedChart>
-    </ChartContainer>
+          )}
+          {maxLoss !== null && (
+            <ReferenceLine
+              y={lo}
+              stroke="none"
+              label={(p: LabelProps) => (
+                <SideLabel
+                  viewBox={p.viewBox}
+                  value={limitText("loss", maxLoss ?? lo, illustrative)}
+                  sub={maxLoss === "Unlimited" ? unboundedHint(lossSide) : illustrative ? undefined : trough?.hint}
+                  color="var(--loss)"
+                  side={lossSide}
+                  dy={28}
+                />
+              )}
+            />
+          )}
+          <Line
+            dataKey="pnl"
+            type="linear"
+            stroke="var(--color-pnl)"
+            strokeWidth={2}
+            dot={false}
+            isAnimationActive={false}
+            activeDot={illustrative ? false : { r: 5, fill: "var(--primary)", stroke: "var(--card)", strokeWidth: 2 }}
+          />
+          {visibleStrikes.map((s) => (
+            <ReferenceDot key={s.price} x={s.price} y={pnlAt(points, s.price)} r={5} fill="var(--card)" stroke="var(--foreground)" strokeWidth={2} />
+          ))}
+          {visibleBreakevens.map((b, i) => {
+            const side = breakevenSide(b, i);
+            return (
+              <ReferenceDot
+                key={b}
+                x={b}
+                y={0}
+                r={5}
+                fill="var(--foreground)"
+                stroke="var(--card)"
+                strokeWidth={2}
+                label={(p: LabelProps) => (
+                  <BreakevenLabel viewBox={p.viewBox} side={side} text={breakevenText(b)} />
+                )}
+              />
+            );
+          })}
+          {!illustrative && <ChartTooltip cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }} content={<Tip />} />}
+        </ComposedChart>
+      </ChartContainer>
+    </div>
   );
 }
