@@ -1,22 +1,52 @@
 "use client";
 
 import { useState } from "react";
-import PayoffChart from "./payoff-chart";
-import { CATEGORY_BADGE, inr, keyMetrics, type NormalizedStrategy } from "./types";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { PayoffChart } from "@/app/components/payoff-chart";
+import { ViewBadge } from "@/app/components/view-badge";
+import { signedInr } from "@/lib/payoff-series";
+import { cn } from "@/lib/utils";
+import { payoffPoints, strikeMarkers } from "./payoff-points";
+import { inr, keyMetrics, type NormalizedStrategy } from "./types";
 
-const TABS = [
-  { id: "payoff", label: "Payoff" },
-  { id: "table", label: "Payoff table" },
-  { id: "legs", label: "Legs" },
-] as const;
+const STAT_TIPS: Record<string, string> = {
+  Spot: "Last traded price of the underlying",
+  "Max profit": "Best case at expiry for the position",
+  "Max loss": "Worst case at expiry for the position",
+  Breakeven: "Price at expiry where P&L is zero",
+  Breakevens: "Prices at expiry where P&L is zero",
+  "Risk : reward": "Max loss against max profit",
+};
 
-const TH = "px-3 py-2.5 font-semibold first:pl-4 last:pr-4";
-const TD = "px-3 py-2 first:pl-4 last:pr-4";
+function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  const tip = STAT_TIPS[label.replace(/ \(.*\)$/, "")] ?? "Premium paid or received for the whole position";
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <dt tabIndex={0} className="w-fit cursor-help text-sm text-muted-foreground outline-none focus-visible:underline">
+            {label}
+          </dt>
+        </TooltipTrigger>
+        <TooltipContent>{tip}</TooltipContent>
+      </Tooltip>
+      <dd className={cn("num truncate text-xl font-medium", tone)}>{value}</dd>
+    </div>
+  );
+}
+
+const pnlTone = (v: number) => (v > 0 ? "text-profit" : v < 0 ? "text-loss" : "text-foreground");
 
 export default function StrategyDetail({ strategy }: { strategy: NormalizedStrategy }) {
-  const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("payoff");
-  const { name, category, description, spotPrice, legs, maxProfit, maxLoss, breakevens, payoffTable } = strategy;
+  const [tab, setTab] = useState("payoff");
+  const { name, category, description, spotPrice, lotSize, legs, maxProfit, maxLoss, breakevens, payoffTable, costOrCredit } = strategy;
 
+  const points = payoffPoints(payoffTable);
   const legColumns = Object.keys(payoffTable[0] ?? {}).filter((k) => k !== "closing_price" && k !== "net_pl");
   const atmIndex = payoffTable.reduce(
     (best, row, i) =>
@@ -24,129 +54,145 @@ export default function StrategyDetail({ strategy }: { strategy: NormalizedStrat
     0,
   );
   const metrics = [
-    { label: "Spot", value: inr(spotPrice), tone: "text-sky-300" },
+    { label: "Spot", value: inr(spotPrice), tone: "text-foreground" },
     ...keyMetrics(strategy),
     {
       label: "Risk : reward",
       value: typeof maxProfit === "number" && typeof maxLoss === "number" && maxLoss > 0 ? `1 : ${(maxProfit / maxLoss).toFixed(2)}` : "Uncapped",
-      tone: "text-indigo-300",
+      tone: "text-foreground",
     },
   ];
 
   return (
-    <div className="rounded-xl border border-white/12 bg-white/[0.04] p-4 sm:p-5">
-      <div className="border-b border-white/10 pb-4">
+    <Card className="@container gap-4 p-6">
+      <div className="flex flex-col gap-2 @3xl:flex-row @3xl:items-start @3xl:gap-4">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="font-serif text-2xl tracking-tight sm:text-3xl text-white">{name}</h2>
-          <span className={`rounded border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${CATEGORY_BADGE[category]}`}>
-            {category}
-          </span>
+          <h2 className="text-3xl font-semibold tracking-tight">{name}</h2>
+          <ViewBadge view={category} />
         </div>
-        <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-white/65">{description}</p>
+        <p className="max-w-md text-sm text-muted-foreground @3xl:ml-auto @3xl:text-right">{description}</p>
       </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-3 2xl:grid-cols-6">
+      <dl className="grid grid-cols-2 gap-4 @xl:grid-cols-3 @5xl:grid-cols-6">
         {metrics.map((m) => (
-          <div key={m.label} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-            <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">{m.label}</dt>
-            <dd className={`mt-1 font-mono text-sm tabular-nums font-semibold ${m.tone}`}>{m.value}</dd>
-          </div>
+          <Stat key={m.label} {...m} />
         ))}
       </dl>
 
-      <div className="mt-6 flex gap-1.5 overflow-x-auto border-b border-white/10 pb-2.5">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={`shrink-0 rounded-[5px] border px-3 py-1 text-xs font-medium transition-all ${
-              tab === t.id
-                ? "border-sky-400/50 bg-[#0a276b] text-white shadow-sm"
-                : "border-transparent text-white/60 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            {t.label}
-            {t.id === "table" && ` (${payoffTable.length})`}
-            {t.id === "legs" && ` (${legs.length})`}
-          </button>
-        ))}
-      </div>
+      <Tabs value={tab} onValueChange={setTab} className="gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <TabsList className="h-10 p-1">
+            <TabsTrigger value="payoff" className="px-3">
+              Payoff
+            </TabsTrigger>
+            <TabsTrigger value="table" className="gap-2 px-3">
+              Payoff table <span className="num text-xs text-muted-foreground">{payoffTable.length}</span>
+            </TabsTrigger>
+            <TabsTrigger value="legs" className="gap-2 px-3">
+              Legs <span className="num text-xs text-muted-foreground">{legs.length}</span>
+            </TabsTrigger>
+          </TabsList>
+          <span className="text-sm text-muted-foreground @3xl:ml-auto">
+            Expiry P&amp;L for one lot{lotSize > 1 && <> of <span className="num">{lotSize.toLocaleString("en-IN")}</span></>}. Hover the chart to read any price.
+          </span>
+        </div>
 
-      <div className="mt-4">
-        {tab === "payoff" && <PayoffChart payoffTable={payoffTable} spotPrice={spotPrice} breakevens={breakevens} />}
+        <TabsContent value="payoff" className="rounded-xl bg-background p-4">
+          {points.length > 1 ? (
+            <PayoffChart
+              points={points}
+              spot={spotPrice}
+              breakevens={breakevens}
+              strikes={strikeMarkers(legs)}
+              maxProfit={maxProfit}
+              maxLoss={maxLoss}
+            />
+          ) : (
+            <Empty className="h-72">
+              <EmptyHeader>
+                <EmptyTitle>No payoff data</EmptyTitle>
+                <EmptyDescription>The calculator returned no payoff table for this strategy.</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
+        </TabsContent>
 
-        {tab === "table" && (
-          <div className="max-h-96 overflow-auto rounded-xl border border-white/12 bg-white/[0.03] text-xs">
-            <table className="w-full whitespace-nowrap text-left">
-              <thead className="sticky top-0 border-b border-white/10 bg-[#061e4f] text-[10px] uppercase tracking-wider text-white/50 backdrop-blur-md">
-                <tr>
-                  <th className={TH}>Closing price</th>
+        <TabsContent value="table" className="rounded-xl bg-background p-2">
+          <div className="max-h-[480px] overflow-auto">
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-background">
+                <TableRow>
+                  <TableHead className="px-4 py-3 text-sm">Price at expiry</TableHead>
                   {legColumns.map((k) => (
-                    <th key={k} className={TH}>{k.replace(/_/g, " ")}</th>
+                    <TableHead key={k} className="px-4 py-3 text-right text-sm capitalize">
+                      {k.replace(/_/g, " ")}
+                    </TableHead>
                   ))}
-                  <th className={`${TH} text-right`}>Net P&amp;L</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 font-mono tabular-nums">
+                  <TableHead className="px-4 py-3 text-right text-sm">Net P&amp;L</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {payoffTable.map((row, i) => (
-                  <tr key={row.closing_price} className={i === atmIndex ? "bg-sky-500/15 text-sky-100" : "hover:bg-white/[0.03]"}>
-                    <td className={TD}>
-                      ₹{row.closing_price.toLocaleString("en-IN")}
-                      {i === atmIndex && <span className="ml-2 font-sans text-[9px] font-semibold uppercase text-sky-300">ATM</span>}
-                    </td>
+                  <TableRow key={row.closing_price} className={cn("h-8", i === atmIndex && "bg-accent hover:bg-accent")}>
+                    <TableCell className="num px-4 py-1 text-sm">
+                      {row.closing_price.toLocaleString("en-IN")}
+                      {i === atmIndex && <Badge className="ml-3 h-5 rounded px-2 text-xs">Spot</Badge>}
+                    </TableCell>
                     {legColumns.map((k) => (
-                      <td key={k} className={`${TD} text-white/70`}>₹{row[k]}</td>
+                      <TableCell key={k} className="num px-4 py-1 text-right text-sm text-muted-foreground">
+                        {signedInr(row[k], 2)}
+                      </TableCell>
                     ))}
-                    <td className={`${TD} text-right font-semibold ${row.net_pl > 0 ? "text-emerald-400" : row.net_pl < 0 ? "text-rose-400" : "text-white/70"}`}>
-                      {row.net_pl > 0 && "+"}
-                      {inr(row.net_pl)}
-                    </td>
-                  </tr>
+                    <TableCell className={cn("num px-4 py-1 text-right text-sm", pnlTone(row.net_pl))}>{signedInr(row.net_pl, 2)}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
-        )}
+        </TabsContent>
 
-        {tab === "legs" && (
-          <div className="overflow-x-auto rounded-xl border border-white/12 bg-white/[0.03] text-xs">
-            <table className="w-full whitespace-nowrap text-left">
-              <thead className="border-b border-white/10 bg-white/[0.03] text-[10px] font-semibold uppercase tracking-wider text-white/50">
-                <tr>
-                  <th className={TH}>Leg</th>
-                  <th className={TH}>Action</th>
-                  <th className={TH}>Type</th>
-                  <th className={TH}>Strike</th>
-                  <th className={TH}>Premium</th>
-                  <th className={TH}>Instrument</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 font-mono tabular-nums">
-                {legs.map((leg) => (
-                  <tr key={leg.label} className="hover:bg-white/[0.03]">
-                    <td className={`${TD} font-sans capitalize text-white font-medium`}>{leg.label}</td>
-                    <td className={`${TD} font-sans font-semibold uppercase ${leg.action === "Buy" ? "text-emerald-300" : "text-amber-300"}`}>
-                      {leg.action}
-                      {leg.qty > 1 && ` ×${leg.qty}`}
-                    </td>
-                    <td className={TD}>
-                      <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-sans font-semibold uppercase ${
-                        leg.type === "call" ? "bg-sky-500/15 text-sky-300 border border-sky-400/30" : "bg-indigo-500/15 text-indigo-300 border border-indigo-400/30"
-                      }`}>
-                        {leg.type === "call" ? "CE (Call)" : "PE (Put)"}
-                      </span>
-                    </td>
-                    <td className={`${TD} font-semibold text-white`}>₹{leg.strike.toLocaleString("en-IN")}</td>
-                    <td className={`${TD} text-sky-200`}>{leg.premium === undefined ? "—" : `₹${leg.premium.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}</td>
-                    <td className={`${TD} text-[11px] text-white/40`}>{leg.instrumentKey ?? "—"}</td>
-                  </tr>
+        <TabsContent value="legs" className="rounded-xl bg-background p-2">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {["Leg", "Action", "Strike", "Premium", "Instrument"].map((h, i) => (
+                  <TableHead key={h} className={cn("px-4 py-3 text-sm", i === 3 && "text-right")}>
+                    {h}
+                  </TableHead>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {legs.map((leg) => (
+                <TableRow key={leg.label} className="h-12">
+                  <TableCell className="px-4 text-sm capitalize">{leg.label}</TableCell>
+                  <TableCell className="px-4">
+                    <Badge variant="outline" className="h-6 rounded-md px-2 text-xs">
+                      {leg.action}
+                      {leg.qty > 1 && <span className="num">×{leg.qty}</span>}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="num px-4 text-sm">
+                    {leg.strike.toLocaleString("en-IN")} {leg.type === "call" ? "CE" : "PE"}
+                  </TableCell>
+                  <TableCell className="num px-4 text-right text-sm">{leg.premium === undefined ? "—" : inr(leg.premium)}</TableCell>
+                  <TableCell className="num px-4 text-xs text-muted-foreground">{leg.instrumentKey ?? "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter className="bg-accent/60">
+              <TableRow className="h-12">
+                <TableCell colSpan={3} className="px-4 text-sm font-medium">
+                  {costOrCredit.label}
+                  {lotSize > 1 && <span className="font-normal text-muted-foreground"> for one lot</span>}
+                </TableCell>
+                <TableCell className="num px-4 text-right text-sm font-medium">{inr(costOrCredit.amount)}</TableCell>
+                <TableCell />
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </TabsContent>
+      </Tabs>
+    </Card>
   );
 }

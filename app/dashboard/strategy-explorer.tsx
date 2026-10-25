@@ -1,11 +1,20 @@
 "use client";
 
+import { CodeIcon, CopyIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { parseStoredDecision, type Pane } from "@/lib/analysis";
+import { cn } from "@/lib/utils";
 import RecommendationPanel, { type Decision } from "./recommendation-panel";
-import StrategyCard from "./strategy-card";
 import StrategyDetail from "./strategy-detail";
-import { normalizeStrategy, STRATEGY_DEFINITIONS, type Category } from "./types";
+import StrategyRow, { STRATEGY_COLUMNS } from "./strategy-row";
+import { normalizeStrategy, STRATEGY_DEFINITIONS, type Category, type NormalizedStrategy } from "./types";
 
 const FILTERS: { id: Category | "all"; label: string }[] = [
   { id: "all", label: "All" },
@@ -14,6 +23,9 @@ const FILTERS: { id: Category | "all"; label: string }[] = [
   { id: "neutral", label: "Neutral" },
   { id: "volatile", label: "Volatile" },
 ];
+
+const CHIP =
+  "h-9 gap-2 rounded-full px-3 text-sm data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground";
 
 type Payload = {
   underlying_key?: string;
@@ -31,6 +43,47 @@ function lotOf(value: unknown) {
   if (!value || typeof value !== "object") return 0;
   const n = (value as { lot_size?: unknown }).lot_size;
   return typeof n === "number" && n > 0 ? n : 0;
+}
+
+function ComparePane({
+  pane,
+  decision,
+  strategy,
+  focused,
+  onFocus,
+}: {
+  pane: Pane;
+  decision: Decision | null;
+  strategy: NormalizedStrategy | null;
+  focused: boolean;
+  onFocus: () => void;
+}) {
+  return (
+    <div
+      onClick={onFocus}
+      className={cn(
+        "flex min-w-0 cursor-pointer flex-col gap-2 rounded-2xl p-1 transition-opacity",
+        focused ? "ring-2 ring-primary" : "opacity-85 hover:opacity-100",
+      )}
+    >
+      <div className="flex items-center justify-between gap-2 px-2 pt-1">
+        <span className="text-sm font-medium capitalize">
+          {pane} pane{decision?.view && <span className="text-muted-foreground"> · {decision.view} view</span>}
+        </span>
+        {focused && <Badge className="h-6 rounded-md px-2">Active target</Badge>}
+      </div>
+      {strategy ? (
+        <StrategyDetail strategy={strategy} />
+      ) : (
+        <Empty className="rounded-xl bg-card ring-1 ring-foreground/10">
+          <EmptyHeader>
+            <EmptyTitle>Nothing to compare yet</EmptyTitle>
+            <EmptyDescription>Score the {pane} view above to compare.</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      )}
+    </div>
+  );
 }
 
 export default function StrategyExplorer({
@@ -125,83 +178,61 @@ export default function StrategyExplorer({
     (data.long_straddle as { strike_price?: number } | undefined)?.strike_price ??
     (data.short_straddle as { strike_price?: number } | undefined)?.strike_price;
   const gridSelectedKey = compareMode ? selectedByPane[focusPane] : active?.key;
+  const subtitle = [companyFullName !== companySymbol && companyFullName, instrumentId !== companySymbol && instrumentId]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <div className="mt-6 space-y-5">
-      <div className="rounded-xl border border-white/12 bg-white/[0.04] p-4 sm:p-5">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">Option chain</p>
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-3">
-              <h2 className="font-serif text-2xl sm:text-3xl tracking-tight text-white">
-                <span>{companySymbol}</span>
-                {instrumentId && instrumentId !== companySymbol && (
-                  <>
-                    <span className="mx-2 text-white/35 font-sans font-light">||</span>
-                    <span className="font-mono text-xl sm:text-2xl text-sky-200/90">{instrumentId}</span>
-                  </>
-                )}
-              </h2>
-              {spot > 0 && (
-                <span className="font-serif text-2xl sm:text-3xl tracking-tight text-sky-300">
-                  <span className="font-mono tabular-nums font-semibold">₹{spot.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
-                </span>
-              )}
-            </div>
-            {companyFullName && companyFullName !== companySymbol && (
-              <p className="mt-0.5 text-xs text-white/55 font-medium">{companyFullName}</p>
-            )}
-            <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs font-mono tabular-nums">
-              {spot > 0 && (
-                <div className="rounded-[5px] border border-white/15 bg-white/5 px-2.5 py-1 text-white/80">
-                  <span className="font-sans text-[10px] uppercase tracking-wider text-white/45 mr-1.5">Spot</span>
-                  <span className="font-semibold text-sky-300">₹{spot.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
-                </div>
-              )}
-              {atmStrike != null && (
-                <div className="rounded-[5px] border border-white/15 bg-white/5 px-2.5 py-1 text-white/80">
-                  <span className="font-sans text-[10px] uppercase tracking-wider text-white/45 mr-1.5">ATM Strike</span>
-                  <span className="font-semibold text-white">₹{Number(atmStrike).toLocaleString("en-IN")}</span>
-                </div>
-              )}
-              {data.expiry_date && (
-                <div className="rounded-[5px] border border-white/15 bg-white/5 px-2.5 py-1 text-white/80">
-                  <span className="font-sans text-[10px] uppercase tracking-wider text-white/45 mr-1.5">Expiry</span>
-                  <span className="text-white">{data.expiry_date}</span>
-                </div>
-              )}
-              {lotSize > 1 && (
-                <div className="rounded-[5px] border border-white/15 bg-white/5 px-2.5 py-1 text-white/80">
-                  <span className="font-sans text-[10px] uppercase tracking-wider text-white/45 mr-1.5">Lot Size</span>
-                  <span className="font-semibold text-emerald-300">{lotSize.toLocaleString("en-IN")}</span>
-                </div>
-              )}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowJson(!showJson)}
-            className="rounded-[5px] border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70 hover:border-white/25 hover:bg-white/10 hover:text-white transition-all"
-          >
-            {showJson ? "Hide JSON" : "Raw JSON"}
-          </button>
+    <div className="flex flex-col gap-4">
+      <header className="flex flex-wrap items-end gap-x-8 gap-y-4 px-2">
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="text-xs text-muted-foreground">NSE F&amp;O · option chain</span>
+          <h1 className="text-4xl font-semibold tracking-tight">{companySymbol}</h1>
+          {subtitle && <span className="truncate text-xs text-muted-foreground">{subtitle}</span>}
         </div>
-
-        {showJson && (
-          <div className="mt-4 border-t border-white/10 pt-3">
-            <button
-              type="button"
-              onClick={() => navigator.clipboard.writeText(JSON.stringify(data, null, 2))}
-              className="mb-2 text-[11px] text-sky-300 underline hover:text-sky-200"
-            >
-              Copy
-            </button>
-            <pre className="max-h-64 overflow-auto rounded-xl border border-white/10 bg-[#020d24] p-3 font-mono text-[11px] leading-relaxed text-sky-200/80">
-              {JSON.stringify(data, null, 2)}
-            </pre>
+        {spot > 0 && (
+          <div className="flex flex-col gap-1 pb-1">
+            <span className="text-xs text-muted-foreground">Spot</span>
+            <span className="num text-3xl font-medium">₹{spot.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
           </div>
         )}
-      </div>
+        <div className="flex flex-wrap items-center gap-2 pb-1 xl:ml-auto">
+          {atmStrike != null && (
+            <Badge variant="outline" className="num h-9 rounded-lg px-3 text-sm font-normal">
+              ATM {Number(atmStrike).toLocaleString("en-IN")}
+            </Badge>
+          )}
+          {data.expiry_date && (
+            <Badge variant="outline" className="num h-9 rounded-lg px-3 text-sm font-normal">
+              Expiry {data.expiry_date}
+            </Badge>
+          )}
+          {lotSize > 1 && (
+            <Badge variant="outline" className="num h-9 rounded-lg px-3 text-sm font-normal">
+              Lot {lotSize.toLocaleString("en-IN")}
+            </Badge>
+          )}
+          <Button variant="outline" size="lg" aria-expanded={showJson} onClick={() => setShowJson(!showJson)}>
+            <CodeIcon />
+            {showJson ? "Hide JSON" : "Raw JSON"}
+          </Button>
+        </div>
+      </header>
+
+      {showJson && (
+        <Card size="sm" className="gap-2 px-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Calculator response</span>
+            <Button variant="ghost" size="sm" onClick={() => navigator.clipboard.writeText(JSON.stringify(data, null, 2))}>
+              <CopyIcon />
+              Copy
+            </Button>
+          </div>
+          <pre className="num max-h-64 overflow-auto rounded-lg bg-background p-3 text-xs leading-relaxed text-muted-foreground">
+            {JSON.stringify(data, null, 2)}
+          </pre>
+        </Card>
+      )}
 
       <RecommendationPanel
         analysisId={analysisId}
@@ -216,62 +247,9 @@ export default function StrategyExplorer({
       />
 
       {compareMode ? (
-        <div ref={compareDetailRef} className="grid grid-cols-1 lg:grid-cols-2 gap-5 scroll-mt-20">
-          <div
-            onClick={() => setFocusPane("left")}
-            className={`space-y-2 rounded-xl transition-all cursor-pointer ${
-              focusPane === "left"
-                ? "ring-2 ring-emerald-400/40 p-1"
-                : "opacity-85 hover:opacity-100 p-1"
-            }`}
-          >
-            <div className="flex items-center justify-between px-1">
-              <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
-                Left Pane {left?.view ? `(${left.view} view)` : ""}
-              </span>
-              {focusPane === "left" && (
-                <span className="rounded-[4px] border border-sky-400/50 bg-[#0a276b] px-2 py-0.5 font-mono text-[10px] text-white">
-                  Active Target
-                </span>
-              )}
-            </div>
-            {leftActive ? (
-              <StrategyDetail strategy={leftActive} />
-            ) : (
-              <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center font-mono text-xs text-white/40">
-                Score the left view above to compare.
-              </div>
-            )}
-          </div>
-
-          <div
-            onClick={() => setFocusPane("right")}
-            className={`space-y-2 rounded-xl transition-all cursor-pointer ${
-              focusPane === "right"
-                ? "ring-2 ring-rose-400/40 p-1"
-                : "opacity-85 hover:opacity-100 p-1"
-            }`}
-          >
-            <div className="flex items-center justify-between px-1">
-              <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-rose-300 flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-rose-400 shadow-sm shadow-rose-400/50" />
-                Right Pane {right?.view ? `(${right.view} view)` : ""}
-              </span>
-              {focusPane === "right" && (
-                <span className="rounded-[4px] border border-sky-400/50 bg-[#0a276b] px-2 py-0.5 font-mono text-[10px] text-white">
-                  Active Target
-                </span>
-              )}
-            </div>
-            {rightActive ? (
-              <StrategyDetail strategy={rightActive} />
-            ) : (
-              <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center font-mono text-xs text-white/40">
-                Score the right view above to compare.
-              </div>
-            )}
-          </div>
+        <div ref={compareDetailRef} className="grid scroll-mt-20 grid-cols-1 gap-4 xl:grid-cols-2">
+          <ComparePane pane="left" decision={left} strategy={leftActive} focused={focusPane === "left"} onFocus={() => setFocusPane("left")} />
+          <ComparePane pane="right" decision={right} strategy={rightActive} focused={focusPane === "right"} onFocus={() => setFocusPane("right")} />
         </div>
       ) : (
         active && (
@@ -281,76 +259,105 @@ export default function StrategyExplorer({
         )
       )}
 
-      <div className="flex flex-col gap-3 border-b border-white/10 pb-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1">
-          {FILTERS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setFilter(f.id)}
-              className={`shrink-0 rounded-[5px] border px-3 py-1 text-xs font-medium transition-all ${
-                filter === f.id
-                  ? "border-sky-400/50 bg-[#0a276b] text-white shadow-sm"
-                  : "border-white/15 bg-white/5 text-white/70 hover:border-white/25 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              {f.label}{" "}
-              <span className="font-mono tabular-nums text-[10.5px] opacity-60">
-                {f.id === "all" ? strategies.length : strategies.filter((s) => s.category === f.id).length}
-              </span>
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-2.5">
+      <Card className="gap-4 p-6">
+        <CardHeader className="flex flex-row flex-wrap items-end gap-4 p-0">
+          <div className="flex flex-col gap-1">
+            <CardTitle className="text-xl font-semibold">Compare all {strategies.length} strategies</CardTitle>
+            <CardDescription>
+              {rankedDecision ? "Ranked by recommendation score." : "In catalogue order."} Select a row to load its payoff.
+            </CardDescription>
+          </div>
+          <div className="relative w-full sm:ml-auto sm:w-56">
+            <MagnifyingGlassIcon aria-hidden className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search strategy"
+              aria-label="Search strategy"
+              className="h-9 bg-muted pl-8"
+            />
+          </div>
+        </CardHeader>
+
+        <div className="flex flex-wrap items-center gap-4">
+          <ToggleGroup
+            type="single"
+            value={filter}
+            onValueChange={(v) => v && setFilter(v as Category | "all")}
+            variant="outline"
+            spacing={2}
+            aria-label="Filter by market view"
+            className="flex-wrap justify-start"
+          >
+            {FILTERS.map((f) => (
+              <ToggleGroupItem key={f.id} value={f.id} className={CHIP}>
+                {f.label}
+                <span className="num text-xs opacity-80">
+                  {f.id === "all" ? strategies.length : strategies.filter((s) => s.category === f.id).length}
+                </span>
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
           {compareMode && (
-            <div className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-xs">
-              <span className="font-semibold uppercase tracking-wider text-[10.5px] text-white/60">
-                Cards apply to:
-              </span>
-              <div className="inline-flex rounded-[5px] p-0.5 bg-[#020d24] border border-white/10">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground md:ml-auto">
+              Rows apply to
+              <ToggleGroup
+                type="single"
+                value={focusPane}
+                onValueChange={(v) => v && setFocusPane(v as Pane)}
+                variant="outline"
+                spacing={2}
+                aria-label="Pane that rows load into"
+              >
                 {(["left", "right"] as const).map((pane) => (
-                  <button
-                    key={pane}
-                    type="button"
-                    onClick={() => setFocusPane(pane)}
-                    className={`rounded-[4px] px-3 py-1 font-medium text-xs capitalize transition-all ${
-                      focusPane === pane
-                        ? "border border-sky-400/50 bg-[#0a276b] text-white shadow-sm shadow-sky-500/20 font-semibold"
-                        : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"
-                    }`}
-                  >
-                    {pane === "left" ? "Left" : "Right"}
-                  </button>
+                  <ToggleGroupItem key={pane} value={pane} className={cn(CHIP, "capitalize")}>
+                    {pane}
+                  </ToggleGroupItem>
                 ))}
-              </div>
+              </ToggleGroup>
             </div>
           )}
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search strategy..."
-            className="w-full rounded-[5px] border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-white/40 focus:border-sky-400 focus:outline-none sm:w-56 transition-colors"
-          />
         </div>
-      </div>
 
-      {visible.length > 0 ? (
-        <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
-          {visible.map((s) => (
-            <StrategyCard
-              key={s.key}
-              strategy={s}
-              selected={gridSelectedKey === s.key}
-              decision={ranked.get(s.key)}
-              recommended={rankedDecision?.best?.key === s.key}
-              onSelect={() => select(s.key)}
-            />
-          ))}
-        </div>
-      ) : (
-        <p className="rounded-xl border border-white/10 p-8 text-center font-mono text-xs text-white/40">NO MATCHING STRATEGIES</p>
-      )}
+        <CardContent className="p-0">
+          {visible.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  {STRATEGY_COLUMNS.map((c) => (
+                    <TableHead key={c.label} className={cn("px-3 py-3 text-sm", "numeric" in c && "text-right")}>
+                      {c.label}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visible.map((s) => (
+                  <StrategyRow
+                    key={s.key}
+                    strategy={s}
+                    index={strategies.indexOf(s)}
+                    selected={gridSelectedKey === s.key}
+                    decision={ranked.get(s.key)}
+                    recommended={rankedDecision?.best?.key === s.key}
+                    onSelect={() => select(s.key)}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <Empty className="py-12">
+              <EmptyHeader>
+                <EmptyTitle>No matching strategies</EmptyTitle>
+                <EmptyDescription>
+                  {strategies.length === 0 ? "The calculator returned no strategies for this symbol." : "Try another view or clear the search."}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

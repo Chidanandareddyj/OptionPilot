@@ -1,5 +1,5 @@
-import LoadingScreen from "@/app/components/LoadingScreen";
+import { SettingsSkeleton } from "@/app/components/settings-skeleton";
 
-export default function OrganizationLoading() {
-  return <LoadingScreen statusText="Loading Organization..." />;
+export default function Loading() {
+  return <SettingsSkeleton />;
 }
