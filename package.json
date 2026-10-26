@@ -16,6 +16,7 @@
   "overrides": {
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "@types/react": "19.3.0"
+    "@types/react": "19.3.0",
+    "react-native-gesture-handler": "3.3.0"
   }
 }
