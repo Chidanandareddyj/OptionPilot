@@ -1,16 +1,24 @@
 // Deep imports keep the bundle to the icons below. The package barrel pulls in all ~1,500.
 export { ArrowLeftIcon } from "phosphor-react-native/src/icons/ArrowLeft";
 export { ArrowRightIcon } from "phosphor-react-native/src/icons/ArrowRight";
+export { CaretLeftIcon } from "phosphor-react-native/src/icons/CaretLeft";
 export { CaretRightIcon } from "phosphor-react-native/src/icons/CaretRight";
 export { ChartLineUpIcon } from "phosphor-react-native/src/icons/ChartLineUp";
+export { CheckCircleIcon } from "phosphor-react-native/src/icons/CheckCircle";
 export { CheckIcon } from "phosphor-react-native/src/icons/Check";
 export { ClockCounterClockwiseIcon } from "phosphor-react-native/src/icons/ClockCounterClockwise";
 export { DeviceMobileIcon } from "phosphor-react-native/src/icons/DeviceMobile";
+export { EnvelopeSimpleIcon } from "phosphor-react-native/src/icons/EnvelopeSimple";
+export { EnvelopeSimpleOpenIcon } from "phosphor-react-native/src/icons/EnvelopeSimpleOpen";
+export { EyeIcon } from "phosphor-react-native/src/icons/Eye";
+export { EyeSlashIcon } from "phosphor-react-native/src/icons/EyeSlash";
 export { GearSixIcon } from "phosphor-react-native/src/icons/GearSix";
 export { GitBranchIcon } from "phosphor-react-native/src/icons/GitBranch";
 export { ListMagnifyingGlassIcon } from "phosphor-react-native/src/icons/ListMagnifyingGlass";
+export { LockKeyIcon } from "phosphor-react-native/src/icons/LockKey";
 export { MoonStarsIcon } from "phosphor-react-native/src/icons/MoonStars";
 export { ShieldCheckIcon } from "phosphor-react-native/src/icons/ShieldCheck";
+export { SignOutIcon } from "phosphor-react-native/src/icons/SignOut";
 export { SunIcon } from "phosphor-react-native/src/icons/Sun";
 export { WarningCircleIcon } from "phosphor-react-native/src/icons/WarningCircle";
 export { XIcon } from "phosphor-react-native/src/icons/X";

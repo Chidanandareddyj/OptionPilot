@@ -11,6 +11,8 @@ type ScreenProps = {
   bottomSpace?: number;
   /** Pad the top by the status bar and notch. Turn off under a native header. */
   topInset?: boolean;
+  /** A screen with text inputs: tapping a button keeps the keyboard handling it, and content clears the keyboard. */
+  form?: boolean;
   className?: string;
 };
 
@@ -20,6 +22,7 @@ export function Screen({
   scroll = false,
   bottomSpace = 0,
   topInset = true,
+  form = false,
   className,
 }: ScreenProps) {
   const insets = useScreenInsets();
@@ -30,9 +33,11 @@ export function Screen({
       <View className="flex-1 bg-background" style={{ paddingTop }}>
         <ScrollView
           className="flex-1"
-          contentContainerClassName={cn("px-4", className)}
+          contentContainerClassName={cn("px-4", form && "grow", className)}
           contentContainerStyle={{ paddingBottom: bottomSpace }}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps={form ? "handled" : "never"}
+          automaticallyAdjustKeyboardInsets={form}
         >
           {children}
         </ScrollView>

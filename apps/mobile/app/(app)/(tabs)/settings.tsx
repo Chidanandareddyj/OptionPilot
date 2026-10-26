@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { View } from "react-native";
-import { MoonStarsIcon } from "@/components/icons";
+import { MoonStarsIcon, SignOutIcon } from "@/components/icons";
 import { TAB_BAR_CLEARANCE } from "@/components/navigation/FloatingTabBar";
 import { Card, ListGroup, ListRow, Screen, Text } from "@/components/ui";
 import { APPEARANCE_LABELS } from "@/components/appearance/options";
@@ -32,11 +32,17 @@ export default function SettingsTab() {
         </ListGroup>
       </View>
 
+      <View className="mt-4">
+        <ListGroup>
+          <ListRow first danger icon={SignOutIcon} label="Sign out" onPress={() => router.push("/sign-out")} />
+        </ListGroup>
+      </View>
+
       <Card className="mt-4 gap-2 p-4">
         <Text size="xs" weight="medium" tone="primary">
           PLACEHOLDER · PHASE 11
         </Text>
-        <Text tone="muted">Profile, security, organizations and sign out arrive in phase 11.</Text>
+        <Text tone="muted">Profile, security and organizations arrive in phase 11.</Text>
       </Card>
     </Screen>
   );

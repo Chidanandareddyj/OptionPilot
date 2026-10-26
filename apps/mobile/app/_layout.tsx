@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { AuthProvider, useAuth } from "@/lib/auth";
 import { useAppFonts } from "@/lib/fonts";
 import { OnboardingProvider, useOnboarding } from "@/lib/onboarding";
 import { ThemeProvider, useTheme } from "@/lib/theme/ThemeProvider";
@@ -20,7 +21,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         <OnboardingProvider>
-          <Root />
+          <AuthProvider>
+            <Root />
+          </AuthProvider>
         </OnboardingProvider>
       </ThemeProvider>
     </SafeAreaProvider>
@@ -30,6 +33,8 @@ export default function RootLayout() {
 function Root() {
   const { scheme, colors, isReady: themeReady } = useTheme();
   const { seen, isReady: onboardingReady } = useOnboarding();
+  const { user, isReady: authReady } = useAuth();
+  const signedIn = user !== null;
   const fontsReady = useAppFonts();
   const [holdElapsed, setHoldElapsed] = useState(false);
 
@@ -38,7 +43,7 @@ function Root() {
     return () => clearTimeout(timer);
   }, []);
 
-  const ready = fontsReady && themeReady && onboardingReady && holdElapsed;
+  const ready = fontsReady && themeReady && onboardingReady && authReady && holdElapsed;
 
   return (
     <>
@@ -48,7 +53,10 @@ function Root() {
           <Stack.Protected guard={!seen}>
             <Stack.Screen name="(onboarding)" />
           </Stack.Protected>
-          <Stack.Protected guard={seen}>
+          <Stack.Protected guard={seen && !signedIn}>
+            <Stack.Screen name="(auth)" />
+          </Stack.Protected>
+          <Stack.Protected guard={seen && signedIn}>
             <Stack.Screen name="(app)" />
           </Stack.Protected>
         </Stack>
