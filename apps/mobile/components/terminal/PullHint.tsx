@@ -4,7 +4,7 @@ import { Text } from "@/components/ui";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 
 /** How far the list has to be pulled down, in points, before letting go refreshes. */
-export const PULL_THRESHOLD = 72;
+export const PULL_THRESHOLD = 56;
 
 type PullHintProps = { distance: number; refreshing: boolean };
 
@@ -22,9 +22,7 @@ export function PullHint({ distance, refreshing }: PullHintProps) {
       className="h-[72px] items-center justify-center gap-1"
       style={{ opacity: refreshing ? 1 : Math.min(1, distance / PULL_THRESHOLD) }}
     >
-      <View style={{ transform: [{ rotate: ready && !refreshing ? "180deg" : "0deg" }] }}>
-        <Icon size={24} weight="bold" color={colors.primary} />
-      </View>
+      <Icon size={24} weight="bold" color={colors.primary} />
       <Text size="xs" tone="muted">
         {text}
       </Text>

@@ -14,15 +14,15 @@ export function EmptyCompanies({ search, onClear }: EmptyCompaniesProps) {
       <View className="h-16 w-16 items-center justify-center rounded-xl bg-accent">
         <MagnifyingGlassIcon size={32} color={colors.mutedForeground} />
       </View>
-      <Text size="xl" weight="semibold">
+      <Text size="xl" weight="semibold" className="mt-1">
         No matching companies.
       </Text>
-      <Text size="sm" tone="muted" className="text-center">
+      <Text size="sm" tone="muted" className="mt-1 text-center">
         {text ? `Nothing matches “${text}” with these filters.` : "Nothing matches these filters."}
         {"\n"}
         Clear the search or reset the filters.
       </Text>
-      <Button label="Clear filters" variant="ghost" onPress={onClear} className="mt-3 self-center" />
+      <Button label="Clear filters" variant="ghost" onPress={onClear} className="mt-4 self-center" />
     </View>
   );
 }

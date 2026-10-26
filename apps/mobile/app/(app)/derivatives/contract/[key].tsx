@@ -43,7 +43,7 @@ export default function ContractSheet() {
             {evaluation?.symbol ?? company?.s ?? "Contract"}
           </Text>
           {evaluation ? (
-            <Text size="sm" tone="muted" mono numberOfLines={2}>
+            <Text size="sm" tone="muted" numberOfLines={2}>
               {`lot ${evaluation.lot.toLocaleString("en-IN")} · spot ${evaluation.spot.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · ${legSummary(evaluation.legs)} · ${shortExpiry(evaluation.expiry)}`}
             </Text>
           ) : null}
@@ -53,9 +53,9 @@ export default function ContractSheet() {
           accessibilityLabel="Close"
           onPress={close}
           hitSlop={8}
-          className="h-11 w-11 items-center justify-center rounded-full border border-border bg-card"
+          className="h-8 w-8 items-center justify-center rounded-full border border-border bg-card"
         >
-          <XIcon size={20} weight="bold" color={colors.foreground} />
+          <XIcon size={16} weight="bold" color={colors.foreground} />
         </Pressable>
       </View>
 
@@ -74,7 +74,7 @@ export default function ContractSheet() {
                     <Text size="xs" tone="muted">
                       {stat.label}
                     </Text>
-                    <Text size="xl" mono weight={stat.strong ? "semibold" : "medium"} tone={stat.tone ?? "foreground"} numberOfLines={1} adjustsFontSizeToFit>
+                    <Text mono weight="medium" tone={stat.tone ?? "foreground"} numberOfLines={1} adjustsFontSizeToFit>
                       {stat.value}
                     </Text>
                   </View>

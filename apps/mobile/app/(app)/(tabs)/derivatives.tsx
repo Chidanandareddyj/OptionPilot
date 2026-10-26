@@ -43,7 +43,7 @@ import {
   resetFilters,
   strategySegments,
 } from "@/lib/derivatives/model";
-import { useScreenInsets } from "@/lib/safe-area";
+import { PREVIEW_PULL, useScreenInsets } from "@/lib/safe-area";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 
 const NAV_BAR = 44;
@@ -73,7 +73,7 @@ export default function DerivativesTab() {
   const status = boardStatus({ online, conn, label, feed });
   const filters = filterChips(view);
 
-  const [pull, setPull] = useState(0);
+  const [pull, setPull] = useState(PREVIEW_PULL);
   const [refreshing, setRefreshing] = useState(false);
   const reconnect = useCallback(async () => {
     setRefreshing(true);
@@ -95,12 +95,12 @@ export default function DerivativesTab() {
   const renderItem = useCallback(({ item }: { item: (typeof cards)[number] }) => <ContractCard card={item} onPress={openContract} />, [openContract]);
 
   const note = staleNote(staleCount, view.hideStale);
-  const summary = feed ? `${boardCountText(visible.length, evaluations.length, unavailable)}${note ? `. ${note}.` : ""}` : "Waiting for prices…";
+  const summary = feed ? `${boardCountText(visible.length, evaluations.length, unavailable)}${note ? `${view.hideStale ? "." : ","} ${note}.` : ""}` : "Waiting for prices…";
 
   const header = (
     <View className="gap-4 pb-4">
       <View>
-        <View className="h-[44px] flex-row items-center justify-end">
+        <View className="h-[44px] flex-row items-center justify-end" style={pull > 0 ? { transform: [{ translateY: -pull }] } : undefined}>
           <StatusPill status={status} />
         </View>
         <Text size="sm" tone="muted">
@@ -140,7 +140,7 @@ export default function DerivativesTab() {
 
   return (
     <View className="flex-1 bg-background">
-      <View pointerEvents="none" className="absolute inset-x-0" style={{ top: insets.top + NAV_BAR }}>
+      <View pointerEvents="none" className="absolute inset-x-0" style={{ top: insets.top + NAV_BAR - 8 }}>
         <PullHint distance={pull} refreshing={refreshing} />
       </View>
       <FlatList<(typeof cards)[number]>
@@ -152,6 +152,7 @@ export default function DerivativesTab() {
         ListEmptyComponent={empty}
         ItemSeparatorComponent={Separator}
         className="flex-1"
+        style={PREVIEW_PULL ? { transform: [{ translateY: PREVIEW_PULL }] } : undefined}
         contentContainerClassName="px-4"
         contentContainerStyle={{ paddingTop: insets.top, paddingBottom: TAB_BAR_CLEARANCE }}
         showsVerticalScrollIndicator={false}

@@ -20,7 +20,7 @@ export function InfoBanner({ title, message, footnote }: InfoBannerProps) {
         </View>
       </View>
       {footnote ? (
-        <View className="flex-row items-center gap-2 self-start rounded-lg border border-border px-3 py-1.5">
+        <View className="ml-9 flex-row items-center gap-2">
           <View className="h-2 w-2 rounded-full bg-faint" />
           <Text size="xs" tone="muted">
             {footnote}

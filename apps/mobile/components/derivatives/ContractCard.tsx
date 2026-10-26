@@ -4,6 +4,9 @@ import { Text } from "@/components/ui";
 import type { ContractCard as Card } from "@/lib/derivatives/model";
 import { cn } from "@/lib/cn";
 
+/** The symbol row sits tighter than the type scale's line height, as in the design. */
+const TIGHT_LINE = { lineHeight: 20 };
+
 type ContractCardProps = { card: Card; onPress: (key: string) => void };
 
 /** One contract on the board: symbol and profit to risk, the contract in one line, then profit, loss and breakeven. Stale rows are faded. */
@@ -15,15 +18,15 @@ export const ContractCard = memo(function ContractCard({ card, onPress }: Contra
       accessibilityLabel={label}
       accessibilityHint="Opens the payoff"
       onPress={() => onPress(card.key)}
-      className={cn("gap-3 rounded-2xl border border-border bg-card px-4 py-4", card.stale && "opacity-60")}
+      className={cn("gap-3 rounded-2xl border border-border bg-card px-4 py-3.5", card.stale && "opacity-60")}
     >
       <View>
         <View className="flex-row items-baseline justify-between gap-2">
-          <Text size="xl" weight="semibold" numberOfLines={1} className="shrink">
+          <Text size="xl" weight="semibold" numberOfLines={1} className="shrink" style={TIGHT_LINE}>
             {card.symbol}
           </Text>
           <View className="flex-row items-baseline gap-2">
-            <Text size="xl" mono weight="medium">
+            <Text size="lg" mono weight="medium" style={TIGHT_LINE}>
               {card.roi}
             </Text>
             <Text size="xs" tone="muted">
@@ -31,7 +34,7 @@ export const ContractCard = memo(function ContractCard({ card, onPress }: Contra
             </Text>
           </View>
         </View>
-        <Text size="xs" mono tone="muted" numberOfLines={1} className="mt-0.5">
+        <Text size="xs" tone="muted" numberOfLines={1} className="mt-2">
           {card.meta}
         </Text>
       </View>

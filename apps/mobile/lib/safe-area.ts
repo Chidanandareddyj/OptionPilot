@@ -14,6 +14,9 @@ function previewInsets(): EdgeInsets | null {
 
 const PREVIEW = previewInsets();
 
+/** Review-only: a fixed pull distance (`EXPO_PUBLIC_PREVIEW_PULL=60`) so the pull-to-refresh hint can be shown on the web, which cannot bounce. */
+export const PREVIEW_PULL = Number(process.env.EXPO_PUBLIC_PREVIEW_PULL ?? 0) || 0;
+
 export function useScreenInsets(): EdgeInsets {
   const insets = useSafeAreaInsets();
   return PREVIEW ?? insets;
