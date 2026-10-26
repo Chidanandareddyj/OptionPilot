@@ -20,16 +20,26 @@ const row = (n: number, tag = "12 strategies"): AnalysisSummary => ({
 const FIRST = [row(1, "Neutral · Put Butterfly"), row(2, "Compare view"), row(3)];
 const SECOND = [row(4), row(5)];
 
-/** A server with two pages, a cursor between them, and deletes that can be told to fail. */
+/**
+ * A server with two pages, a cursor between them, and deletes that can be told to fail. It
+ * remembers what it deleted: a successful DELETE is followed by a refetch of the lists, and a
+ * server that kept answering with the deleted row made the assertions after it race that refetch.
+ */
 function server({ failDelete = false, firstPage = FIRST, secondPage = SECOND, hang = false } = {}) {
   const calls: { method: string; path: string }[] = [];
+  const deleted = new Set<string>();
+  const alive = (rows: AnalysisSummary[]) => rows.filter((item) => !deleted.has(item.id));
   mockApiFetch = jest.fn(async (path: string, init?: RequestInit) => {
     const method = init?.method ?? "GET";
     calls.push({ method, path });
     if (hang) return new Promise<Response>(() => {});
-    if (method === "DELETE") return failDelete ? failure(500, "Boom") : new Response(null, { status: 204 });
-    if (path === "/api/analyses") return new Response(JSON.stringify({ analyses: firstPage, nextCursor: secondPage.length ? "next-1" : null }));
-    if (path === "/api/analyses?cursor=next-1") return new Response(JSON.stringify({ analyses: secondPage, nextCursor: null }));
+    if (method === "DELETE") {
+      if (failDelete) return failure(500, "Boom");
+      deleted.add(path.split("/").pop()!);
+      return new Response(null, { status: 204 });
+    }
+    if (path === "/api/analyses") return new Response(JSON.stringify({ analyses: alive(firstPage), nextCursor: secondPage.length ? "next-1" : null }));
+    if (path === "/api/analyses?cursor=next-1") return new Response(JSON.stringify({ analyses: alive(secondPage), nextCursor: null }));
     return failure(404, "Not found");
   });
   return calls;
