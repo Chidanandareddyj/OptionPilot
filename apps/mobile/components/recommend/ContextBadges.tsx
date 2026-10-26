@@ -10,7 +10,7 @@ export function ContextBadges({ badges }: { badges: { label: string; value: stri
           key={badge.label}
           accessible
           accessibilityLabel={`${badge.label} ${badge.value}`}
-          className="h-6 flex-row items-center gap-1 rounded-md border border-border px-2"
+          className="h-7 flex-row items-center gap-1 rounded-md border border-border px-2"
         >
           <Text size="xs" tone="muted">
             {badge.label}

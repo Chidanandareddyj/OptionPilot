@@ -10,11 +10,7 @@ type BestPickCardProps = { pick: BestPick; onShowPayoff: () => void };
 export function BestPickCard({ pick, onShowPayoff }: BestPickCardProps) {
   const { colors } = useTheme();
   return (
-    <View
-      className="gap-3 rounded-2xl border border-primary bg-accent p-4"
-      accessible={false}
-      style={{ shadowColor: colors.primary, shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 0 } }}
-    >
+    <View className="gap-3 rounded-2xl border border-primary bg-accent p-4" accessible={false}>
       <View className="flex-row items-start justify-between gap-3">
         <View className="flex-1">
           <Text size="xs" tone="muted">
@@ -45,7 +41,7 @@ export function BestPickCard({ pick, onShowPayoff }: BestPickCardProps) {
         ))}
       </View>
 
-      <Pressable accessibilityRole="button" accessibilityLabel={`Show payoff for ${pick.name}`} onPress={onShowPayoff} hitSlop={8} className="min-h-[32px] flex-row items-center gap-1">
+      <Pressable accessibilityRole="button" accessibilityLabel={`Show payoff for ${pick.name}`} onPress={onShowPayoff} hitSlop={8} className="min-h-[24px] flex-row items-center gap-1">
         <Text size="sm" weight="medium" tone="foreground">
           Show payoff
         </Text>
