@@ -107,7 +107,7 @@ describe("Compare all (25 to 28)", () => {
 });
 
 describe("Compare views (29)", () => {
-  const pair = (): Decision => mergeCompareDecision(mergeCompareDecision(null, "left", decide("bullish")), "right", decide("bearish")) as Decision;
+  const pair = () => mergeCompareDecision(mergeCompareDecision(null, "left", decide("bullish")), "right", decide("bearish"));
 
   it("switches to two views and offers to recommend", async () => {
     useApi({ "GET /api/analyses/an-1": DETAIL });
