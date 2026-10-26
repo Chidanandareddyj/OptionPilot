@@ -6,7 +6,7 @@ export function HistorySkeleton() {
   return (
     <View className="gap-2" accessibilityLabel="Loading saved analyses" accessibilityRole="progressbar">
       {[0, 1, 2, 3, 4, 5].map((n) => (
-        <Card key={n} className="gap-3 px-4 pb-3 pt-[13px]">
+        <Card key={n} className="gap-[11px] px-4 pb-3 pt-[13px]">
           <View className="flex-row items-center justify-between">
             <Skeleton width={96} height={20} />
             <Skeleton width={71} height={20} />

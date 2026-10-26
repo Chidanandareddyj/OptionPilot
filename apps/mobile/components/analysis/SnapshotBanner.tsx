@@ -12,7 +12,7 @@ export function SnapshotBanner({ savedAt }: { savedAt: string }) {
     <View
       accessibilityRole="summary"
       accessibilityLabel={`Saved snapshot, ${when}, prices as saved, not live`}
-      className="flex-row items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-[7px]"
+      className="flex-row items-center gap-2.5 rounded-xl bg-accent px-3.5 py-[7px]"
     >
       <ClockCounterClockwiseIcon size={20} weight="bold" color={colors.mutedForeground} />
       <View className="flex-1">

@@ -126,7 +126,7 @@ export default function HistoryTab() {
         }
       />
       {notice ? (
-        <View className="absolute inset-x-4" style={{ bottom: Math.max(insets.bottom, 12) + 80 }}>
+        <View className="absolute inset-x-4" style={{ bottom: Math.max(insets.bottom, 12) + 90 }}>
           <UndoBar notice={notice} onUndo={undo} onDismiss={dismiss} />
         </View>
       ) : null}

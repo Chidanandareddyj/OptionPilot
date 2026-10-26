@@ -24,9 +24,9 @@ export const HistoryRow = memo(function HistoryRow({ analysis, onOpen, onDelete 
       onPress={() => onOpen(analysis)}
       onAction={() => onDelete(analysis)}
     >
-      <Card className="gap-3 px-4 pb-3 pt-[13px]">
+      <Card className="gap-[11px] px-4 pb-3 pt-[13px]">
         <View className="flex-row items-center justify-between">
-          <Text size="base" weight="semibold" numberOfLines={1} className="shrink" style={{ lineHeight: 20 }}>
+          <Text size="lg" weight="semibold" numberOfLines={1} className="shrink" style={{ lineHeight: 20 }}>
             {analysis.company}
           </Text>
           <Text mono weight="medium" tone={analysis.spot === null ? "muted" : "foreground"} style={{ lineHeight: 20 }}>

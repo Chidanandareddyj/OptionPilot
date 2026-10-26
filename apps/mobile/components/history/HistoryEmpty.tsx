@@ -7,7 +7,7 @@ import { useTheme } from "@/lib/theme/ThemeProvider";
 export function HistoryEmpty({ onOpenTerminal }: { onOpenTerminal: () => void }) {
   const { colors } = useTheme();
   return (
-    <View className="items-center px-6 pt-[84px]">
+    <View className="items-center px-6 pt-[80px]">
       <View className="h-16 w-16 items-center justify-center rounded-xl bg-accent">
         <ClockCounterClockwiseIcon size={32} weight="bold" color={colors.mutedForeground} />
       </View>
