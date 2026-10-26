@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
-import { requireUserId, UnauthorizedError } from "@optionpilot/shared";
-import { auth } from "@/lib/auth/server";
+import { UnauthorizedError } from "@optionpilot/shared";
+import { getRequestUserId } from "@/lib/auth/request-user";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -8,10 +8,9 @@ export const dynamic = "force-dynamic";
 const TTL_MS = 60_000;
 
 // Mints "<expiryMs>.<hmac>" for the relay's /stream endpoint (see relay/server.mjs validToken).
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const { data: session } = await auth.getSession();
-    requireUserId(session);
+    await getRequestUserId(request);
 
     const secret = process.env.RELAY_SECRET;
     const url = process.env.NEXT_PUBLIC_RELAY_URL;

@@ -2,19 +2,18 @@ import { getDailyCloses } from "@/upstoxservices/getDailyCloses";
 import { getLotSize } from "@/upstoxservices/getLotSize";
 import { getOptions } from "@/upstoxservices/getOptions";
 
-import { BadRequestError, mergeCompareDecision, parseDecideInput, requireUserId, UnauthorizedError } from "@optionpilot/shared";
+import { BadRequestError, mergeCompareDecision, parseDecideInput, UnauthorizedError } from "@optionpilot/shared";
 import { expiryMsLeft, rankDecision, scoreStrategies } from "@optionpilot/shared";
 import { explainDecision } from "@/lib/explain";
 import { askMercury } from "@/lib/mercury";
-import { auth } from "@/lib/auth/server";
+import { getRequestUserId } from "@/lib/auth/request-user";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@/generated/prisma/client";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { data: session } = await auth.getSession();
-    const userId = requireUserId(session);
+    const userId = await getRequestUserId(request);
 
     const { analysisId, view, maxLoss, pane } = parseDecideInput(await request.json().catch(() => null));
 
