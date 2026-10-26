@@ -8,6 +8,9 @@ web-build/
 expo-env.d.ts
 *.tsbuildinfo
 
+# Copied from canvaskit-wasm by `npm run setup:web`, for the web preview only
+/public/canvaskit.wasm
+
 # Local env and credentials
 .env*.local
 google-service-account*.json
