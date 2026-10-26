@@ -17,6 +17,8 @@ export type MarketIndicesResponse = {
     nifty: IndexQuote;
     bankNifty: IndexQuote;
   };
+  // Additive. "fallback" means the hard-coded prices, not a live Upstox quote.
+  source: "live" | "fallback";
 };
 
 /**

@@ -1,5 +1,5 @@
-app/api/market/indices/route.ts:58:32: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
-app/api/market/indices/route.ts:90:17: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
+app/api/market/indices/route.ts:59:32: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
+app/api/market/indices/route.ts:92:17: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
 app/components/AuthViewClient.tsx:333:63: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
 app/components/AuthViewClient.tsx:350:38: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
 app/components/AuthViewClient.tsx:351:42: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
