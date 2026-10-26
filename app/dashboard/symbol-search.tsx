@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-type Suggestion = {
+export type Suggestion = {
   symbol: string;
   name: string;
   sector?: string;
@@ -16,7 +16,7 @@ export const QUICK = ["NIFTY", "BANKNIFTY", "RELIANCE", "TCS", "INFY"];
 
 // Popular / Trending companies shown in the dropdown before user types anything
 // (Curated to be DIFFERENT from the QUICK symbols above)
-const POPULAR_COMPANIES: Suggestion[] = [
+export const POPULAR_COMPANIES: Suggestion[] = [
   { symbol: "ICICIBANK",  name: "ICICI Bank",                   sector: "Banking" },
   { symbol: "SBIN",       name: "State Bank of India",          sector: "Banking" },
   { symbol: "BHARTIARTL", name: "Bharti Airtel",                sector: "Telecom" },
@@ -32,7 +32,7 @@ const POPULAR_COMPANIES: Suggestion[] = [
 ];
 
 // Comprehensive NSE F&O symbol catalog
-const NSE_FO_SYMBOLS: Suggestion[] = [
+export const NSE_FO_SYMBOLS: Suggestion[] = [
   // Major Indices
   { symbol: "NIFTY",        name: "Nifty 50 Index",                  sector: "Index" },
   { symbol: "BANKNIFTY",    name: "Bank Nifty Index",                sector: "Index" },

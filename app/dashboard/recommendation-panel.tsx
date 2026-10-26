@@ -86,6 +86,7 @@ function MaxLossInput({ value, onChange }: { value: string; onChange?: (value: s
           type="number"
           min={1}
           required
+          inputMode="numeric"
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
           className="num h-9 w-32 bg-muted pl-8"
@@ -207,7 +208,7 @@ function RecommendationPane({
       )}
 
       {decision ? (
-        <div className="flex flex-col gap-4 border-t pt-4">
+        <div className="flex flex-col gap-4 border-t border-border pt-4">
           <div className="flex flex-wrap gap-2">
             {[
               ["ATM IV", pct(decision.atm_iv)],
@@ -250,53 +251,36 @@ function RecommendationPane({
                     <dd className="num">{pct(best.metrics.pop)}</dd>
                   </div>
                   <div className="flex gap-1">
-                    <dt className="text-muted-foreground">EV</dt>
-                    <dd className="num">{signedInr(best.metrics.ev_per_lot, 2)}</dd>
+                    <dt className="text-muted-foreground">Max profit</dt>
+                    <dd className="num text-profit">
+                      {best.metrics.max_profit_per_lot == null ? "Unlimited" : signedInr(best.metrics.max_profit_per_lot)}
+                    </dd>
                   </div>
                   <div className="flex gap-1">
                     <dt className="text-muted-foreground">Max loss</dt>
-                    <dd className="num text-loss">{signedInr(-Math.abs(best.metrics.max_loss_per_lot), 2)}</dd>
-                  </div>
-                  <div className="flex gap-1">
-                    <dt className="text-muted-foreground">Max profit</dt>
-                    <dd className="num text-profit">
-                      {best.metrics.max_profit_per_lot == null ? "Unlimited" : signedInr(best.metrics.max_profit_per_lot, 2)}
+                    <dd className="num text-loss">
+                      {best.metrics.max_loss_per_lot == null ? "Unlimited" : signedInr(best.metrics.max_loss_per_lot)}
                     </dd>
                   </div>
-                  {best.metrics.lot_size && best.metrics.lot_size > 1 && (
-                    <div className="flex gap-1">
-                      <dt className="text-muted-foreground">Lot size</dt>
-                      <dd className="num">{best.metrics.lot_size.toLocaleString("en-IN")}</dd>
-                    </div>
-                  )}
                 </dl>
               )}
             </button>
           ) : (
-            <Alert>
-              <WarningIcon />
-              <AlertDescription>No strategy is viable for this view and loss budget. Expand the rows below to see why.</AlertDescription>
-            </Alert>
+            <div className="rounded-lg bg-accent/50 p-4 text-sm text-muted-foreground">
+              No strategy scored as viable under the current criteria.
+            </div>
           )}
 
-          {decision.summary ? (
-            <Summary text={decision.summary} />
-          ) : (
-            <p className="text-sm text-muted-foreground">Plain-language explanation unavailable for this run.</p>
-          )}
+          {decision.summary && <Summary text={decision.summary} />}
 
-          <Accordion
-            type="single"
-            collapsible
-            value={open ?? ""}
-            onValueChange={(v) => setOpen(v || null)}
-            className={cn("rounded-lg bg-background px-4", compact && "max-h-72 overflow-y-auto")}
-          >
-            {decision.strategies.map((s, i) => (
-              <AccordionItem key={s.key} value={s.key}>
-                <AccordionTrigger className="min-w-0 items-center gap-3 hover:no-underline">
-                  <span className="num w-6 text-xs text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="min-w-0 flex-1 truncate">{nameOf(s.key)}</span>
+          <Accordion type="single" collapsible value={open ?? undefined} onValueChange={setOpen}>
+            {decision.strategies.slice(0, 3).map((s, i) => (
+              <AccordionItem key={s.key} value={s.key} className="border-border">
+                <AccordionTrigger className="gap-3 py-3 text-left hover:no-underline">
+                  <span className="num flex size-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-medium">
+                    {i + 1}
+                  </span>
+                  <span className="flex-1 font-medium">{nameOf(s.key)}</span>
                   <Badge variant="outline" className={cn("h-6 rounded-md px-2 font-normal", s.viable ? "text-profit" : "text-loss")}>
                     {s.viable ? <CheckIcon aria-hidden /> : <XIcon aria-hidden />}
                     <span className="max-sm:sr-only">{s.viable ? "Viable" : "Not viable"}</span>
@@ -354,6 +338,7 @@ export default function RecommendationPanel({
   const [singleView, setSingleView] = useState<Category>(single?.view ?? "neutral");
   const [leftView, setLeftView] = useState<Category>(left?.view ?? "bullish");
   const [rightView, setRightView] = useState<Category>(right?.view ?? "bearish");
+  const [mobileActivePane, setMobileActivePane] = useState<Pane>("left");
 
   useEffect(() => {
     if (left?.view) {
@@ -385,44 +370,80 @@ export default function RecommendationPanel({
     <Card size="sm" className="gap-4 px-4 py-3">
       {compareMode ? (
         <>
-          <div className="flex flex-wrap items-center gap-4">
-            {title}
-            <MaxLossInput value={maxLoss} onChange={setMaxLoss} />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-4">
+              {title}
+              <MaxLossInput value={maxLoss} onChange={setMaxLoss} />
+            </div>
             {compareSwitch}
           </div>
+
+          {/* Mobile Phone Segmented Toggle between Left & Right Panes */}
+          <div className="flex w-full rounded-lg bg-muted p-1 gap-1 md:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileActivePane("left")}
+              className={cn(
+                "flex-1 rounded-md py-1.5 text-xs font-semibold transition-colors",
+                mobileActivePane === "left"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Left: {titleCase(leftView)}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileActivePane("right")}
+              className={cn(
+                "flex-1 rounded-md py-1.5 text-xs font-semibold transition-colors",
+                mobileActivePane === "right"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Right: {titleCase(rightView)}
+            </button>
+          </div>
+
+          {/* Grid: 2 columns on Tablet and Desktop; Selected tab only on Phone */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <RecommendationPane
-              analysisId={analysisId}
-              decision={left}
-              view={leftView}
-              onViewChange={setLeftView}
-              maxLoss={maxLoss}
-              showMaxLoss={false}
-              compact
-              pane="left"
-              pending={pending === "left"}
-              disabled={pending !== null && pending !== "left"}
-              emptyHint="Score this view to compare."
-              onPending={(on) => setPending(on ? "left" : null)}
-              onDecision={(d) => onPane("left", d)}
-              onSelect={(key) => onSelect(key, "left")}
-            />
-            <RecommendationPane
-              analysisId={analysisId}
-              decision={right}
-              view={rightView}
-              onViewChange={setRightView}
-              maxLoss={maxLoss}
-              showMaxLoss={false}
-              compact
-              pane="right"
-              pending={pending === "right"}
-              disabled={pending !== null && pending !== "right"}
-              emptyHint="Score this view to compare."
-              onPending={(on) => setPending(on ? "right" : null)}
-              onDecision={(d) => onPane("right", d)}
-              onSelect={(key) => onSelect(key, "right")}
-            />
+            <div className={cn(mobileActivePane !== "left" && "max-md:hidden")}>
+              <RecommendationPane
+                analysisId={analysisId}
+                decision={left}
+                view={leftView}
+                onViewChange={setLeftView}
+                maxLoss={maxLoss}
+                showMaxLoss={false}
+                compact
+                pane="left"
+                pending={pending === "left"}
+                disabled={pending !== null && pending !== "left"}
+                emptyHint="Score this view to compare."
+                onPending={(on) => setPending(on ? "left" : null)}
+                onDecision={(d) => onPane("left", d)}
+                onSelect={(key) => onSelect(key, "left")}
+              />
+            </div>
+            <div className={cn(mobileActivePane !== "right" && "max-md:hidden")}>
+              <RecommendationPane
+                analysisId={analysisId}
+                decision={right}
+                view={rightView}
+                onViewChange={setRightView}
+                maxLoss={maxLoss}
+                showMaxLoss={false}
+                compact
+                pane="right"
+                pending={pending === "right"}
+                disabled={pending !== null && pending !== "right"}
+                emptyHint="Score this view to compare."
+                onPending={(on) => setPending(on ? "right" : null)}
+                onDecision={(d) => onPane("right", d)}
+                onSelect={(key) => onSelect(key, "right")}
+              />
+            </div>
           </div>
         </>
       ) : (

@@ -11,6 +11,8 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { parseStoredDecision, type Pane } from "@/lib/analysis";
 import { cn } from "@/lib/utils";
+import { MobileStrategyCard } from "./mobile-strategy-card";
+import { MobileStrategySheet } from "./mobile-strategy-sheet";
 import RecommendationPanel, { type Decision } from "./recommendation-panel";
 import StrategyDetail from "./strategy-detail";
 import StrategyRow, { STRATEGY_COLUMNS } from "./strategy-row";
@@ -25,7 +27,7 @@ const FILTERS: { id: Category | "all"; label: string }[] = [
 ];
 
 const CHIP =
-  "h-9 gap-2 rounded-full px-3 text-sm data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground";
+  "h-8 gap-1.5 rounded-full px-3 text-xs md:h-9 md:gap-2 md:text-sm data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground";
 
 type Payload = {
   underlying_key?: string;
@@ -114,6 +116,9 @@ export default function StrategyExplorer({
   const [filter, setFilter] = useState<Category | "all">("all");
   const [query, setQuery] = useState("");
   const [showJson, setShowJson] = useState(false);
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [mobileComparePane, setMobileComparePane] = useState<Pane>("left");
+
   const detailRef = useRef<HTMLDivElement>(null);
   const compareDetailRef = useRef<HTMLDivElement>(null);
 
@@ -133,6 +138,7 @@ export default function StrategyExplorer({
         `${s.name} ${s.tagline}`.toLowerCase().includes(query.trim().toLowerCase()),
     )
     .sort((a, b) => (ranked.get(a.key)?.rank ?? 99) - (ranked.get(b.key)?.rank ?? 99));
+
   const handleCompareMode = (on: boolean) => {
     setCompareMode(on);
     if (on && single && !left) {
@@ -155,6 +161,7 @@ export default function StrategyExplorer({
     setSelectedKey(key);
     detailRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
   const onPane = (pane: Pane, decision: Decision) => {
     if (pane === "left") {
       setLeft(decision);
@@ -170,6 +177,7 @@ export default function StrategyExplorer({
       return next;
     });
   };
+
   const instrumentId = data.underlying_key?.replace(/^NSE_(INDEX|EQ)\|/, "") || "";
   const companySymbol = company.toUpperCase().trim();
   const companyFullName = (typeof data.company_name === "string" ? data.company_name : "").trim();
@@ -184,37 +192,48 @@ export default function StrategyExplorer({
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="flex flex-wrap items-end gap-x-8 gap-y-4 px-2">
-        <div className="flex min-w-0 flex-col gap-1">
-          <span className="text-xs text-muted-foreground">NSE F&amp;O · option chain</span>
-          <h1 className="text-4xl font-semibold tracking-tight">{companySymbol}</h1>
+      {/* Header: Adaptive for Mobile / Tablet / Laptop */}
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 px-1 md:px-2">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="text-xs text-muted-foreground">NSE F&amp;O · Option Chain</span>
+          <div className="flex items-baseline gap-3">
+            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{companySymbol}</h1>
+            {spot > 0 && (
+              <span className="num text-2xl font-semibold text-foreground md:hidden">
+                ₹{spot.toLocaleString("en-IN", { minimumFractionDigits: 1 })}
+              </span>
+            )}
+          </div>
           {subtitle && <span className="truncate text-xs text-muted-foreground">{subtitle}</span>}
         </div>
+
         {spot > 0 && (
-          <div className="flex flex-col gap-1 pb-1">
-            <span className="text-xs text-muted-foreground">Spot</span>
+          <div className="hidden flex-col gap-1 pb-1 md:flex">
+            <span className="text-xs text-muted-foreground">Spot Price</span>
             <span className="num text-3xl font-medium">₹{spot.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-2 pb-1 xl:ml-auto">
+
+        <div className="flex flex-wrap items-center gap-1.5 pb-1 sm:gap-2">
           {atmStrike != null && (
-            <Badge variant="outline" className="num h-9 rounded-lg px-3 text-sm font-normal">
+            <Badge variant="outline" className="num h-8 rounded-lg px-2.5 text-xs font-normal md:h-9 md:px-3 md:text-sm">
               ATM {Number(atmStrike).toLocaleString("en-IN")}
             </Badge>
           )}
           {data.expiry_date && (
-            <Badge variant="outline" className="num h-9 rounded-lg px-3 text-sm font-normal">
+            <Badge variant="outline" className="num h-8 rounded-lg px-2.5 text-xs font-normal md:h-9 md:px-3 md:text-sm">
               Expiry {data.expiry_date}
             </Badge>
           )}
           {lotSize > 1 && (
-            <Badge variant="outline" className="num h-9 rounded-lg px-3 text-sm font-normal">
+            <Badge variant="outline" className="num h-8 rounded-lg px-2.5 text-xs font-normal md:h-9 md:px-3 md:text-sm">
               Lot {lotSize.toLocaleString("en-IN")}
             </Badge>
           )}
-          <Button variant="outline" size="lg" aria-expanded={showJson} onClick={() => setShowJson(!showJson)}>
+          <Button variant="outline" size="sm" className="h-8 md:h-9" aria-expanded={showJson} onClick={() => setShowJson(!showJson)}>
             <CodeIcon />
-            {showJson ? "Hide JSON" : "Raw JSON"}
+            <span className="max-sm:hidden">{showJson ? "Hide JSON" : "Raw JSON"}</span>
+            <span className="sm:hidden">JSON</span>
           </Button>
         </div>
       </header>
@@ -234,6 +253,7 @@ export default function StrategyExplorer({
         </Card>
       )}
 
+      {/* Recommendation & Scored Strategy Panel */}
       <RecommendationPanel
         analysisId={analysisId}
         compareMode={compareMode}
@@ -243,121 +263,303 @@ export default function StrategyExplorer({
         right={right}
         onSingle={setSingle}
         onPane={onPane}
-        onSelect={select}
+        onSelect={(key, pane) => {
+          select(key, pane);
+          // On mobile, also trigger the detail sheet
+          setMobileSheetOpen(true);
+        }}
       />
 
-      {compareMode ? (
-        <div ref={compareDetailRef} className="grid scroll-mt-20 grid-cols-1 gap-4 xl:grid-cols-2">
-          <ComparePane pane="left" decision={left} strategy={leftActive} focused={focusPane === "left"} onFocus={() => setFocusPane("left")} />
-          <ComparePane pane="right" decision={right} strategy={rightActive} focused={focusPane === "right"} onFocus={() => setFocusPane("right")} />
-        </div>
-      ) : (
-        active && (
-          <div ref={detailRef} className="scroll-mt-20">
-            <StrategyDetail strategy={active} />
+      {/* ============================================================== */}
+      {/* 1. MOBILE PHONE VIEW (< 768px): Card list + Bottom Payoff Sheet */}
+      {/* ============================================================== */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {/* Compare Mode Payoff Accordion / Toggle for Mobile */}
+        {compareMode && (
+          <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3">
+            <div className="flex rounded-lg bg-muted p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => setMobileComparePane("left")}
+                className={cn(
+                  "flex-1 rounded-md py-1.5 text-xs font-semibold transition-colors",
+                  mobileComparePane === "left" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground"
+                )}
+              >
+                Left Payoff
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileComparePane("right")}
+                className={cn(
+                  "flex-1 rounded-md py-1.5 text-xs font-semibold transition-colors",
+                  mobileComparePane === "right" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground"
+                )}
+              >
+                Right Payoff
+              </button>
+            </div>
+            {mobileComparePane === "left" ? (
+              leftActive ? (
+                <StrategyDetail strategy={leftActive} />
+              ) : (
+                <div className="py-6 text-center text-xs text-muted-foreground">Score left view to see payoff.</div>
+              )
+            ) : rightActive ? (
+              <StrategyDetail strategy={rightActive} />
+            ) : (
+              <div className="py-6 text-center text-xs text-muted-foreground">Score right view to see payoff.</div>
+            )}
           </div>
-        )
-      )}
+        )}
 
-      <Card className="gap-4 p-6">
-        <CardHeader className="flex flex-row flex-wrap items-end gap-4 p-0">
-          <div className="flex flex-col gap-1">
-            <CardTitle className="text-xl font-semibold">Compare all {strategies.length} strategies</CardTitle>
-            <CardDescription>
-              {rankedDecision ? "Ranked by recommendation score." : "In catalogue order."} Select a row to load its payoff.
-            </CardDescription>
-          </div>
-          <div className="relative w-full sm:ml-auto sm:w-56">
+        {/* Filter and Search Controls */}
+        <div className="flex flex-col gap-2 pt-1">
+          <div className="relative w-full">
             <MagnifyingGlassIcon aria-hidden className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search strategy"
-              aria-label="Search strategy"
-              className="h-9 bg-muted pl-8"
+              placeholder="Search strategy name or tagline..."
+              className="h-10 bg-muted pl-9 text-sm"
             />
           </div>
-        </CardHeader>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <ToggleGroup
-            type="single"
-            value={filter}
-            onValueChange={(v) => v && setFilter(v as Category | "all")}
-            variant="outline"
-            spacing={2}
-            aria-label="Filter by market view"
-            className="flex-wrap justify-start"
-          >
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {FILTERS.map((f) => (
-              <ToggleGroupItem key={f.id} value={f.id} className={CHIP}>
-                {f.label}
-                <span className="num text-xs opacity-80">
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFilter(f.id)}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  filter === f.id
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground hover:bg-accent"
+                )}
+              >
+                <span>{f.label}</span>
+                <span className="num text-[10px] opacity-80">
                   {f.id === "all" ? strategies.length : strategies.filter((s) => s.category === f.id).length}
                 </span>
-              </ToggleGroupItem>
+              </button>
             ))}
-          </ToggleGroup>
-          {compareMode && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground md:ml-auto">
-              Rows apply to
-              <ToggleGroup
-                type="single"
-                value={focusPane}
-                onValueChange={(v) => v && setFocusPane(v as Pane)}
-                variant="outline"
-                spacing={2}
-                aria-label="Pane that rows load into"
-              >
-                {(["left", "right"] as const).map((pane) => (
-                  <ToggleGroupItem key={pane} value={pane} className={cn(CHIP, "capitalize")}>
-                    {pane}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </div>
+          </div>
+        </div>
+
+        {/* High-density Touch Cards List */}
+        <div className="flex flex-col gap-2.5">
+          {visible.length > 0 ? (
+            visible.map((s) => (
+              <MobileStrategyCard
+                key={s.key}
+                strategy={s}
+                selected={gridSelectedKey === s.key}
+                decision={ranked.get(s.key)}
+                recommended={rankedDecision?.best?.key === s.key}
+                onSelect={() => {
+                  select(s.key);
+                  setMobileSheetOpen(true);
+                }}
+              />
+            ))
+          ) : (
+            <div className="py-8 text-center text-xs text-muted-foreground">No matching strategies found.</div>
           )}
         </div>
 
-        <CardContent className="p-0">
-          {visible.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  {STRATEGY_COLUMNS.map((c) => (
-                    <TableHead key={c.label} className={cn("px-3 py-3 text-sm", "numeric" in c && "text-right")}>
-                      {c.label}
-                    </TableHead>
+        {/* Full-bleed Mobile Bottom Sheet for Active Payoff Chart & Legs */}
+        <MobileStrategySheet
+          strategy={active}
+          open={mobileSheetOpen}
+          onOpenChange={setMobileSheetOpen}
+        />
+      </div>
+
+      {/* ============================================================== */}
+      {/* 2. TABLET VIEW (768px - 1024px): 2-Column Master-Detail Layout */}
+      {/* ============================================================== */}
+      <div className="hidden md:block lg:hidden">
+        {compareMode ? (
+          <div ref={compareDetailRef} className="grid grid-cols-2 gap-4">
+            <ComparePane pane="left" decision={left} strategy={leftActive} focused={focusPane === "left"} onFocus={() => setFocusPane("left")} />
+            <ComparePane pane="right" decision={right} strategy={rightActive} focused={focusPane === "right"} onFocus={() => setFocusPane("right")} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-12 gap-4 items-start">
+            {/* Left Column (5 cols): Master Strategy List & Filters */}
+            <div className="col-span-5 flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
+                <div className="relative">
+                  <MagnifyingGlassIcon aria-hidden className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search strategy..."
+                    className="h-9 bg-muted pl-9 text-xs"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {FILTERS.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setFilter(f.id)}
+                      className={cn(
+                        "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                        filter === f.id
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-card text-muted-foreground hover:bg-accent"
+                      )}
+                    >
+                      {f.label} ({f.id === "all" ? strategies.length : strategies.filter((s) => s.category === f.id).length})
+                    </button>
                   ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+                </div>
+              </div>
+
+              {/* Scrollable Master List */}
+              <div className="flex flex-col gap-2 max-h-[720px] overflow-y-auto pr-1">
                 {visible.map((s) => (
-                  <StrategyRow
+                  <MobileStrategyCard
                     key={s.key}
                     strategy={s}
-                    index={strategies.indexOf(s)}
                     selected={gridSelectedKey === s.key}
                     decision={ranked.get(s.key)}
                     recommended={rankedDecision?.best?.key === s.key}
                     onSelect={() => select(s.key)}
                   />
                 ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <Empty className="py-12">
-              <EmptyHeader>
-                <EmptyTitle>No matching strategies</EmptyTitle>
-                <EmptyDescription>
-                  {strategies.length === 0 ? "The calculator returned no strategies for this symbol." : "Try another view or clear the search."}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            </div>
+
+            {/* Right Column (7 cols): Sticky Payoff Chart, Stats & Legs */}
+            <div className="col-span-7 sticky top-20">
+              {active && <StrategyDetail strategy={active} />}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ============================================================== */}
+      {/* 3. LAPTOP & DESKTOP VIEW (>= 1024px): Preserved Power Layout   */}
+      {/* ============================================================== */}
+      <div className="hidden lg:flex lg:flex-col lg:gap-4">
+        {compareMode ? (
+          <div ref={compareDetailRef} className="grid scroll-mt-20 grid-cols-1 gap-4 xl:grid-cols-2">
+            <ComparePane pane="left" decision={left} strategy={leftActive} focused={focusPane === "left"} onFocus={() => setFocusPane("left")} />
+            <ComparePane pane="right" decision={right} strategy={rightActive} focused={focusPane === "right"} onFocus={() => setFocusPane("right")} />
+          </div>
+        ) : (
+          active && (
+            <div ref={detailRef} className="scroll-mt-20">
+              <StrategyDetail strategy={active} />
+            </div>
+          )
+        )}
+
+        <Card className="gap-4 p-6">
+          <CardHeader className="flex flex-row flex-wrap items-end gap-4 p-0">
+            <div className="flex flex-col gap-1">
+              <CardTitle className="text-xl font-semibold">Compare all {strategies.length} strategies</CardTitle>
+              <CardDescription>
+                {rankedDecision ? "Ranked by recommendation score." : "In catalogue order."} Select a row to load its payoff.
+              </CardDescription>
+            </div>
+            <div className="relative w-full sm:ml-auto sm:w-56">
+              <MagnifyingGlassIcon aria-hidden className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search strategy"
+                aria-label="Search strategy"
+                className="h-9 bg-muted pl-8"
+              />
+            </div>
+          </CardHeader>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <ToggleGroup
+              type="single"
+              value={filter}
+              onValueChange={(v) => v && setFilter(v as Category | "all")}
+              variant="outline"
+              spacing={2}
+              aria-label="Filter by market view"
+              className="flex-wrap justify-start"
+            >
+              {FILTERS.map((f) => (
+                <ToggleGroupItem key={f.id} value={f.id} className={CHIP}>
+                  {f.label}
+                  <span className="num text-xs opacity-80">
+                    {f.id === "all" ? strategies.length : strategies.filter((s) => s.category === f.id).length}
+                  </span>
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+            {compareMode && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground md:ml-auto">
+                Rows apply to
+                <ToggleGroup
+                  type="single"
+                  value={focusPane}
+                  onValueChange={(v) => v && setFocusPane(v as Pane)}
+                  variant="outline"
+                  spacing={2}
+                  aria-label="Pane that rows load into"
+                >
+                  {(["left", "right"] as const).map((pane) => (
+                    <ToggleGroupItem key={pane} value={pane} className={cn(CHIP, "capitalize")}>
+                      {pane}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+            )}
+          </div>
+
+          <CardContent className="p-0">
+            {visible.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    {STRATEGY_COLUMNS.map((c) => (
+                      <TableHead key={c.label} className={cn("px-3 py-3 text-sm", "numeric" in c && "text-right")}>
+                        {c.label}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visible.map((s) => (
+                    <StrategyRow
+                      key={s.key}
+                      strategy={s}
+                      index={strategies.indexOf(s)}
+                      selected={gridSelectedKey === s.key}
+                      decision={ranked.get(s.key)}
+                      recommended={rankedDecision?.best?.key === s.key}
+                      onSelect={() => select(s.key)}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <Empty className="py-12">
+                <EmptyHeader>
+                  <EmptyTitle>No matching strategies</EmptyTitle>
+                  <EmptyDescription>
+                    {strategies.length === 0 ? "The calculator returned no strategies for this symbol." : "Try another view or clear the search."}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

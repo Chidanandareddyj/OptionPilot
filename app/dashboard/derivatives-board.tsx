@@ -37,6 +37,7 @@ import {
 import { signedInr } from "@/lib/payoff-series";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/app/components/spinner";
+import { MobileDerivativeCard } from "./mobile-derivative-card";
 import { STRATEGY_DEFINITIONS } from "./types";
 
 const CALCULATORS: Record<string, Calculator> = {
@@ -308,7 +309,32 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
         </span>
       </div>
 
-      <Card className="gap-0 p-2">
+      {/* Mobile Phone (< 768px): High-Density Ticker Cards */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {visible.map((e) => (
+          <MobileDerivativeCard key={e.k} item={e} onAnalyze={onAnalyze} />
+        ))}
+        {!visible.length && (
+          <div className="py-12 text-center text-sm text-muted-foreground">
+            {feed ? "No matching companies." : "Waiting for prices…"}
+          </div>
+        )}
+      </div>
+
+      {/* Tablet (768px - 1024px): 2-Column Responsive Card Grid */}
+      <div className="hidden md:grid lg:hidden grid-cols-2 gap-3">
+        {visible.map((e) => (
+          <MobileDerivativeCard key={e.k} item={e} onAnalyze={onAnalyze} />
+        ))}
+        {!visible.length && (
+          <div className="col-span-2 py-12 text-center text-sm text-muted-foreground">
+            {feed ? "No matching companies." : "Waiting for prices…"}
+          </div>
+        )}
+      </div>
+
+      {/* Laptop & Desktop (>= 1024px): Preserved Pro Table */}
+      <Card className="hidden lg:block gap-0 p-2">
         <Table className="min-w-[56rem]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
