@@ -26,16 +26,20 @@ jobs:
         run: npm ci
 
       - name: Generate Prisma client
+        working-directory: apps/web
         run: npx prisma generate
 
       - name: Lint against the recorded baseline
-        run: node .github/scripts/check-eslint-baseline.mjs
+        working-directory: apps/web
+        run: node ../../.github/scripts/check-eslint-baseline.mjs
 
       # LayoutProps and PageProps are generated globals. tsc cannot see them until this runs.
       - name: Generate Next.js route types
+        working-directory: apps/web
         run: npx next typegen
 
       - name: Typecheck
+        working-directory: apps/web
         run: npx tsc --noEmit
 
       - name: Test
