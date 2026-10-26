@@ -3,13 +3,10 @@ import { validateEmail } from "@/lib/auth/validation";
 /** The website's name field stops at 32 characters, so the app does too. */
 export const NAME_MAX_LENGTH = 32;
 
-/** Up to two capital letters for the avatar tile: first and last word of the name, else the email. */
+/** The first two letters of the name, in capitals (design 56 shows "CH" for Chidananda). Falls back to the email. */
 export function initials(name: string, email: string): string {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return (email.trim()[0] ?? "?").toUpperCase();
-  const first = words[0]![0]!;
-  const last = words.length > 1 ? words[words.length - 1]![0]! : (words[0]![1] ?? "");
-  return (first + last).toUpperCase();
+  const source = name.trim() || email.trim();
+  return (Array.from(source).slice(0, 2).join("") || "?").toUpperCase();
 }
 
 export function validateDisplayName(name: string): string | null {

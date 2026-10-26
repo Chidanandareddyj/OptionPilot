@@ -31,7 +31,7 @@ export function FieldCard({
   return (
     <View className="overflow-hidden rounded-2xl border border-border bg-card">
       <View className={plain ? "gap-4 p-4 pb-3" : "gap-4 p-4 pb-5"}>
-        <View className="gap-1">
+        <View className={plain ? "gap-0" : "gap-1"}>
           <Text size="lg" weight="semibold">
             {title}
           </Text>

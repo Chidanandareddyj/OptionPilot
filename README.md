@@ -70,3 +70,7 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+### Account deletion (server)
+
+`DELETE /api/account` removes the signed-in user's saved analyses. To also delete the Neon Auth login from the server, set `NEON_API_KEY`, `NEON_PROJECT_ID` and `NEON_BRANCH_ID` (the Neon admin API, `DELETE /projects/{project_id}/branches/{branch_id}/auth/users/{id}`). Without them the route still deletes the analyses and answers `authUserDeleted: false`; the mobile app then falls back to Neon Auth's own `delete-user` call.

@@ -13,7 +13,7 @@ export function SettingsSkeleton() {
         <Skeleton width={64} height={64} radius={12} />
       </View>
       {[0, 1].map((index) => (
-        <View key={index} className="gap-3 rounded-2xl border border-border bg-card p-4">
+        <View key={index} className="gap-4 rounded-2xl border border-border bg-card p-4">
           <Skeleton width="42%" height={24} />
           <Skeleton height={16} />
           <Skeleton height={52} radius={12} />

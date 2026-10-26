@@ -128,7 +128,7 @@ function ConnectedAccountsCard() {
 
   return (
     <View className="gap-4 rounded-2xl border border-border bg-card p-4">
-      <View className="gap-1">
+      <View className="gap-0">
         <Text size="lg" weight="semibold">
           Connected accounts
         </Text>
@@ -148,7 +148,7 @@ function ConnectedAccountsCard() {
         </Text>
       ) : (
         social.map((item) => (
-          <View key={item.id} className="flex-row items-center gap-3 rounded-xl bg-accent p-3">
+          <View key={item.id} className="min-h-[68px] flex-row items-center gap-3 rounded-xl bg-accent p-3">
             <GoogleLogoIcon size={24} color={colors.foreground} />
             <View className="flex-1">
               <Text weight="semibold">{item.providerId === "google" ? "Google" : item.providerId}</Text>
@@ -192,7 +192,7 @@ function SessionsCard() {
 
   return (
     <View className="gap-4 rounded-2xl border border-border bg-card p-4">
-      <View className="gap-1">
+      <View className="gap-0">
         <Text size="lg" weight="semibold">
           Sessions
         </Text>

@@ -18,7 +18,7 @@ export default function OrganizationsScreen() {
   const list = organizations.data ?? [];
 
   const footer = (
-    <View className="border-t border-border bg-background px-4 pt-3" style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
+    <View className="border-t border-border bg-background px-4 pt-3" style={{ paddingBottom: Math.max(insets.bottom - 2, 16) }}>
       <Button
         label="Create organization"
         variant="primary"
@@ -42,8 +42,8 @@ export default function OrganizationsScreen() {
         </View>
       ) : list.length === 0 ? (
         <View className="items-center gap-4 px-2 pt-12">
-          <View className="h-20 w-20 items-center justify-center rounded-3xl bg-accent">
-            <BuildingsIcon size={40} color={colors.mutedForeground} />
+          <View className="h-16 w-16 items-center justify-center rounded-xl bg-accent">
+            <BuildingsIcon size={32} color={colors.mutedForeground} />
           </View>
           <Text size="2xl" weight="semibold" tight className="text-center">
             No organizations yet

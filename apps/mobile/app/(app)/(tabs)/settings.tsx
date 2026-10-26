@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
-import { APPEARANCE_LABELS } from "@/components/appearance/options";
+import { APPEARANCE_ROW_VALUE } from "@/components/appearance/options";
 import {
   BellIcon,
   BuildingsIcon,
@@ -33,17 +33,17 @@ export default function SettingsTab() {
 
   return (
     <Screen scroll bottomSpace={TAB_BAR_CLEARANCE}>
-      <View className="pt-[44px]">
+      <View className="pt-[46px]">
         <Text size="sm" tone="muted">
           Account
         </Text>
-        <Text size="4xl" weight="semibold" tight accessibilityRole="header">
+        <Text size="4xl" weight="semibold" tight accessibilityRole="header" className="mt-[3px]">
           Settings
         </Text>
       </View>
 
       {!user ? (
-        <View className="mt-6">
+        <View className="mt-4">
           <SettingsSkeleton />
         </View>
       ) : (
@@ -53,7 +53,7 @@ export default function SettingsTab() {
             accessibilityLabel={`${user.name || user.email}, ${user.email}`}
             accessibilityHint="Opens your account"
             onPress={() => router.push("/settings/account")}
-            className="mt-6 flex-row items-center gap-4 rounded-2xl border border-border bg-card p-4"
+            className="mt-4 flex-row items-center gap-4 rounded-2xl border border-border bg-card p-4"
           >
             <Avatar name={user.name} email={user.email} image={user.image} />
             <View className="min-w-0 flex-1">
@@ -67,7 +67,7 @@ export default function SettingsTab() {
             <CaretRightIcon size={16} weight="bold" color={colors.faint} />
           </Pressable>
 
-          <View className="mt-4">
+          <View className="mt-6">
             <ListGroup>
               <ListRow first icon={UserCircleIcon} label="Account" onPress={() => router.push("/settings/account")} />
               <ListRow icon={ShieldCheckIcon} label="Security" onPress={() => router.push("/settings/security")} />
@@ -81,7 +81,7 @@ export default function SettingsTab() {
                 first
                 icon={MoonStarsIcon}
                 label="Appearance"
-                value={APPEARANCE_LABELS[appearance]}
+                value={APPEARANCE_ROW_VALUE[appearance]}
                 onPress={() => router.push("/appearance")}
               />
               <ListRow

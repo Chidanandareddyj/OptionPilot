@@ -99,13 +99,13 @@ export default function AccountScreen() {
           >
             <Avatar name={user.name} email={user.email} image={user.image} />
             <View
-              className="absolute -bottom-2 -right-2 h-7 w-7 items-center justify-center rounded-full border border-border bg-card"
+              className="absolute -bottom-1 -right-1 h-7 w-7 items-center justify-center rounded-full border border-border bg-card"
             >
               <CameraIcon size={16} color={colors.foreground} />
             </View>
           </Pressable>
         </View>
-        <View className="bg-accent px-4 py-3">
+        <View className="bg-accent px-4 py-4">
           <Text size="sm" tone="muted">
             An avatar is optional but we recommend adding one.
           </Text>

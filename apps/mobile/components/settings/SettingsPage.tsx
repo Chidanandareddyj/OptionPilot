@@ -35,18 +35,18 @@ export function SettingsPage({ title, children, form = false, footer }: Settings
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-4"
-        contentContainerStyle={{ paddingTop: navHeight + 8, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingTop: navHeight + 2, paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps={form ? "handled" : "never"}
         automaticallyAdjustKeyboardInsets={form}
         scrollEventThrottle={16}
         onScroll={onScroll}
       >
-        <View className="mb-6">
+        <View className="mb-4">
           <Text size="sm" tone="muted">
             Settings
           </Text>
-          <Text size="4xl" weight="semibold" tight accessibilityRole="header">
+          <Text size="4xl" weight="semibold" tight accessibilityRole="header" className="mt-[2px]">
             {title}
           </Text>
         </View>
