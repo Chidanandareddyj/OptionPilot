@@ -7,6 +7,7 @@ import type {
   MarketIndicesResponse,
   MarketQuote,
   MarketQuotesResponse,
+  RelayTokenResponse,
 } from "@optionpilot/shared";
 
 /** The server answered, but with an error status. `message` is the server's own text when it sent one. */
@@ -61,6 +62,9 @@ export function createApi(apiFetch: ApiFetch) {
     async recentAnalyses(): Promise<AnalysisSummary[]> {
       return (await request<HistoryPage>("/api/analyses")).analyses;
     },
+
+    /** A 60 second token and the address of the live price relay. Fetch a new one for every connection. */
+    derivativesToken: () => request<RelayTokenResponse>("/api/derivatives/token"),
 
     analysis: (id: string) => request<AnalysisDetail>(`/api/analyses/${encodeURIComponent(id)}`),
 
