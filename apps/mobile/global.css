@@ -1,0 +1,51 @@
+@import "tailwindcss";
+@import "uniwind";
+
+/*
+ * Theme colours. The values are the semantic tokens in @optionpilot/shared (saffron = dark,
+ * paper = light), which equal the web's apps/web/app/globals.css. __tests__/global-css.test.ts fails if
+ * this file drifts from those tokens.
+ */
+@layer theme {
+  :root {
+    @variant dark {
+      --color-background: #131209;
+      --color-foreground: #f2f2f0;
+      --color-card: #181818;
+      --color-primary: #e09b3f;
+      --color-primary-foreground: #131209;
+      --color-muted: #1f1f1f;
+      --color-muted-foreground: #ababa8;
+      --color-faint: #8d8d8a;
+      --color-accent: #272727;
+      --color-destructive: #db6f63;
+      --color-border: #313131;
+      --color-profit: #5db58c;
+      --color-loss: #db6f63;
+    }
+
+    @variant light {
+      --color-background: #f4efe6;
+      --color-foreground: #1c1a17;
+      --color-card: #fbf8f2;
+      --color-primary: #c23b16;
+      --color-primary-foreground: #fff8f0;
+      --color-muted: #ffffff;
+      --color-muted-foreground: #575044;
+      --color-faint: #6b6458;
+      --color-accent: #eae3d6;
+      --color-destructive: #a3203a;
+      --color-border: #d6ccba;
+      --color-profit: #0b6e55;
+      --color-loss: #a3203a;
+    }
+  }
+}
+
+@theme {
+  --font-geist: Geist_400Regular;
+  --font-geist-medium: Geist_500Medium;
+  --font-geist-semibold: Geist_600SemiBold;
+  --font-geist-mono: GeistMono_400Regular;
+  --font-geist-mono-medium: GeistMono_500Medium;
+}

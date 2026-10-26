@@ -1,0 +1,17 @@
+# Expo
+.expo/
+dist/
+dist-native/
+web-build/
+/ios
+/android
+expo-env.d.ts
+*.tsbuildinfo
+
+# Local env and credentials
+.env*.local
+google-service-account*.json
+*.p8
+*.p12
+*.jks
+*.mobileprovision
