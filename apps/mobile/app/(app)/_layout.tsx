@@ -69,6 +69,33 @@ export default function AppLayout() {
                   contentStyle: { backgroundColor: colors.card },
                 }}
               />
+              <Stack.Screen name="settings/account" />
+              <Stack.Screen name="settings/security" />
+              <Stack.Screen name="settings/organizations" />
+              <Stack.Screen
+                name="settings/avatar"
+                options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }}
+              />
+              <Stack.Screen
+                name="settings/create-organization"
+                options={{
+                  presentation: "formSheet",
+                  sheetAllowedDetents: "fitToContents",
+                  sheetGrabberVisible: true,
+                  sheetCornerRadius: 24,
+                  contentStyle: { backgroundColor: colors.card },
+                }}
+              />
+              <Stack.Screen
+                name="settings/delete-account"
+                options={{
+                  presentation: "formSheet",
+                  sheetAllowedDetents: "fitToContents",
+                  sheetGrabberVisible: true,
+                  sheetCornerRadius: 24,
+                  contentStyle: { backgroundColor: colors.card },
+                }}
+              />
               <Stack.Screen
                 name="sign-out"
                 options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }}

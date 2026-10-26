@@ -44,6 +44,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-font",
     "expo-secure-store",
     [
+      "expo-image-picker",
+      {
+        photosPermission: "OptionPilot uses your photos so you can choose an avatar.",
+        cameraPermission: "OptionPilot uses the camera so you can take a photo for your avatar.",
+        microphonePermission: false,
+      },
+    ],
+    [
       "expo-splash-screen",
       {
         image: "./assets/splash-icon-light.png",
