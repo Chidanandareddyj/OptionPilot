@@ -48,17 +48,10 @@ export function FeedProvider({ children, createSource = nativeSource }: FeedProv
   const holds = useRef(0);
   const releaseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const appActive = useRef(AppState.currentState !== "background");
-  const api_ = useRef(api);
-  const createSource_ = useRef(createSource);
-  useEffect(() => {
-    api_.current = api;
-    createSource_.current = createSource;
-  }, [api, createSource]);
-
   const [stream] = useState(
     () =>
       new RelayStream(
-        { fetchToken: () => api_.current.derivativesToken(), createSource: (url) => createSource_.current(url) },
+        { fetchToken: () => api.derivativesToken(), createSource },
         {
           onUniverse: setCompanies,
           onTick: (tick) => setFeed((previous) => mergeTick(previous, tick)),
@@ -67,6 +60,11 @@ export function FeedProvider({ children, createSource = nativeSource }: FeedProv
         },
       ),
   );
+
+  // The stream outlives renders, so it is handed the latest api and source factory rather than the first.
+  useEffect(() => {
+    stream.setDeps({ fetchToken: () => api.derivativesToken(), createSource });
+  }, [stream, api, createSource]);
 
   const acquire = useCallback(() => {
     holds.current += 1;

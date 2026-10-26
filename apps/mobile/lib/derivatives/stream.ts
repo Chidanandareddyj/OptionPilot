@@ -55,9 +55,14 @@ export class RelayStream {
   private waiters: (() => void)[] = [];
 
   constructor(
-    private readonly deps: StreamDeps,
+    private deps: StreamDeps,
     private readonly handlers: StreamHandlers,
   ) {}
+
+  /** Swaps the token fetcher and source factory, for when the caller's own versions change between renders. */
+  setDeps(deps: StreamDeps) {
+    this.deps = deps;
+  }
 
   get running() {
     return this.active;
