@@ -14,7 +14,7 @@ import { money, signed } from "@/lib/analysis/format";
 /** Space between the card edge and the plot: left for the y labels, bottom for the axis. */
 export const CHART_MARGIN = { left: 44, top: 36, right: 20, bottom: 72 } as const;
 /** The compact chart (Compare views) has no strike labels under the axis, so less room is kept there. */
-const COMPACT_MARGIN = { ...CHART_MARGIN, top: 32, bottom: 44 } as const;
+const COMPACT_MARGIN = { ...CHART_MARGIN, top: 35, bottom: 45 } as const;
 /**
  * The canvas is this much wider than the layout on each side. The y labels are 44 px wide and the
  * design lets them spill into the card padding, so the canvas covers that padding too.
@@ -126,7 +126,10 @@ export function layoutChart(input: ChartInput): ChartLayout {
     clamp(xmin + ((x - plot.left) / (plot.right - plot.left || 1)) * (xmax - xmin), xmin, xmax);
   const zeroY = yOf(0);
 
-  const xTickValues = innerTicks(xmin, xmax, 5);
+  // The compact chart labels the window's two edges and three prices between them.
+  const xTickValues = compact
+    ? [0, 1, 2, 3, 4].map((i) => Math.round(xmin + ((xmax - xmin) * i) / 4))
+    : innerTicks(xmin, xmax, 5);
   const tickStep = xTickValues.length > 1 ? xTickValues[1] - xTickValues[0] : (xmax - xmin) / 5;
   const rulerStep = tickStep / 20;
   const ruler: ChartLayout["ruler"] = [];

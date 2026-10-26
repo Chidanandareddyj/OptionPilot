@@ -23,16 +23,16 @@ export function RankedList({ rows, onShowPayoff }: RankedListProps) {
               accessibilityState={{ expanded }}
               accessibilityLabel={`${row.position} ${row.name}, ${row.viable ? "viable" : "not viable"}, score ${row.score.toFixed(0)}`}
               onPress={() => setOpen(expanded ? null : row.key)}
-              className="min-h-[52px] flex-row items-center gap-3 px-4 py-3"
+              className="min-h-[56px] flex-row items-center gap-3 px-4 py-3"
             >
               <Text size="xs" mono tone="faint">
                 {row.position}
               </Text>
-              <Text weight="medium" numberOfLines={1} className="flex-1">
+              <Text size="sm" numberOfLines={1} className="flex-1">
                 {row.name}
               </Text>
               <Tag variant="outline" tone={row.viable ? "profit" : "loss"} icon={row.viable ? CheckIcon : XIcon} label={row.viable ? "Viable" : "Not viable"} />
-              <Text mono className="w-8 text-right">
+              <Text size="sm" mono className="w-8 text-right">
                 {row.score.toFixed(0)}
               </Text>
             </Pressable>

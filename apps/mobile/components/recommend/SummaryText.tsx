@@ -21,7 +21,7 @@ export function SummaryText({ text }: { text: string }) {
             </Text>
           </View>
         ) : (
-          <Text key={index} size="sm" tone="muted">
+          <Text key={index} size="sm">
             {line.text}
           </Text>
         ),

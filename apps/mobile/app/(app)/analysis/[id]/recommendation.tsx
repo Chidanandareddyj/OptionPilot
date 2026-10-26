@@ -14,11 +14,13 @@ import { Button, Skeleton, Text } from "@/components/ui";
 import { bestPick, contextBadges, decisionSubtitle, rankedRows } from "@/lib/analysis/recommend";
 import { analysisHeader } from "@/lib/analysis/model";
 import { useAnalysis } from "@/lib/api/hooks";
+import { useTheme } from "@/lib/theme/ThemeProvider";
 
 /** The answer to "Which strategy fits?": the pick, the numbers behind it and the ranking. Reads the saved recommendation. */
 export default function RecommendationScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { colors } = useTheme();
   const navHeight = useNavBarHeight();
   const barClearance = useActionBarClearance();
   const detail = useAnalysis(id);
@@ -63,7 +65,7 @@ export default function RecommendationScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="gap-2">
-          <Text size="3xl" weight="semibold" tight accessibilityRole="header">
+          <Text size="4xl" weight="semibold" tight accessibilityRole="header">
             Which strategy fits?
           </Text>
           {decision ? (
@@ -82,11 +84,12 @@ export default function RecommendationScreen() {
                 {summary ? <SummaryText text={summary} /> : null}
               </>
             ) : (
-              <FormAlert
-                icon={WarningIcon}
-                title="No strategy is viable"
-                message="No strategy is viable for this view and loss budget. Expand the rows below to see why."
-              />
+              <View accessibilityRole="alert" className="flex-row items-center gap-3 rounded-2xl border border-border bg-card p-4">
+                <WarningIcon size={24} weight="fill" color={colors.foreground} />
+                <Text size="sm" className="flex-1">
+                  No strategy is viable for this view and loss budget. Expand the rows below to see why.
+                </Text>
+              </View>
             )}
             <RankedList rows={rankedRows(decision)} onShowPayoff={showPayoff} />
           </>

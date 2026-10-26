@@ -11,7 +11,7 @@ export function BestPickCard({ pick, onShowPayoff }: BestPickCardProps) {
   const { colors } = useTheme();
   return (
     <View
-      className="gap-3 rounded-2xl border border-primary bg-card p-4"
+      className="gap-3 rounded-2xl border border-primary bg-accent p-4"
       accessible={false}
       style={{ shadowColor: colors.primary, shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 0 } }}
     >

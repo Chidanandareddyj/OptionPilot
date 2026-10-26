@@ -8,7 +8,7 @@ import type { NormalizedStrategy } from "@optionpilot/shared";
 import { ChartCanvas } from "./ChartCanvas";
 
 export const CHART_HEIGHT = 252;
-export const COMPACT_CHART_HEIGHT = 216;
+export const COMPACT_CHART_HEIGHT = 217;
 
 type PayoffChartProps = {
   strategy: NormalizedStrategy;
@@ -83,7 +83,7 @@ export function PayoffChart({ strategy, spot, compact = false, onScrubChange }: 
         <Inset pointerEvents="none" className="absolute inset-x-2 inset-y-0" />
         <View
           onLayout={onLayout}
-          style={{ height, marginTop: 8, marginBottom: 4 }}
+          style={{ height, marginTop: compact ? 0 : 8, marginBottom: compact ? 0 : 4 }}
           accessible
           accessibilityRole="image"
           accessibilityLabel={`Payoff chart for ${strategy.name}. Drag to read the profit or loss at any price.`}

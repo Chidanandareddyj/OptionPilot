@@ -1,14 +1,13 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
-import type { Category } from "@optionpilot/shared";
+import { initialCompareState, type Category } from "@optionpilot/shared";
 import { FormAlert } from "@/components/forms/FormAlert";
 import { SparkleIcon, XIcon } from "@/components/icons";
 import { MaxLossField } from "@/components/recommend/MaxLossField";
 import { ViewPicker } from "@/components/recommend/ViewPicker";
 import { Button, SegmentedControl, Text } from "@/components/ui";
 import { DEFAULT_MAX_LOSS, decideErrorMessage, decideInput } from "@/lib/analysis/recommend";
-import { asDecision } from "@optionpilot/shared";
 import { useAnalysis, useDecide } from "@/lib/api/hooks";
 import { useScreenInsets } from "@/lib/safe-area";
 import { useTheme } from "@/lib/theme/ThemeProvider";
@@ -27,10 +26,14 @@ export default function RecommendSheet() {
   const detail = useAnalysis(id);
   const decide = useDecide(id);
 
-  const saved = asDecision(detail.data?.decision);
   const [pane, setPane] = useState<Pane | undefined>(paneParam === "left" || paneParam === "right" ? paneParam : undefined);
-  const [view, setView] = useState<Category>(saved?.view ?? (pane ? PANE_DEFAULT[pane] : "bullish"));
-  const [amount, setAmount] = useState(String(saved?.max_loss_budget ?? DEFAULT_MAX_LOSS));
+  // What was scored last seeds the form. The answer may arrive after the sheet opens, so the fields stay unset until the user edits them.
+  const state = useMemo(() => initialCompareState(detail.data?.decision), [detail.data]);
+  const prior = pane ? state[pane] : state.single;
+  const [chosenView, setChosenView] = useState<Category | null>(null);
+  const [typedAmount, setTypedAmount] = useState<string | null>(null);
+  const view = chosenView ?? prior?.view ?? (pane ? PANE_DEFAULT[pane] : "bullish");
+  const amount = typedAmount ?? String(prior?.max_loss_budget ?? DEFAULT_MAX_LOSS);
 
   const input = decideInput(id, view, amount, pane);
   const scoring = decide.isPending;
@@ -48,7 +51,7 @@ export default function RecommendSheet() {
 
   const choosePane = (next: Pane) => {
     setPane(next);
-    setView(PANE_DEFAULT[next]);
+    setChosenView(null);
     decide.reset();
   };
 
@@ -79,11 +82,11 @@ export default function RecommendSheet() {
             onChange={choosePane}
           />
         ) : null}
-        <ViewPicker value={view} onChange={setView} disabled={scoring} />
+        <ViewPicker value={view} onChange={setChosenView} disabled={scoring} />
         <MaxLossField
           value={amount}
           onChangeText={(text) => {
-            setAmount(text);
+            setTypedAmount(text);
             if (decide.isError) decide.reset();
           }}
           onSubmit={submit}

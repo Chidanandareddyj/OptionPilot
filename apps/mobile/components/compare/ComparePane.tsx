@@ -9,8 +9,8 @@ type ComparePaneProps = { strategy: NormalizedStrategy; spot: number };
 /** One of the two views side by side: its view and strategy, over a compact payoff chart. */
 export function ComparePane({ strategy, spot }: ComparePaneProps) {
   return (
-    <Card className="gap-2 p-3" accessible={false}>
-      <View className="flex-row items-center gap-2 px-1">
+    <Card className="gap-2 p-2" accessible={false}>
+      <View className="flex-row items-center gap-2 px-2 pt-1">
         <ViewTag view={strategy.category} />
         <Text weight="semibold" numberOfLines={1} className="flex-1">
           {strategy.name}

@@ -10,11 +10,11 @@ export function EmptyMatches({ query, total }: EmptyMatchesProps) {
   const { colors } = useTheme();
   const text = query.trim();
   return (
-    <View className="items-center gap-2 px-6 pt-10" accessibilityRole="alert">
-      <View className="mb-2 h-14 w-14 items-center justify-center rounded-xl bg-muted">
-        <MagnifyingGlassIcon size={28} color={colors.mutedForeground} />
+    <View className="items-center gap-2 px-6 pt-12" accessibilityRole="alert">
+      <View className="mb-2 h-16 w-16 items-center justify-center rounded-xl bg-muted">
+        <MagnifyingGlassIcon size={32} color={colors.mutedForeground} />
       </View>
-      <Text size="lg" weight="semibold">
+      <Text size="xl" weight="semibold">
         No strategies match
       </Text>
       <Text size="sm" tone="muted" className="text-center">

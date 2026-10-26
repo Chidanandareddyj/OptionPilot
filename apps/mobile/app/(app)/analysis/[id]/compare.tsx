@@ -85,7 +85,7 @@ export default function CompareScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View className="mb-1 gap-2">
-            <Text size="3xl" weight="semibold" tight accessibilityRole="header">
+            <Text size="4xl" weight="semibold" tight accessibilityRole="header">
               Compare views
             </Text>
             <Text size="sm" tone="muted">
@@ -124,7 +124,7 @@ export default function CompareScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="mb-1 gap-2">
-          <Text size="3xl" weight="semibold" tight accessibilityRole="header">
+          <Text size="4xl" weight="semibold" tight accessibilityRole="header">
             {`Compare all\n${strategies.length} strategies`}
           </Text>
           <Text size="sm" tone="muted">
