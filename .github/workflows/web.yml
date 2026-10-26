@@ -1,0 +1,45 @@
+name: web
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # Dummy values. Nothing here is a real credential, and the job never connects to a database.
+      DATABASE_URL_UNPOOLED: postgresql://ci:ci@127.0.0.1:5432/optionpilot
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/optionpilot
+      NEON_AUTH_BASE_URL: https://auth.example.test
+      # createNeonAuth rejects a cookie secret shorter than 32 characters at module load.
+      NEON_AUTH_COOKIE_SECRET: ci-cookie-secret-must-be-32-characters-long
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Lint against the recorded baseline
+        run: node .github/scripts/check-eslint-baseline.mjs
+
+      # LayoutProps and PageProps are generated globals. tsc cannot see them until this runs.
+      - name: Generate Next.js route types
+        run: npx next typegen
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
