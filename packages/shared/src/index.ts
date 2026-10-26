@@ -24,6 +24,16 @@ export {
 } from "./brand/logo";
 
 export {
+  COMPARE_FILTERS,
+  asDecision,
+  filterCount,
+  initialCompareState,
+  paneStrategies,
+  visibleStrategies,
+} from "./compare";
+export type { CompareFilter, CompareState } from "./compare";
+
+export {
   ANALYSIS_PAGE_SIZE,
   analysisListWhere,
   analysisSpot,
