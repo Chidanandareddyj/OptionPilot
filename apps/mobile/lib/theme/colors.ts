@@ -23,8 +23,8 @@ export function surfaceColors(scheme: Scheme) {
   const c = themeColors[scheme];
   const dark = scheme === "dark";
   return {
-    glass: withAlpha(c.card, 0.84),
-    glassBackground: withAlpha(c.background, 0.88),
+    glass: withAlpha(c.card, 0.94),
+    glassBackground: withAlpha(c.background, 0.94),
     scrim: dark ? "rgba(0,0,0,0.56)" : "rgba(28,26,23,0.36)",
     profitFill: withAlpha(c.profit, dark ? 0.18 : 0.16),
     lossFill: withAlpha(c.loss, dark ? 0.18 : 0.14),
