@@ -9,7 +9,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { asDecision, initialCompareState, paneStrategies, visibleStrategies, type Pane } from "@optionpilot/shared";
+import { initialCompareState, paneStrategies, visibleStrategies, type Pane } from "@optionpilot/shared";
 import { cn } from "@/lib/utils";
 import { MobileStrategyCard } from "./mobile-strategy-card";
 import { MobileStrategySheet } from "./mobile-strategy-sheet";
