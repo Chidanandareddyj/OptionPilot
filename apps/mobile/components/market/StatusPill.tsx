@@ -6,6 +6,13 @@ import type { MarketStatus } from "@/lib/market/status";
 /** "NSE open 14:46 IST", "NSE closed" or "Offline", with a green or grey dot. Nothing until the status is known. */
 export function StatusPill({ status }: { status: MarketStatus | null }) {
   if (!status) return null;
+  if (status.kind === "busy") {
+    return (
+      <Text size="sm" tone="muted" accessibilityLiveRegion="polite">
+        {status.label}
+      </Text>
+    );
+  }
   return (
     <View
       accessible

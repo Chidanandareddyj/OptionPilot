@@ -11,7 +11,9 @@ export function formatIstClock(moment: Date): string {
 export type MarketStatus =
   | { kind: "open"; label: "NSE open"; clock: string }
   | { kind: "closed"; label: "NSE closed" }
-  | { kind: "offline"; label: "Offline" };
+  | { kind: "offline"; label: "Offline" }
+  /** A word in place of the market state while the live feed connects, such as "Connecting…". */
+  | { kind: "busy"; label: string };
 
 /** What the status pill above the Terminal title says. */
 export function marketStatus(input: { online: boolean; isLive?: boolean; timestamp?: string }): MarketStatus | null {

@@ -9,10 +9,12 @@ type SegmentedControlProps<T extends string> = {
   value: T;
   onChange: (value: T) => void;
   className?: string;
+  /** `primary` fills the selected segment with the accent colour, as the derivatives switchers do. */
+  tone?: "raised" | "primary";
 };
 
 /** The 52 px switcher between views of one screen. The selected segment is raised, not coloured. */
-export function SegmentedControl<T extends string>({ segments, value, onChange, className }: SegmentedControlProps<T>) {
+export function SegmentedControl<T extends string>({ segments, value, onChange, className, tone = "raised" }: SegmentedControlProps<T>) {
   return (
     <View
       accessibilityRole="tablist"
@@ -27,9 +29,9 @@ export function SegmentedControl<T extends string>({ segments, value, onChange, 
             accessibilityState={{ selected }}
             accessibilityLabel={segment.count === undefined ? segment.label : `${segment.label}, ${segment.count}`}
             onPress={() => onChange(segment.value)}
-            className={cn("flex-1 flex-row items-center justify-center gap-1 rounded-lg", selected && "bg-accent")}
+            className={cn("flex-1 flex-row items-center justify-center gap-1 rounded-lg", selected && (tone === "primary" ? "bg-primary" : "bg-accent"))}
           >
-            <Text size="sm" weight={selected ? "semibold" : "medium"} tone={selected ? "foreground" : "muted"} numberOfLines={1}>
+            <Text size="sm" weight={selected ? "semibold" : "medium"} tone={selected ? (tone === "primary" ? "onPrimary" : "foreground") : "muted"} numberOfLines={1}>
               {segment.label}
             </Text>
             {segment.count === undefined ? null : (

@@ -1,4 +1,5 @@
 import type { Company, ConnState, RelayTick } from "@optionpilot/shared";
+import { FakeSource } from "./fixtures/relay";
 import {
   MAX_STREAM_MS,
   REFRESH_TIMEOUT_MS,
@@ -7,34 +8,11 @@ import {
   TOKEN_RETRY_MS,
   WATCHDOG_MS,
   backoffMs,
-  type StreamSource,
 } from "@/lib/derivatives/stream";
-
-type Listener = (event: { data?: string | null; type?: string }) => void;
-
-/** An EventSource double: tests push events into it as the relay would. */
-class FakeSource implements StreamSource {
-  static all: FakeSource[] = [];
-  closed = false;
-  private listeners = new Map<string, Listener[]>();
-  constructor(readonly url: string) {
-    FakeSource.all.push(this);
-  }
-  addEventListener(type: string, listener: Listener) {
-    this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
-  }
-  close() {
-    this.closed = true;
-  }
-  emit(type: string, data?: unknown) {
-    const payload = typeof data === "string" ? data : data === undefined ? null : JSON.stringify(data);
-    (this.listeners.get(type) ?? []).forEach((listener) => listener({ type, data: payload }));
-  }
-}
 
 const company: Company = { k: "A", s: "AAA", n: "Aaa", e: "2026-10-27", l: 100, strikes: [90, 100, 110] };
 const tick = (now = 1): RelayTick => ({ rows: [{ k: "A", sp: 100, w: [[100, 7, now, 6, now]] }], live: true, status: "NORMAL_OPEN", now });
-const last = () => FakeSource.all[FakeSource.all.length - 1];
+const last = () => FakeSource.latest;
 
 function setup(fetchToken?: () => Promise<{ url: string; token: string }>) {
   let issued = 0;

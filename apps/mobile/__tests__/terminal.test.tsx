@@ -3,7 +3,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import TerminalTab from "@/app/(app)/(tabs)/terminal";
 import { DETAIL, failure, fakeApi, INDICES, QUOTES, renderApp, SUMMARY } from "./app-harness";
 
-const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn() };
+const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), navigate: jest.fn() };
 jest.mock("expo-router", () => ({ useRouter: () => mockRouter, useIsFocused: () => true }));
 
 let mockApiFetch: ReturnType<typeof fakeApi>["apiFetch"];
@@ -131,5 +131,24 @@ describe("Terminal home (13)", () => {
     await waitFor(() =>
       expect(api.calls.filter((call) => call.path.startsWith("/api/market/indices")).length).toBeGreaterThan(before),
     );
+  });
+});
+
+describe("Browse by view (14)", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    netInfo.fetch.mockResolvedValue({ isConnected: true, isInternetReachable: true });
+  });
+
+  it.each([
+    ["Bullish", "bull_call_spread"],
+    ["Bearish", "bear_put_spread"],
+    ["Neutral", "call_butterfly"],
+    ["Volatile", "long_straddle"],
+  ])("opens the live derivatives board on %s's strategy", async (view, strategy) => {
+    routes();
+    await renderApp(<TerminalTab />);
+    await fireEvent.press(await screen.findByRole("button", { name: new RegExp(`^${view}, \\d+ strategies`) }));
+    expect(mockRouter.navigate).toHaveBeenCalledWith({ pathname: "/derivatives", params: { strategy, at: expect.any(String) } });
   });
 });

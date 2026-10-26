@@ -6,6 +6,18 @@ import { SignedOutError } from "@/lib/auth/errors";
 import { failure, fakeApi, QUOTES } from "./app-harness";
 
 describe("createApi", () => {
+  it("fetches the relay's address and a 60-second token", async () => {
+    const answer = { url: "https://relay.test", token: "1790000000000.ab" };
+    const { apiFetch, calls } = fakeApi({ "GET /api/derivatives/token": answer });
+    expect(await createApi(apiFetch).derivativesToken()).toEqual(answer);
+    expect(calls[0]!.path).toBe("/api/derivatives/token");
+  });
+
+  it("reads a missing relay as an error the board can show", async () => {
+    const { apiFetch } = fakeApi({ "GET /api/derivatives/token": failure(503, "Live feed is not configured.") });
+    await expect(createApi(apiFetch).derivativesToken()).rejects.toMatchObject({ status: 503, message: "Live feed is not configured." });
+  });
+
   it("asks for stock quotes with the symbols in the query", async () => {
     const { apiFetch, calls } = fakeApi({ "GET /api/market/quotes": { quotes: QUOTES } });
     const quotes = await createApi(apiFetch).quotes(["RELIANCE", "TCS"]);
