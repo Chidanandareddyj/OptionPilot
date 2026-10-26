@@ -10,6 +10,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppShell } from "@/app/components/app-shell";
 import type { ShellUser } from "@/app/components/avatar-menu";
+import { MobileSymbolSheet } from "@/app/components/mobile-symbol-sheet";
 import { Spinner } from "@/app/components/spinner";
 import { cn } from "@/lib/utils";
 import DerivativesBoard from "./derivatives-board";
@@ -119,6 +120,10 @@ export default function AnalyzePanel({ history, user }: { history: Snapshot[]; u
     </>
   );
 
+  const activeSpot =
+    (active?.result as { underlying_spot_price?: number; spot_price?: number } | undefined)?.underlying_spot_price ??
+    (active?.result as { underlying_spot_price?: number; spot_price?: number } | undefined)?.spot_price;
+
   return (
     <AppShell
       active={showBoard ? "derivatives" : "terminal"}
@@ -129,6 +134,14 @@ export default function AnalyzePanel({ history, user }: { history: Snapshot[]; u
       onNavigate={(view) => setShowBoard(view === "derivatives")}
     >
       <div className="flex flex-col gap-4">
+        {/* Mobile / Tablet Top Symbol Selector Trigger */}
+        <MobileSymbolSheet
+          activeSymbol={showBoard ? undefined : active?.company || company}
+          spotPrice={showBoard ? undefined : activeSpot}
+          disabled={pending}
+          onSelect={analyze}
+        />
+
         {error && (
           <Alert variant="destructive" className="px-4 py-3">
             <WarningIcon />
@@ -151,7 +164,7 @@ export default function AnalyzePanel({ history, user }: { history: Snapshot[]; u
             decision={active.decision}
           />
         ) : (
-          <Empty className="min-h-[480px] rounded-xl bg-card ring-1 ring-foreground/10">
+          <Empty className="min-h-[420px] rounded-xl bg-card ring-1 ring-foreground/10">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <ChartLineUpIcon />
