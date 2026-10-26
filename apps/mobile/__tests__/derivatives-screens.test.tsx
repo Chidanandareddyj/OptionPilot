@@ -1,7 +1,8 @@
 import NetInfo from "@react-native-community/netinfo";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react-native";
 import { AppState } from "react-native";
-import { applyView, evaluateBoard, mergeTick, DEFAULT_BOARD_VIEW, type BoardFeed } from "@optionpilot/shared";
+import { applyView, evaluateBoard, mergeTick, type BoardFeed } from "@optionpilot/shared";
+import { MOBILE_BOARD_VIEW } from "@/lib/derivatives/model";
 import DerivativesTab from "@/app/(app)/(tabs)/derivatives";
 import FiltersSheet from "@/app/(app)/derivatives/filters";
 import ContractSheet from "@/app/(app)/derivatives/contract/[key]";
@@ -49,7 +50,7 @@ beforeEach(() => {
 afterEach(() => jest.restoreAllMocks());
 
 describe("Derivatives tab (37)", () => {
-  it("waits for prices with a skeleton, then lists every company ranked by profit to risk", async () => {
+  it("waits for prices with a skeleton, then lists every company A to Z", async () => {
     await renderBoard(<DerivativesTab />);
     expect(screen.getByRole("header", { name: "All derivatives" })).toBeOnTheScreen();
     expect(screen.getByText("Waiting for prices…")).toBeOnTheScreen();
@@ -61,7 +62,7 @@ describe("Derivatives tab (37)", () => {
     await relaySends(source);
 
     const feed = feedFrom(fullTick());
-    const expected = applyView(evaluateBoard(UNIVERSE, feed, "bull_call_spread").evaluations, DEFAULT_BOARD_VIEW).map((e) => e.symbol);
+    const expected = applyView(evaluateBoard(UNIVERSE, feed, "bull_call_spread").evaluations, MOBILE_BOARD_VIEW).map((e) => e.symbol);
     expect(expected.length).toBeGreaterThan(1);
     expect(cardNames()).toEqual(expected);
     expect(screen.getByText(`Showing ${expected.length} of ${expected.length} contracts`)).toBeOnTheScreen();
@@ -97,7 +98,7 @@ describe("Derivatives tab (37)", () => {
     await renderBoard(<DerivativesTab />);
     await relaySends(await openedStream());
     await fireEvent.press(screen.getByRole("tab", { name: "Bear Put Spread" }));
-    const expected = applyView(evaluateBoard(UNIVERSE, feedFrom(fullTick()), "bear_put_spread").evaluations, DEFAULT_BOARD_VIEW).map((e) => e.symbol);
+    const expected = applyView(evaluateBoard(UNIVERSE, feedFrom(fullTick()), "bear_put_spread").evaluations, MOBILE_BOARD_VIEW).map((e) => e.symbol);
     expect(cardNames()).toEqual(expected);
   });
 
@@ -246,7 +247,6 @@ describe("Stale rows (39)", () => {
     await fireEvent(screen.getByLabelText("Show stale rows"), "valueChange", true);
     expect(await screen.findByText(/2 stale rows shown faded/)).toBeOnTheScreen();
     expect(cardNames()).toHaveLength(UNIVERSE.length);
-    expect(screen.getByRole("button", { name: /Stale rows shown/ })).toBeOnTheScreen();
   });
 });
 

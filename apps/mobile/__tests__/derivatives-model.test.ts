@@ -1,4 +1,4 @@
-import { DEFAULT_BOARD_VIEW, evaluateBoard, mergeTick, type BoardView, type Evaluation } from "@optionpilot/shared";
+import { evaluateBoard, mergeTick, type BoardView, type Evaluation } from "@optionpilot/shared";
 import {
   activeFilterCount,
   boardStatus,
@@ -8,6 +8,7 @@ import {
   filterChips,
   formatTradeTime,
   legSummary,
+  MOBILE_BOARD_VIEW,
   nextOpenText,
   parseStrategy,
   resetFilters,
@@ -17,7 +18,7 @@ import {
 import { contractDetail } from "@/lib/derivatives/detail";
 import { UNIVERSE, FRIDAY_CLOSE, MONDAY_AFTERNOON, fullTick, liveRow, tickOf } from "./fixtures/relay";
 
-const view = (patch: Partial<BoardView> = {}): BoardView => ({ ...DEFAULT_BOARD_VIEW, ...patch });
+const view = (patch: Partial<BoardView> = {}): BoardView => ({ ...MOBILE_BOARD_VIEW, ...patch });
 const IST = (y: number, m: number, d: number, h: number, min = 0) => Date.UTC(y, m - 1, d, h, min) - 5.5 * 3600_000;
 
 describe("filters", () => {
@@ -27,13 +28,17 @@ describe("filters", () => {
   });
 
   it("makes a chip per filter that is on, in the order the sheet shows them", () => {
-    const v = view({ investment: "low", min: 1500, max: 250000, hideStale: false });
+    const v = view({ investment: "low", min: 1500, max: 250000 });
     expect(filterChips(v)).toEqual([
       { id: "investment", label: "Investment: Low" },
       { id: "min", label: "Min ₹1,500" },
       { id: "max", label: "Max ₹2,50,000" },
-      { id: "stale", label: "Stale rows shown" },
     ]);
+  });
+
+  it("does not count showing stale rows, which the summary line states", () => {
+    expect(filterChips(view({ hideStale: false }))).toEqual([]);
+    expect(activeFilterCount(view({ hideStale: false }))).toBe(0);
   });
 
   it("counts a search in the badge but gives it no chip", () => {
@@ -47,7 +52,6 @@ describe("filters", () => {
     expect(clearFilter(v, "investment").investment).toBe("all");
     expect(clearFilter(v, "min").min).toBeNull();
     expect(clearFilter(v, "max").max).toBeNull();
-    expect(clearFilter(v, "stale").hideStale).toBe(true);
     expect(resetFilters(v)).toEqual(view());
   });
 });

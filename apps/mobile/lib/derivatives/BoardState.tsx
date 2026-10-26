@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import { DEFAULT_BOARD_VIEW, type BoardView } from "@optionpilot/shared";
-import { DEFAULT_STRATEGY } from "./model";
+import type { BoardView } from "@optionpilot/shared";
+import { DEFAULT_STRATEGY, MOBILE_BOARD_VIEW } from "./model";
 
 type BoardState = {
   strategy: string;
@@ -14,7 +14,7 @@ const Context = createContext<BoardState | null>(null);
 /** The board's strategy and filters. The Derivatives tab and its Filters sheet both edit them, so they live above both. */
 export function BoardStateProvider({ children }: { children: ReactNode }) {
   const [strategy, setStrategy] = useState<string>(DEFAULT_STRATEGY);
-  const [view, setView] = useState<BoardView>(DEFAULT_BOARD_VIEW);
+  const [view, setView] = useState<BoardView>(MOBILE_BOARD_VIEW);
   const value = useMemo(() => ({ strategy, setStrategy, view, setView }), [strategy, view]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

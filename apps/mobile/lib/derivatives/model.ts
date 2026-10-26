@@ -1,4 +1,5 @@
 import {
+  DEFAULT_BOARD_VIEW,
   STRATEGY_DEFINITIONS,
   signedInr,
   type BoardFeed,
@@ -15,6 +16,9 @@ const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 /** NSE opens at 9:15 am IST, in minutes after midnight. */
 const OPEN_MINUTES = 9 * 60 + 15;
+
+/** The board's starting view. The web opens ranked by profit to risk; the phone's designs list companies A to Z, and it has no sort control. */
+export const MOBILE_BOARD_VIEW: BoardView = { ...DEFAULT_BOARD_VIEW, sort: "symbol", dir: "asc" };
 
 /** The two strategies the board's switcher offers. */
 export const DEFAULT_STRATEGIES = ["bull_call_spread", "bear_put_spread"] as const;
@@ -43,15 +47,14 @@ export const parseStrategy = (value: string | undefined) => (value && STRATEGY_D
 
 const rupees = (n: number) => `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
-export type FilterId = "investment" | "min" | "max" | "stale";
+export type FilterId = "investment" | "min" | "max";
 
-/** One removable chip under the switcher per filter that is on. Search lives in its own box. */
+/** One removable chip under the switcher per filter that is on. Search lives in its own box, and showing stale rows is said in the summary line instead. */
 export function filterChips(view: BoardView): { id: FilterId; label: string }[] {
   const chips: { id: FilterId; label: string }[] = [];
   if (view.investment !== "all") chips.push({ id: "investment", label: `Investment: ${view.investment === "low" ? "Low" : "High"}` });
   if (view.min != null) chips.push({ id: "min", label: `Min ${rupees(view.min)}` });
   if (view.max != null) chips.push({ id: "max", label: `Max ${rupees(view.max)}` });
-  if (!view.hideStale) chips.push({ id: "stale", label: "Stale rows shown" });
   return chips;
 }
 
@@ -62,8 +65,7 @@ export const activeFilterCount = (view: BoardView) => filterChips(view).length +
 export function clearFilter(view: BoardView, id: FilterId): BoardView {
   if (id === "investment") return { ...view, investment: "all" };
   if (id === "min") return { ...view, min: null };
-  if (id === "max") return { ...view, max: null };
-  return { ...view, hideStale: true };
+  return { ...view, max: null };
 }
 
 /** Filters back to their defaults. The search text goes too, as "Clear filters" under no matches promises. */
