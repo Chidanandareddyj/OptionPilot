@@ -40,7 +40,7 @@ export const failure = (status: number, error: string) => new Response(JSON.stri
 
 /** Renders a screen with the theme, a fresh query cache and the analyze flow, as the signed-in layout does, under the gesture root the app has. */
 export function renderApp(ui: ReactElement) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { gcTime: Infinity } } });
   return renderThemed(
     <QueryClientProvider client={client}>
       <GestureHandlerRootView>

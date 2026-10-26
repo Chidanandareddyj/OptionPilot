@@ -1,7 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 import { AppearancePicker } from "@/components/appearance/AppearancePicker";
 import { BrandMark } from "@/components/brand/BrandMark";
-import { Button, Text } from "@/components/ui";
+import { Button, Tag, Text } from "@/components/ui";
 import { renderThemed } from "./test-utils";
 
 describe("Button", () => {
@@ -59,5 +59,21 @@ describe("AppearancePicker", () => {
     await fireEvent.press(await screen.findByRole("radio", { name: /^Light\./ }));
     expect(screen.getByRole("radio", { name: /^Light\./ })).toBeSelected();
     expect(screen.getByRole("radio", { name: /^System\./ })).not.toBeSelected();
+  });
+});
+
+describe("Tag", () => {
+  it("colours an outline tag's label for Viable and Not viable, and leaves a plain one quiet", async () => {
+    await renderThemed(
+      <>
+        <Tag variant="outline" tone="profit" label="Viable" />
+        <Tag variant="outline" tone="loss" label="Not viable" />
+        <Tag variant="outline" label="Quiet" />
+      </>,
+    );
+    const classes = (label: string) => String(screen.getByText(label).props.className);
+    expect(classes("Viable")).toContain("text-profit");
+    expect(classes("Not viable")).toContain("text-loss");
+    expect(classes("Quiet")).not.toMatch(/text-(profit|loss)/);
   });
 });
