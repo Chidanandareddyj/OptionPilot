@@ -22,9 +22,10 @@ export default async function OrganizationPage({
   }
 
   const { path } = await params;
+  const { name, email, image } = session.user;
 
   return (
-    <AuthAppShell name={session.user.name}>
+    <AuthAppShell user={{ name, email, image }} active="organizations">
       <OrganizationViewClient path={path} />
     </AuthAppShell>
   );

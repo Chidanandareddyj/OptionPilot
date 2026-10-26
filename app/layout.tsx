@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Instrument_Serif } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PageLoadingProvider } from "@/app/components/loading-overlay";
 import "./globals.css";
@@ -9,11 +11,9 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -25,14 +25,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
-        <PageLoadingProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </PageLoadingProvider>
+      <body className="flex min-h-full flex-col">
+        <ThemeProvider>
+          <TooltipProvider delayDuration={200}>
+            <PageLoadingProvider>
+              <AuthProvider>{children}</AuthProvider>
+            </PageLoadingProvider>
+          </TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -151,13 +151,6 @@ export const STRATEGY_DEFINITIONS: Record<string, StrategyDef> = {
   },
 };
 
-export const CATEGORY_BADGE: Record<Category, string> = {
-  bullish: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-  bearish: "border-rose-500/30 bg-rose-500/10 text-rose-300",
-  neutral: "border-sky-500/30 bg-sky-500/10 text-sky-300",
-  volatile: "border-indigo-400/30 bg-indigo-500/10 text-indigo-300",
-};
-
 export const inr = (n: number) => `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
 
 const formatLimit = (v: Limit) => (typeof v === "number" ? inr(v) : v ?? "—");
@@ -167,13 +160,13 @@ const round = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 export function keyMetrics(s: NormalizedStrategy) {
   const lotSuffix = s.lotSize > 1 ? ` (${s.lotSize.toLocaleString("en-IN")} lot)` : "";
   return [
-    { label: `${s.costOrCredit.label}${lotSuffix}`, value: inr(s.costOrCredit.amount), tone: "text-white" },
-    { label: `Max profit${lotSuffix}`, value: formatLimit(s.maxProfit), tone: "text-emerald-400" },
-    { label: `Max loss${lotSuffix}`, value: formatLimit(s.maxLoss), tone: "text-rose-400" },
+    { label: `${s.costOrCredit.label}${lotSuffix}`, value: inr(s.costOrCredit.amount), tone: "text-foreground" },
+    { label: `Max profit${lotSuffix}`, value: formatLimit(s.maxProfit), tone: "text-profit" },
+    { label: `Max loss${lotSuffix}`, value: formatLimit(s.maxLoss), tone: "text-loss" },
     {
       label: s.breakevens.length > 1 ? "Breakevens" : "Breakeven",
       value: s.breakevens.map(inr).join(" / ") || "—",
-      tone: "text-amber-300",
+      tone: "text-foreground",
     },
   ];
 }
