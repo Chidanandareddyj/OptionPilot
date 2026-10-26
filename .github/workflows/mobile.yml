@@ -1,0 +1,60 @@
+name: mobile
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "packages/shared/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/mobile.yml"
+  pull_request:
+    paths:
+      - "apps/mobile/**"
+      - "packages/shared/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/mobile.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Expo SDK 58 needs Node 22.13 or newer.
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        working-directory: .
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Expo doctor
+        run: npx --yes expo-doctor
+
+      # Bundles the JavaScript for both platforms. This catches missing assets and bad imports, but
+      # it is not a native build and does not run on a device.
+      - name: Export
+        run: npx expo export --platform ios --platform android --output-dir dist-native
