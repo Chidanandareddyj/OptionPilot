@@ -103,6 +103,22 @@ describe("Analysis screen (18 to 24)", () => {
     expect(await screen.findByRole("button", { name: "Back to History" })).toBeOnTheScreen();
   });
 
+  it("opened from History: banners that it is a saved snapshot, and goes back to History", async () => {
+    mockParams = { id: "an-1", snapshot: "1" };
+    useApi({ "GET /api/analyses/an-1": DETAIL });
+    await renderApp(<AnalysisScreen />);
+    expect(await screen.findByText("Saved snapshot")).toBeOnTheScreen();
+    expect(screen.getByText("26 Oct, 09:30 am IST · prices as saved, not live")).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Back to History" })).toBeOnTheScreen();
+  });
+
+  it("shows no snapshot banner for an analysis that was just run", async () => {
+    useApi({ "GET /api/analyses/an-1": DETAIL });
+    await renderApp(<AnalysisScreen />);
+    await screen.findByRole("header", { name: "RELIANCE" });
+    expect(screen.queryByText("Saved snapshot")).not.toBeOnTheScreen();
+  });
+
   it("opens Compare and Recommend on the strategy being viewed", async () => {
     useApi({ "GET /api/analyses/an-1": DETAIL });
     await renderApp(<AnalysisScreen />);

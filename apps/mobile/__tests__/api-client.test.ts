@@ -36,6 +36,27 @@ describe("createApi", () => {
     expect(await createApi(apiFetch).recentAnalyses()).toEqual([{ id: "a" }]);
   });
 
+  it("asks for a later page of saved analyses with its cursor, escaped", async () => {
+    const { apiFetch, calls } = fakeApi({ "GET /api/analyses": { analyses: [], nextCursor: null } });
+    const api = createApi(apiFetch);
+    await api.historyPage();
+    await api.historyPage("2026-10-01T00:00:00.000Z|a b");
+    expect(calls.map((call) => call.path)).toEqual(["/api/analyses", "/api/analyses?cursor=2026-10-01T00%3A00%3A00.000Z%7Ca%20b"]);
+  });
+
+  it("deletes an analysis, and counts one that is already gone as deleted", async () => {
+    const { apiFetch, calls } = fakeApi({ "DELETE /api/analyses/a": new Response(null, { status: 204 }) });
+    const api = createApi(apiFetch);
+    await expect(api.deleteAnalysis("a")).resolves.toBeUndefined();
+    expect(calls[0]).toMatchObject({ method: "DELETE", path: "/api/analyses/a" });
+    await expect(api.deleteAnalysis("gone")).resolves.toBeUndefined();
+  });
+
+  it("raises any other failure to delete", async () => {
+    const { apiFetch } = fakeApi({ "DELETE /api/analyses/a": failure(500, "Boom") });
+    await expect(createApi(apiFetch).deleteAnalysis("a")).rejects.toMatchObject({ status: 500 });
+  });
+
   it("escapes the id in the analysis path", async () => {
     const { apiFetch, calls } = fakeApi({});
     await createApi(apiFetch)

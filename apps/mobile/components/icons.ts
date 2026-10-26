@@ -33,6 +33,7 @@ export { SparkleIcon } from "phosphor-react-native/src/icons/Sparkle";
 export { SpinnerGapIcon } from "phosphor-react-native/src/icons/SpinnerGap";
 export { SunIcon } from "phosphor-react-native/src/icons/Sun";
 export { TableIcon } from "phosphor-react-native/src/icons/Table";
+export { TrashIcon } from "phosphor-react-native/src/icons/Trash";
 export { TrendDownIcon } from "phosphor-react-native/src/icons/TrendDown";
 export { TrendUpIcon } from "phosphor-react-native/src/icons/TrendUp";
 export { SlidersHorizontalIcon } from "phosphor-react-native/src/icons/SlidersHorizontal";

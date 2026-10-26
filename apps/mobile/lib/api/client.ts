@@ -23,7 +23,7 @@ export class ApiError extends Error {
 
 type ApiFetch = (path: string, init?: RequestInit) => Promise<Response>;
 
-type HistoryPage = { analyses: AnalysisSummary[]; nextCursor: string | null };
+export type HistoryPage = { analyses: AnalysisSummary[]; nextCursor: string | null };
 
 async function readJson(response: Response): Promise<unknown> {
   try {
@@ -61,6 +61,19 @@ export function createApi(apiFetch: ApiFetch) {
     /** The newest page of the signed-in user's saved analyses. */
     async recentAnalyses(): Promise<AnalysisSummary[]> {
       return (await request<HistoryPage>("/api/analyses")).analyses;
+    },
+
+    /** One page of the saved analyses, newest first. Pass the previous page's `nextCursor` for the next one. */
+    historyPage: (cursor?: string | null) =>
+      request<HistoryPage>(cursor ? `/api/analyses?cursor=${encodeURIComponent(cursor)}` : "/api/analyses"),
+
+    /** Deletes one saved analysis. A 404 means it is already gone, which is what was asked for. */
+    async deleteAnalysis(id: string): Promise<void> {
+      try {
+        await request<unknown>(`/api/analyses/${encodeURIComponent(id)}`, { method: "DELETE" });
+      } catch (error) {
+        if (!(error instanceof ApiError && error.status === 404)) throw error;
+      }
     },
 
     /** A 60 second token and the address of the live price relay. Fetch a new one for every connection. */

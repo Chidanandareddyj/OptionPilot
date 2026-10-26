@@ -4,6 +4,7 @@ import { ScrollView, View, type LayoutChangeEvent, type NativeScrollEvent, type 
 import { ActionBar, useActionBarClearance } from "@/components/analysis/ActionBar";
 import { AnalysisHeader } from "@/components/analysis/AnalysisHeader";
 import { AnalysisSkeleton } from "@/components/analysis/AnalysisSkeleton";
+import { SnapshotBanner } from "@/components/analysis/SnapshotBanner";
 import { LegsList } from "@/components/analysis/LegsList";
 import { PayoffCard } from "@/components/analysis/PayoffCard";
 import { PayoffTable } from "@/components/analysis/PayoffTable";
@@ -33,8 +34,14 @@ const SOLID_AFTER = 56;
 
 export default function AnalysisScreen() {
   const router = useRouter();
-  const { id, back, strategy: requested, at } = useLocalSearchParams<{ id: string; back?: string; strategy?: string; at?: string }>();
-  const backLabel = back || "Terminal";
+  const { id, back, strategy: requested, at, snapshot } = useLocalSearchParams<{
+    id: string;
+    back?: string;
+    strategy?: string;
+    at?: string;
+    snapshot?: string;
+  }>();
+  const backLabel = back || (snapshot === "1" ? "History" : "Terminal");
   const actionBarClearance = useActionBarClearance();
   const navHeight = useNavBarHeight();
   const { scheme } = useTheme();
@@ -99,6 +106,11 @@ export default function AnalysisScreen() {
         scrollEventThrottle={16}
         onScroll={onScroll}
       >
+        {snapshot === "1" ? (
+          <View className="mb-3">
+            <SnapshotBanner savedAt={analysis.createdAt} />
+          </View>
+        ) : null}
         <AnalysisHeader header={header} />
         <View className="mt-4">
           <StrategySelector strategy={strategy} onPress={() => setPicking(true)} />
