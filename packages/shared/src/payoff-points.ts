@@ -1,6 +1,7 @@
-import type { PayoffPoint } from "@/lib/payoff-series";
-import type { StrikeMarker } from "@/app/components/payoff-chart";
+import type { PayoffPoint } from "./payoff-series";
 import type { Leg, PayoffRow } from "./types";
+
+export type StrikeMarker = { price: number; label: string };
 
 export function payoffPoints(table: PayoffRow[]): PayoffPoint[] {
   return table

@@ -1,5 +1,5 @@
-app/api/market/indices/route.ts:125:17: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
-app/api/market/indices/route.ts:93:32: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
+app/api/market/indices/route.ts:58:32: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
+app/api/market/indices/route.ts:90:17: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
 app/components/AuthViewClient.tsx:333:63: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
 app/components/AuthViewClient.tsx:350:38: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
 app/components/AuthViewClient.tsx:351:42: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
@@ -9,11 +9,6 @@ app/components/mobile-bottom-nav.tsx:21:10: 1 @typescript-eslint/no-unused-vars 
 app/components/mobile-symbol-sheet.tsx:24:3: 1 @typescript-eslint/no-unused-vars 'symbolName' is defined but never used.
 app/components/mobile-symbol-sheet.tsx:25:8: 1 @typescript-eslint/no-unused-vars 'Suggestion' is defined but never used.
 app/components/mobile-symbol-sheet.tsx:6:3: 1 @typescript-eslint/no-unused-vars 'SparkleIcon' is defined but never used.
-app/dashboard/adversarial.test.ts:14:8: 1 @typescript-eslint/no-unused-vars 'SortKey' is defined but never used.
-app/dashboard/adversarial.test.ts:16:56: 1 @typescript-eslint/no-unused-vars 'keyMetrics' is defined but never used.
-app/dashboard/adversarial.test.ts:6:3: 1 @typescript-eslint/no-unused-vars 'isCompareDecision' is defined but never used.
-app/dashboard/adversarial.test.ts:7:8: 1 @typescript-eslint/no-unused-vars 'Pane' is defined but never used.
-app/dashboard/adversarial.test.ts:8:8: 1 @typescript-eslint/no-unused-vars 'StoredDecision' is defined but never used.
-app/dashboard/recommendation-panel.tsx:345:7: 2 react-hooks/set-state-in-effect Error: Calling setState synchronously within an effect can trigger cascading renders
-app/dashboard/recommendation-panel.tsx:351:7: 2 react-hooks/set-state-in-effect Error: Calling setState synchronously within an effect can trigger cascading renders
-app/dashboard/recommendation-panel.tsx:357:7: 2 react-hooks/set-state-in-effect Error: Calling setState synchronously within an effect can trigger cascading renders
+app/dashboard/recommendation-panel.tsx:342:7: 2 react-hooks/set-state-in-effect Error: Calling setState synchronously within an effect can trigger cascading renders
+app/dashboard/recommendation-panel.tsx:348:7: 2 react-hooks/set-state-in-effect Error: Calling setState synchronously within an effect can trigger cascading renders
+app/dashboard/recommendation-panel.tsx:354:7: 2 react-hooks/set-state-in-effect Error: Calling setState synchronously within an effect can trigger cascading renders

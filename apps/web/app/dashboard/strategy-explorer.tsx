@@ -9,14 +9,14 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { parseStoredDecision, type Pane } from "@/lib/analysis";
+import { parseStoredDecision, type Pane } from "@optionpilot/shared";
 import { cn } from "@/lib/utils";
 import { MobileStrategyCard } from "./mobile-strategy-card";
 import { MobileStrategySheet } from "./mobile-strategy-sheet";
 import RecommendationPanel, { type Decision } from "./recommendation-panel";
 import StrategyDetail from "./strategy-detail";
 import StrategyRow, { STRATEGY_COLUMNS } from "./strategy-row";
-import { normalizeStrategy, STRATEGY_DEFINITIONS, type Category, type NormalizedStrategy } from "./types";
+import { normalizeStrategy, STRATEGY_DEFINITIONS, type Category, type NormalizedStrategy } from "@optionpilot/shared";
 
 const FILTERS: { id: Category | "all"; label: string }[] = [
   { id: "all", label: "All" },

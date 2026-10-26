@@ -10,7 +10,7 @@
     "dev": "npm run dev -w @optionpilot/web",
     "build": "npm run build -w @optionpilot/web",
     "start": "npm run start -w @optionpilot/web",
-    "lint": "npm run lint -w @optionpilot/web",
-    "test": "npm test -w @optionpilot/web && node --experimental-strip-types --test relay/universe.test.mjs"
+    "lint": "npm run lint -w @optionpilot/web && npm run lint -w @optionpilot/shared",
+    "test": "npm test -w @optionpilot/shared && node --experimental-strip-types --test relay/universe.test.mjs"
   }
 }

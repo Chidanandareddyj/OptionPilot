@@ -1,7 +1,7 @@
 import { CoinsIcon, EqualsIcon, TrendDownIcon, TrendUpIcon, WaveSineIcon } from "@phosphor-icons/react/ssr";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { Category } from "@/app/dashboard/types";
+import type { Category } from "@optionpilot/shared";
 
 export type MarketView = Category | "income";
 

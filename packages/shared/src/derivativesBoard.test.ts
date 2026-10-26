@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calculateBullCallSpread } from "../strategies/BullCallSpread.ts";
-import { calculateShortStraddle } from "../strategies/ShortStraddle.ts";
+import { calculateBullCallSpread } from "./strategies/BullCallSpread.ts";
+import { calculateShortStraddle } from "./strategies/ShortStraddle.ts";
 import { applyView, evaluate, type Company, type Evaluation, type LiveRow, type View } from "./derivativesBoard.ts";
 
 const company: Company = { k: "X", s: "X", n: "X", e: "2026-10-27", l: 100, strikes: [80, 90, 100, 110, 120, 130] };

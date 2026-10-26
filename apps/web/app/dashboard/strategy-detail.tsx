@@ -9,10 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PayoffChart } from "@/app/components/payoff-chart";
 import { ViewBadge } from "@/app/components/view-badge";
-import { signedInr } from "@/lib/payoff-series";
+import { signedInr } from "@optionpilot/shared";
 import { cn } from "@/lib/utils";
-import { payoffPoints, strikeMarkers } from "./payoff-points";
-import { inr, keyMetrics, type NormalizedStrategy } from "./types";
+import { payoffPoints, strikeMarkers } from "@optionpilot/shared";
+import { inr, keyMetrics, type NormalizedStrategy } from "@optionpilot/shared";
 
 const STAT_TIPS: Record<string, string> = {
   Spot: "Last traded price of the underlying",
