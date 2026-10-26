@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Animated, PanResponder, Pressable, View } from "react-native";
 import { TrashIcon } from "@/components/icons";
 import { Text } from "@/components/ui";
+import { useTheme } from "@/lib/theme/ThemeProvider";
 
 /** How far the row slides to show its action. */
 export const SWIPE_ACTION_WIDTH = 96;
@@ -27,25 +28,36 @@ function createSwipe() {
   const x = new Animated.Value(0);
   let open = false;
   let start = 0;
+  let panned = false;
+  // A drag that ends on the row can still be reported as a press (on the web, as a click). Those must not open the snapshot.
+  const endPan = () => setTimeout(() => (panned = false), 120);
   const settle = (toOpen: boolean) => {
     open = toOpen;
     Animated.spring(x, { toValue: toOpen ? -SWIPE_ACTION_WIDTH : 0, useNativeDriver: false, bounciness: 0, speed: 24 }).start();
   };
   const responder = PanResponder.create({
-    onMoveShouldSetPanResponder: (_event, gesture) => Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5,
+    onMoveShouldSetPanResponderCapture: (_event, gesture) => Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5,
     onPanResponderGrant: () => {
       start = open ? -SWIPE_ACTION_WIDTH : 0;
+      panned = true;
     },
     onPanResponderMove: (_event, gesture) => {
       x.setValue(Math.max(-SWIPE_ACTION_WIDTH - 24, Math.min(0, start + gesture.dx)));
     },
-    onPanResponderRelease: (_event, gesture) => settle(start + gesture.dx < -OPEN_AT || gesture.vx < -0.6),
-    onPanResponderTerminate: () => settle(open),
+    onPanResponderRelease: (_event, gesture) => {
+      settle(start + gesture.dx < -OPEN_AT || gesture.vx < -0.6);
+      endPan();
+    },
+    onPanResponderTerminate: () => {
+      settle(open);
+      endPan();
+    },
   });
-  return { x, settle, isOpen: () => open, panHandlers: responder.panHandlers };
+  return { x, settle, isOpen: () => open, wasPanned: () => panned, panHandlers: responder.panHandlers };
 }
 
 export function SwipeRow({ children, onPress, onAction, actionLabel, accessibilityLabel, accessibilityHint }: SwipeRowProps) {
+  const { colors } = useTheme();
   const [swipe] = useState(createSwipe);
 
   return (
@@ -61,8 +73,8 @@ export function SwipeRow({ children, onPress, onAction, actionLabel, accessibili
           className="h-full items-center justify-center gap-1"
           style={{ width: SWIPE_ACTION_WIDTH }}
         >
-          <TrashIcon size={22} weight="bold" color="#ffffff" />
-          <Text size="xs" weight="medium" className="text-white">
+          <TrashIcon size={22} weight="bold" color={colors.background} />
+          <Text size="xs" weight="medium" className="text-background">
             {actionLabel}
           </Text>
         </Pressable>
@@ -76,7 +88,11 @@ export function SwipeRow({ children, onPress, onAction, actionLabel, accessibili
           onAccessibilityAction={(event) => {
             if (event.nativeEvent.actionName === "delete") onAction();
           }}
-          onPress={() => (swipe.isOpen() ? swipe.settle(false) : onPress())}
+          onPress={() => {
+            if (swipe.wasPanned()) return;
+            if (swipe.isOpen()) swipe.settle(false);
+            else onPress();
+          }}
         >
           {children}
         </Pressable>

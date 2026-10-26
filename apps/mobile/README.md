@@ -64,3 +64,9 @@ Styles use [Uniwind](https://uniwind.dev) (Tailwind v4 classes on React Native c
 ## Preview in a browser
 
 For layout checks only: `npm run setup:web` once (it copies the CanvasKit WebAssembly file the Skia payoff chart needs into `public/`, which git ignores), then `EXPO_PUBLIC_PREVIEW_INSETS="54,34" npx expo export --platform web`. The variable gives the page the top and bottom safe-area insets of a recent iPhone. This is a react-native-web render, not a device.
+
+## History
+
+The History tab lists saved analyses from `GET /api/analyses` (`useHistory`, an infinite query: 20 a page, the next page by `nextCursor` when the list's end is reached). Pull down to reload from the first page; a failed later page keeps the rows and offers "Try again". A row opens `/analysis/[id]?snapshot=1&back=History`, which shows the saved prices under a "Saved snapshot" banner and a "History" back button.
+
+Slide a row left and tap **Delete** (or use the row's "delete" accessibility action). The row leaves the History and Terminal lists at once and an **Undo** bar stays for 5 seconds. Only then is `DELETE /api/analyses/[id]` sent, because the API has no restore. If the server refuses, the row goes back where it was and the bar says so. A delete still pending when the app goes to the background or the tab unmounts is sent straight away. Only one delete is pending at a time: deleting a second row sends the first. The Terminal's "Resume last analysis" and "Recent symbols" read the same list.

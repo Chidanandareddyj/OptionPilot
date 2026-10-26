@@ -64,11 +64,11 @@ export default function HistoryTab() {
   const subtitle = historySubtitle(state, items.length, history.hasNextPage);
 
   const header = (
-    <View className="pb-4" style={{ paddingTop: NAV_BAR }}>
+    <View className="pb-[17px]" style={{ paddingTop: NAV_BAR }}>
       <Text size="4xl" weight="semibold" tight accessibilityRole="header">
         Analysis history
       </Text>
-      <Text size="sm" tone="muted" className="mt-1">
+      <Text size="sm" tone="muted" className="mt-[7px]">
         {subtitle}
       </Text>
     </View>
@@ -134,4 +134,4 @@ export default function HistoryTab() {
   );
 }
 
-const Separator = () => <View className="h-3" />;
+const Separator = () => <View className="h-2" />;

@@ -24,17 +24,17 @@ export const HistoryRow = memo(function HistoryRow({ analysis, onOpen, onDelete 
       onPress={() => onOpen(analysis)}
       onAction={() => onDelete(analysis)}
     >
-      <Card className="gap-3 px-4 py-3.5">
+      <Card className="gap-3 px-4 pb-3 pt-[13px]">
         <View className="flex-row items-center justify-between">
-          <Text size="xl" weight="semibold" numberOfLines={1} className="shrink" style={{ lineHeight: 20 }}>
+          <Text size="base" weight="semibold" numberOfLines={1} className="shrink" style={{ lineHeight: 20 }}>
             {analysis.company}
           </Text>
-          <Text mono weight="medium" tone={analysis.spot === null ? "muted" : "foreground"}>
+          <Text mono weight="medium" tone={analysis.spot === null ? "muted" : "foreground"} style={{ lineHeight: 20 }}>
             {spot}
           </Text>
         </View>
         <View className="flex-row items-center justify-between gap-2">
-          <Tag icon={icon} label={tag.label} className="h-7 shrink" />
+          <Tag icon={icon} label={tag.label} className="shrink" />
           <Text size="xs" tone="muted" numberOfLines={1}>
             {when}
           </Text>
