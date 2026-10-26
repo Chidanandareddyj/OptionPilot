@@ -1,6 +1,6 @@
-import { STRATEGY_DEFINITIONS, filterCount, visibleStrategies } from "@optionpilot/shared";
+import { STRATEGY_DEFINITIONS, filterCount, payoffPoints, strikeMarkers, visibleStrategies } from "@optionpilot/shared";
 import { compareRows, roiText, strikeList } from "@/lib/analysis/compare";
-import { strategiesOf } from "@/lib/analysis/model";
+import { chartWindow, strategiesOf } from "@/lib/analysis/model";
 import {
   DEFAULT_MAX_LOSS,
   bestPick,
@@ -17,8 +17,6 @@ import {
 import { ApiError } from "@/lib/api/client";
 import { SignedOutError } from "@/lib/auth/errors";
 import { layoutChart, type ChartInput } from "@/lib/chart/layout";
-import { payoffPoints, strikeMarkers } from "@optionpilot/shared";
-import { chartWindow } from "@/lib/analysis/model";
 import { SPOT, analysisResult } from "./fixtures/analysis";
 import { decide } from "./fixtures/decision";
 
