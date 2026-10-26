@@ -1,0 +1,27 @@
+import { View } from "react-native";
+import { MagnifyingGlassIcon } from "@/components/icons";
+import { Text } from "@/components/ui";
+import { useTheme } from "@/lib/theme/ThemeProvider";
+
+type EmptyMatchesProps = { query: string; total: number };
+
+/** What the list says when the search and filter match nothing. */
+export function EmptyMatches({ query, total }: EmptyMatchesProps) {
+  const { colors } = useTheme();
+  const text = query.trim();
+  return (
+    <View className="items-center gap-2 px-6 pt-10" accessibilityRole="alert">
+      <View className="mb-2 h-14 w-14 items-center justify-center rounded-xl bg-muted">
+        <MagnifyingGlassIcon size={28} color={colors.mutedForeground} />
+      </View>
+      <Text size="lg" weight="semibold">
+        No strategies match
+      </Text>
+      <Text size="sm" tone="muted" className="text-center">
+        {text
+          ? `Nothing matches “${text}”. Clear the search to see all ${total}.`
+          : "Nothing in this view. Pick another filter to see the rest."}
+      </Text>
+    </View>
+  );
+}

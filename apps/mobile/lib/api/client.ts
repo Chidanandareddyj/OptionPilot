@@ -2,6 +2,8 @@ import type {
   AnalysisDetail,
   AnalysisSummary,
   AnalyzeResponse,
+  DecideRequest,
+  DecideResponse,
   MarketIndicesResponse,
   MarketQuote,
   MarketQuotesResponse,
@@ -69,6 +71,14 @@ export function createApi(apiFetch: ApiFetch) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ company }),
         signal,
+      }),
+
+    /** Scores the twelve strategies for a view and a loss budget, and saves the result on the analysis. */
+    decide: (decision: DecideRequest) =>
+      request<DecideResponse>("/api/decide", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(decision),
       }),
   };
 }

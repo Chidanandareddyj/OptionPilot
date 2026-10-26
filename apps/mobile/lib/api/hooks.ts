@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { mergeCompareDecision, type AnalysisDetail, type DecideRequest } from "@optionpilot/shared";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useAuth } from "@/lib/auth";
 import { createApi, type Api } from "./client";
@@ -41,4 +42,25 @@ export function useRecentAnalyses() {
 export function useAnalysis(id: string) {
   const api = useApi();
   return useQuery({ queryKey: analysisKey(id), queryFn: () => api.analysis(id), staleTime: Infinity });
+}
+
+/**
+ * Scores one analysis. The server saves the result on the analysis, so the cached copy is updated
+ * the same way (a pane's result joins the compare pair, a single result replaces it) and the
+ * screens that read it show the new ranking at once.
+ */
+export function useDecide(analysisId: string) {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: Omit<DecideRequest, "analysisId">) => api.decide({ ...request, analysisId }),
+    // Fail at once when offline, so the sheet can say so, rather than wait for the network.
+    networkMode: "always",
+    onSuccess: (decision, request) => {
+      queryClient.setQueryData<AnalysisDetail>(analysisKey(analysisId), (saved) =>
+        saved && { ...saved, decision: request.pane ? mergeCompareDecision(saved.decision, request.pane, decision) : decision },
+      );
+      void queryClient.invalidateQueries({ queryKey: ANALYSES_KEY });
+    },
+  });
 }

@@ -8,10 +8,13 @@ import type { NormalizedStrategy } from "@optionpilot/shared";
 import { ChartCanvas } from "./ChartCanvas";
 
 export const CHART_HEIGHT = 252;
+export const COMPACT_CHART_HEIGHT = 216;
 
 type PayoffChartProps = {
   strategy: NormalizedStrategy;
   spot: number;
+  /** The small version for side-by-side panes: no labels except the axes. */
+  compact?: boolean;
   /** Tells the card whether a finger is reading the chart, so it can change its hint. */
   onScrubChange?: (scrubbing: boolean) => void;
 };
@@ -23,10 +26,11 @@ type Pinch = { scale: number; focal: number };
  * price, pinch to zoom the price range. Both run on the JS thread (`runOnJS`) because the readout
  * only changes once per whole price, so there is nothing to gain from a worklet.
  */
-export function PayoffChart({ strategy, spot, onScrubChange }: PayoffChartProps) {
+export function PayoffChart({ strategy, spot, compact = false, onScrubChange }: PayoffChartProps) {
   /** The measured width, which is the canvas width: the plot box sits inside it, CHART_BLEED in. */
   const [measured, setMeasured] = useState(0);
   const width = Math.max(0, measured - 2 * CHART_BLEED);
+  const height = compact ? COMPACT_CHART_HEIGHT : CHART_HEIGHT;
   const [scrubX, setScrubX] = useState<number | null>(null);
   const [baseWindow, setBaseWindow] = useState<readonly [number, number] | null>(null);
   const [pinch, setPinch] = useState<Pinch | null>(null);
@@ -36,10 +40,10 @@ export function PayoffChart({ strategy, spot, onScrubChange }: PayoffChartProps)
   const window = pinch ? zoomWindow(committed, chart.bounds, pinch.scale, pinch.focal) : committed;
 
   const layout = useMemo(
-    () => (width > 0 ? layoutChart({ ...chart.input, window, width, height: CHART_HEIGHT }) : null),
+    () => (width > 0 ? layoutChart({ ...chart.input, window, width, height, compact }) : null),
     // `window` is a new array every render, so key on its numbers.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [chart, width, window[0], window[1]],
+    [chart, width, height, compact, window[0], window[1]],
   );
   const scrub = layout && scrubX !== null ? layoutScrub(layout, chart.points, scrubX) : null;
 
@@ -79,7 +83,7 @@ export function PayoffChart({ strategy, spot, onScrubChange }: PayoffChartProps)
         <Inset pointerEvents="none" className="absolute inset-x-2 inset-y-0" />
         <View
           onLayout={onLayout}
-          style={{ height: CHART_HEIGHT, marginTop: 8, marginBottom: 4 }}
+          style={{ height, marginTop: 8, marginBottom: 4 }}
           accessible
           accessibilityRole="image"
           accessibilityLabel={`Payoff chart for ${strategy.name}. Drag to read the profit or loss at any price.`}

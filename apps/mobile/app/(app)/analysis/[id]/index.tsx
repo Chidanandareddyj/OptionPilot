@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, ScrollView, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { ScrollView, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { ActionBar, useActionBarClearance } from "@/components/analysis/ActionBar";
 import { AnalysisHeader } from "@/components/analysis/AnalysisHeader";
 import { AnalysisSkeleton } from "@/components/analysis/AnalysisSkeleton";
@@ -33,7 +33,7 @@ const SOLID_AFTER = 56;
 
 export default function AnalysisScreen() {
   const router = useRouter();
-  const { id, back } = useLocalSearchParams<{ id: string; back?: string }>();
+  const { id, back, strategy: requested, at } = useLocalSearchParams<{ id: string; back?: string; strategy?: string; at?: string }>();
   const backLabel = back || "Terminal";
   const actionBarClearance = useActionBarClearance();
   const navHeight = useNavBarHeight();
@@ -46,13 +46,20 @@ export default function AnalysisScreen() {
   const [scrollY, setScrollY] = useState(0);
   const [switcherTop, setSwitcherTop] = useState<number | null>(null);
 
+  // Compare and Recommend send a strategy back here. `at` changes with each send, so choosing the same one twice still lands.
+  const request = requested ? `${requested}@${at ?? ""}` : null;
+  const [handled, setHandled] = useState<string | null>(null);
+  if (request !== handled) {
+    setHandled(request);
+    if (requested) setChosenKey(requested);
+  }
+
   const analysis = detail.data;
   const header = useMemo(() => (analysis ? analysisHeader(analysis.company, analysis.result) : null), [analysis]);
   const strategies = useMemo(() => (analysis ? strategiesOf(analysis.result) : []), [analysis]);
   const strategy = strategies.find((item) => item.key === (chosenKey ?? (analysis ? initialStrategyKey(strategies, analysis.decision) : null)));
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace("/"));
-  const comingNext = (feature: string) => Alert.alert(feature, "This arrives in the next update.");
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => setScrollY(event.nativeEvent.contentOffset.y);
 
@@ -127,7 +134,10 @@ export default function AnalysisScreen() {
       ) : null}
 
       <NavBar backLabel={backLabel} onBack={goBack} title={header.symbol} solid={solid} />
-      <ActionBar onCompare={() => comingNext("Compare all 12 strategies")} onRecommend={() => comingNext("Recommend a strategy")} />
+      <ActionBar
+        onCompare={() => router.push({ pathname: "/analysis/[id]/compare", params: { id, strategy: strategy.key } })}
+        onRecommend={() => router.push({ pathname: "/analysis/[id]/recommend", params: { id } })}
+      />
       <StrategyPicker
         visible={picking}
         strategies={strategies}

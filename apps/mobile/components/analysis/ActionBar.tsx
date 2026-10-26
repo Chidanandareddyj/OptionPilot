@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { View } from "react-native";
 import { ArrowsLeftRightIcon, SparkleIcon } from "@/components/icons";
 import { Button } from "@/components/ui";
@@ -16,10 +17,8 @@ export function useActionBarClearance(): number {
   return BAR_TOP_PADDING + BUTTON_HEIGHT + bottomPadding(useScreenInsets().bottom) + 16;
 }
 
-type ActionBarProps = { onCompare: () => void; onRecommend: () => void };
-
-/** The bar pinned under the analysis: Compare and Recommend. */
-export function ActionBar({ onCompare, onRecommend }: ActionBarProps) {
+/** The glass bar pinned to the bottom of a screen, holding one or two 52 px buttons side by side. */
+export function BottomBar({ children }: { children: ReactNode }) {
   const insets = useScreenInsets();
   const { scheme } = useTheme();
   return (
@@ -30,12 +29,23 @@ export function ActionBar({ onCompare, onRecommend }: ActionBarProps) {
         backgroundColor: surfaceColors(scheme).glassBackground,
       }}
     >
+      {children}
+    </View>
+  );
+}
+
+type ActionBarProps = { onCompare: () => void; onRecommend: () => void };
+
+/** The bar pinned under the analysis: Compare and Recommend. */
+export function ActionBar({ onCompare, onRecommend }: ActionBarProps) {
+  return (
+    <BottomBar>
       <View className="flex-1">
         <Button label="Compare" variant="ghost" icon={ArrowsLeftRightIcon} onPress={onCompare} />
       </View>
       <View className="flex-1">
         <Button label="Recommend" variant="primary" icon={SparkleIcon} onPress={onRecommend} />
       </View>
-    </View>
+    </BottomBar>
   );
 }
