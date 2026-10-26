@@ -47,6 +47,12 @@ Sign-in is email + password, with a one-time code to verify a new account. Googl
 
 The analysis screen opens Compare (every strategy, or two views side by side) and Recommend ("Which strategy fits?", a form sheet that scores a view and a loss budget through `POST /api/decide`, then the result screen). Their ranking is the website's: the server ranks (`scoreStrategies`, `rankDecision`), and the order, filters, search, and the saved single or two-view result come from the pure functions in `packages/shared/src/compare.ts`, which the website's strategy explorer uses too. `useDecide` writes the answer into the cached analysis, so every screen shows the new ranking at once. `__tests__/compare-recommend-lib.test.ts` and `packages/shared/src/compare.test.ts` check the same order for the same analysis, with the real scoring on a fixture.
 
+## Derivatives live
+
+The Derivatives tab is the website's board on a phone. `GET /api/derivatives/token` returns the relay URL and a 60 second signed token; `lib/derivatives/stream.ts` opens `{url}/stream?token=` with `react-native-sse` and reads the `universe` and one-second `tick` events. The stream gets a fresh token every time it reconnects: after an error (backoff 3 s, 6 s, 12 s … 30 s (5 s, 10 s … when the token itself fails)), when no tick has come for 15 s, when the app returns from the background, when the phone comes back online, on pull-to-refresh, and every 5 minutes (the XHR transport keeps the whole response in memory). `FeedProvider` holds the stream while any screen that shows prices is mounted and lets go 10 s after the last one, so switching tabs does not reconnect.
+
+What a row is, how it is priced and which rows are stale come from `packages/shared/src/derivativesFeed.ts` and `derivativesBoard.ts` (`buildChain`, `evaluate`, `applyView`, `STALE_AFTER_MS`), which the website's board uses too; `packages/shared/src/derivativesFeed.test.ts` and `__tests__/derivatives-*.test.ts*` cover the same inputs on both sides, and the stream tests run against a fake `EventSource`. The relay host comes from the token endpoint, so `NEXT_PUBLIC_RELAY_URL` on the website must be an `http(s)` URL the phone can reach. Live ticks only exist while NSE is open (9:15 am to 3:30 pm IST, Monday to Friday); outside those hours the board shows the last close.
+
 ## Styling
 
 Styles use [Uniwind](https://uniwind.dev) (Tailwind v4 classes on React Native components). Theme variables live in `global.css`; `light`, `dark` and `system` are switched at runtime from Settings, Appearance.
