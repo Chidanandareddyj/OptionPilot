@@ -16,16 +16,15 @@ import { calculateLongStrangle } from "@optionpilot/shared";
 import { calculateShortStraddle } from "@optionpilot/shared";
 import { calculateShortStrangle } from "@optionpilot/shared";
 
-import { parseCompany, requireUserId, toAnalysisRow, UnauthorizedError } from "@optionpilot/shared";
-import { auth } from "@/lib/auth/server";
+import { parseCompany, toAnalysisRow, UnauthorizedError } from "@optionpilot/shared";
+import { getRequestUserId } from "@/lib/auth/request-user";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@/generated/prisma/client";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { data: session } = await auth.getSession();
-    const userId = requireUserId(session);
+    const userId = await getRequestUserId(request);
 
     const company = parseCompany(await request.json());
 
