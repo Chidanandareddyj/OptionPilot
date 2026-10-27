@@ -8,9 +8,6 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@optionpilot/shared"],
   // Trace files outside apps/web, including packages/shared. Next 16 docs: outputFileTracingRoot.
   outputFileTracingRoot: monorepoRoot,
-  turbopack: {
-    root: monorepoRoot,
-  },
 };
 
 export default nextConfig;

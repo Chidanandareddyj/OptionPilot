@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@optionpilot/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": [
