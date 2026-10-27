@@ -6,15 +6,21 @@ import { useTheme } from "@/lib/theme/ThemeProvider";
 /** How far the list has to be pulled down, in points, before letting go refreshes. */
 export const PULL_THRESHOLD = 56;
 
-type PullHintProps = { distance: number; refreshing: boolean };
+type PullHintProps = {
+  distance: number;
+  refreshing: boolean;
+  /** What gets refreshed, as in "Pull to refresh prices". Empty for "Pull to refresh". */
+  subject?: string;
+};
 
 /** The words and arrow under the nav while the Terminal is pulled down. */
-export function PullHint({ distance, refreshing }: PullHintProps) {
+export function PullHint({ distance, refreshing, subject = "prices" }: PullHintProps) {
   const { colors } = useTheme();
   if (!refreshing && distance <= 0) return null;
   const ready = distance >= PULL_THRESHOLD;
   const Icon = refreshing ? SpinnerGapIcon : ArrowDownIcon;
-  const text = refreshing ? "Refreshing prices" : ready ? "Release to refresh prices" : "Pull to refresh prices";
+  const what = subject ? ` ${subject}` : "";
+  const text = refreshing ? `Refreshing${what}` : ready ? `Release to refresh${what}` : `Pull to refresh${what}`;
   return (
     <View
       pointerEvents="none"

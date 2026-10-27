@@ -1,9 +1,9 @@
 import { mergeCompareDecision, type AnalysisDetail, type DecideRequest } from "@optionpilot/shared";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useAuth } from "@/lib/auth";
 import { createApi, type Api } from "./client";
-import { ANALYSES_KEY, analysisKey, indicesKey, quotesKey } from "./keys";
+import { ANALYSES_KEY, HISTORY_KEY, analysisKey, indicesKey, quotesKey } from "./keys";
 
 /** Prices refresh this often while the Terminal is on screen and the app is in front. */
 export const PRICE_POLL_MS = 3000;
@@ -36,6 +36,31 @@ export function useQuotes(symbols: string[], options: { poll: boolean }) {
 export function useRecentAnalyses() {
   const api = useApi();
   return useQuery({ queryKey: ANALYSES_KEY, queryFn: () => api.recentAnalyses(), staleTime: 30_000 });
+}
+
+/** Every saved analysis, a page at a time, newest first. `fetchNextPage` follows the server's cursor. */
+export function useHistory() {
+  const api = useApi();
+  return useInfiniteQuery({
+    queryKey: HISTORY_KEY,
+    queryFn: ({ pageParam }) => api.historyPage(pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => last.nextCursor,
+    staleTime: 30_000,
+  });
+}
+
+/** Deletes one saved analysis on the server. The History screen hides the row first and puts it back if this fails. */
+export function useDeleteAnalysis() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteAnalysis(id),
+    networkMode: "always",
+    onSuccess: (_result, id) => queryClient.removeQueries({ queryKey: analysisKey(id) }),
+    // Either way the lists are read again, so they agree with the server even if the screen has gone.
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ANALYSES_KEY }),
+  });
 }
 
 /** One saved analysis. Its result never changes, so it is fetched once per session. */
