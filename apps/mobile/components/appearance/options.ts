@@ -1,6 +1,13 @@
 import { semantic } from "@optionpilot/shared";
 import type { Appearance } from "@/lib/theme/ThemeProvider";
 
+/** What the Settings row shows: the theme's name (design 56), or "System" when it follows the phone. */
+export const APPEARANCE_ROW_VALUE: Record<Appearance, string> = {
+  system: "System",
+  dark: "Saffron",
+  light: "Paper",
+};
+
 export const APPEARANCE_LABELS: Record<Appearance, string> = {
   system: "System",
   dark: "Dark",

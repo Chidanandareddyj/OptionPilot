@@ -1,5 +1,5 @@
 import { createApiFetch, type ApiFetch } from "./apiFetch";
-import type { AuthApi } from "./authApi";
+import type { AccountSession, AuthApi, LinkedAccount, Organization, SessionInfo } from "./authApi";
 import { AuthError, SignedOutError } from "./errors";
 import type { SessionStore } from "./sessionStore";
 import { createBearerStrategy, createCookieStrategy, type SessionStrategy } from "./strategy";
@@ -46,6 +46,51 @@ export function createSessionManager({ api, store, baseUrl, onSignedOut, fetchIm
     fetchImpl,
   });
 
+  /** Runs a call on the signed-in session. A 401 means the session is over, as it does for `apiFetch`. */
+  async function onSession<T>(run: (call: ReturnType<SessionStrategy["sessionCall"]>) => Promise<T>): Promise<T> {
+    const call = strategy?.sessionCall();
+    if (!call) throw new SignedOutError();
+    try {
+      return await run(call);
+    } catch (error) {
+      if (error instanceof AuthError && error.status === 401) {
+        void end().then(() => onSignedOut?.());
+        throw new SignedOutError();
+      }
+      throw error;
+    }
+  }
+
+  /** Keeps the stored identity (name and email) in step with what the server now says. */
+  async function remember(patch: Partial<Pick<AuthUser, "name" | "email">>): Promise<AuthUser | null> {
+    if (!user) return null;
+    user = { ...user, ...patch };
+    const stored = await store.load();
+    if (stored) await store.save({ ...stored, user: { ...stored.user, ...patch } });
+    return user;
+  }
+
+  /** The calls Settings makes on the signed-in session. Each one ends the session on a 401. */
+  const account = {
+    session: (): Promise<AccountSession> => onSession((call) => api.getAccountSession(call)),
+    async updateName(name: string): Promise<AuthUser | null> {
+      await onSession((call) => api.updateUser(call, { name }));
+      return remember({ name: name.trim() });
+    },
+    /** `null` removes the avatar. */
+    updateImage: (image: string | null): Promise<void> => onSession((call) => api.updateUser(call, { image })),
+    changeEmail: (newEmail: string): Promise<void> => onSession((call) => api.changeEmail(call, newEmail)),
+    changePassword: (currentPassword: string, newPassword: string): Promise<void> =>
+      onSession((call) => api.changePassword(call, { currentPassword, newPassword })),
+    listAccounts: (): Promise<LinkedAccount[]> => onSession((call) => api.listAccounts(call)),
+    listSessions: (): Promise<SessionInfo[]> => onSession((call) => api.listSessions(call)),
+    revokeSession: (token: string): Promise<void> => onSession((call) => api.revokeSession(call, token)),
+    listOrganizations: (): Promise<Organization[]> => onSession((call) => api.listOrganizations(call)),
+    createOrganization: (name: string, slug: string): Promise<void> =>
+      onSession((call) => api.createOrganization(call, { name, slug })),
+    deleteUser: (): Promise<void> => onSession((call) => api.deleteUser(call)),
+  };
+
   /** Starts a session from what sign-in returned. Prefers bearer and falls back to cookies. */
   async function begin(result: { user: AuthUser; sessionToken: string | null }): Promise<AuthUser> {
     let next: StoredSession | null = null;
@@ -77,6 +122,7 @@ export function createSessionManager({ api, store, baseUrl, onSignedOut, fetchIm
 
   return {
     apiFetch,
+    account,
 
     get user(): AuthUser | null {
       return user;

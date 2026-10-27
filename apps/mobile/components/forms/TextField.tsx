@@ -15,6 +15,8 @@ export type TextFieldProps = Omit<TextInputProps, "style" | "placeholderTextColo
   invalid?: boolean;
   /** Shown on the right of the label row, e.g. a "Forgot your password?" link. */
   labelRight?: ReactNode;
+  /** Keeps the label for screen readers only, when a card heading already names the field. */
+  hideLabel?: boolean;
   /** A password field: hides the text and adds the show/hide eye. */
   password?: boolean;
   inputRef?: Ref<TextInputInstance>;
@@ -26,6 +28,7 @@ export function TextField({
   error,
   invalid = false,
   labelRight,
+  hideLabel = false,
   password = false,
   inputRef,
   onFocus,
@@ -39,12 +42,14 @@ export function TextField({
 
   return (
     <View className="gap-2">
-      <View className="flex-row items-center justify-between">
-        <Text size="sm" weight="medium">
-          {label}
-        </Text>
-        {labelRight}
-      </View>
+      {hideLabel ? null : (
+        <View className="flex-row items-center justify-between">
+          <Text size="sm" weight="medium">
+            {label}
+          </Text>
+          {labelRight}
+        </View>
+      )}
 
       <View
         className={cn(

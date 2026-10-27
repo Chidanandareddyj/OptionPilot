@@ -2,6 +2,8 @@ export type AuthUser = {
   id: string;
   email: string;
   name: string;
+  /** The avatar as a URL or data URL. Never written to secure storage: it can be large. */
+  image?: string | null;
 };
 
 /**

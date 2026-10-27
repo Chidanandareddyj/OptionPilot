@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createAuthApi, type AuthApi } from "./authApi";
 import { getApiBaseUrl } from "./config";
-import { createSessionManager } from "./sessionManager";
+import { createSessionManager, type SessionManager } from "./sessionManager";
+import { ApiError } from "@/lib/api/client";
 import { createSessionStore, type SessionStore } from "./sessionStore";
 import type { AuthUser } from "./types";
 
@@ -18,6 +19,15 @@ export type AuthState = {
   requestPasswordReset: (email: string) => Promise<void>;
   /** `fetch` for `/api/*` with the session credentials. Throws `SignedOutError` once signed out. */
   apiFetch: (path: string, init?: RequestInit) => Promise<Response>;
+  /** Settings calls on the signed-in session: profile, password, sessions, organizations, deletion. */
+  account: SessionManager["account"];
+  /** Changes the name and updates `user` everywhere. */
+  updateName: (name: string) => Promise<void>;
+  /**
+   * Hard-deletes the account: saved analyses first, then the login. Resolves with `loginDeleted: false`
+   * when the analyses are gone but the login could not be removed. The person stays signed in then.
+   */
+  deleteAccount: () => Promise<{ loginDeleted: boolean }>;
 };
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -99,6 +109,36 @@ export function AuthProvider({ children, api, store, baseUrl = getApiBaseUrl() }
     [authApi, baseUrl],
   );
 
+  const updateName = useCallback(
+    async (name: string) => {
+      const next = await manager.account.updateName(name);
+      if (next) setUser((current) => (current ? { ...current, name: next.name } : current));
+    },
+    [manager],
+  );
+
+  const deleteAccount = useCallback(async () => {
+    const response = await manager.apiFetch("/api/account", { method: "DELETE" });
+    const body: unknown = await response.json().catch(() => null);
+    if (!response.ok) {
+      const message = body && typeof body === "object" ? (body as { error?: unknown }).error : null;
+      throw new ApiError(typeof message === "string" ? message : "Could not delete your account.", response.status);
+    }
+    let loginDeleted = Boolean(body && typeof body === "object" && (body as { authUserDeleted?: unknown }).authUserDeleted === true);
+    if (!loginDeleted) {
+      // The server could not remove the login itself, so ask Neon Auth to do it for the signed-in user.
+      loginDeleted = await manager.account.deleteUser().then(
+        () => true,
+        () => false,
+      );
+    }
+    if (loginDeleted) {
+      await manager.signOut();
+      setUser(null);
+    }
+    return { loginDeleted };
+  }, [manager]);
+
   const value = useMemo<AuthState>(
     () => ({
       isReady,
@@ -110,8 +150,11 @@ export function AuthProvider({ children, api, store, baseUrl = getApiBaseUrl() }
       verifyEmail,
       requestPasswordReset,
       apiFetch: manager.apiFetch,
+      account: manager.account,
+      updateName,
+      deleteAccount,
     }),
-    [isReady, user, signIn, signOut, signUp, resendVerificationCode, verifyEmail, requestPasswordReset, manager],
+    [isReady, user, signIn, signOut, signUp, resendVerificationCode, verifyEmail, requestPasswordReset, manager, updateName, deleteAccount],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

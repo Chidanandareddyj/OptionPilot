@@ -25,9 +25,37 @@ type JsonRecord = Record<string, unknown>;
 
 function toUser(value: unknown): AuthUser | null {
   if (!value || typeof value !== "object") return null;
-  const { id, email, name } = value as JsonRecord;
+  const { id, email, name, image } = value as JsonRecord;
   if (typeof id !== "string" || typeof email !== "string") return null;
-  return { id, email, name: typeof name === "string" ? name : "" };
+  return {
+    id,
+    email,
+    name: typeof name === "string" ? name : "",
+    ...(typeof image === "string" && image ? { image } : {}),
+  };
+}
+
+/** The signed-in user plus the id of the session that answered, so a sessions list can mark "this device". */
+export type AccountSession = { user: AuthUser; sessionId: string | null };
+
+/** A sign-in method linked to the account. `providerId` is "credential" for the email password. */
+export type LinkedAccount = { id: string; providerId: string };
+
+export type SessionInfo = {
+  id: string;
+  /** The server's token for this session. It is what `revokeSession` takes. */
+  token: string;
+  userAgent: string | null;
+  ipAddress: string | null;
+  createdAt: string | null;
+};
+
+export type Organization = { id: string; name: string; slug: string; logo: string | null };
+
+const text = (value: unknown): string | null => (typeof value === "string" && value.length > 0 ? value : null);
+
+function asList(body: unknown): JsonRecord[] {
+  return Array.isArray(body) ? body.filter((item): item is JsonRecord => !!item && typeof item === "object") : [];
 }
 
 /** The Neon Auth (Better Auth) endpoints that the web app proxies at `/api/auth/*`. */
@@ -62,6 +90,17 @@ export function createAuthApi({ baseUrl, fetchImpl = fetch }: AuthApiOptions) {
     return "sessionToken" in call
       ? { credentials: "omit", headers: { authorization: `Bearer ${call.sessionToken}` } }
       : { credentials: "include" };
+  }
+
+  async function get(path: string, call: SessionCall): Promise<unknown> {
+    const response = await request(path, { method: "GET", ...sessionInit(call) });
+    if (!response.ok) throw await authErrorFromResponse(response);
+    return response.json().catch(() => null);
+  }
+
+  /** A POST on the session. It uses the same credential rules as every other account call. */
+  function postSession(path: string, body: JsonRecord, call: SessionCall): Promise<Response> {
+    return post(path, body, sessionInit(call));
   }
 
   return {
@@ -117,6 +156,77 @@ export function createAuthApi({ baseUrl, fetchImpl = fetch }: AuthApiOptions) {
       if (!response.ok) return null;
       const body: unknown = await response.json().catch(() => null);
       return toUser(body && typeof body === "object" ? (body as JsonRecord).user : null);
+    },
+
+    /** The user with their avatar, and the id of this session. Throws when the session is not valid. */
+    async getAccountSession(call: SessionCall): Promise<AccountSession> {
+      const body = await get("/get-session", call);
+      const record = body && typeof body === "object" ? (body as JsonRecord) : {};
+      const user = toUser(record.user);
+      if (!user) throw new AuthError("unknown", "Your session is no longer valid.", 401);
+      const session = record.session && typeof record.session === "object" ? (record.session as JsonRecord) : {};
+      return { user, sessionId: text(session.id) };
+    },
+
+    /** Changes the display name and/or the avatar. `image: null` removes the avatar. */
+    async updateUser(call: SessionCall, patch: { name?: string; image?: string | null }): Promise<void> {
+      await postSession("/update-user", { ...patch, ...(patch.name !== undefined ? { name: patch.name.trim() } : {}) }, call);
+    },
+
+    /** Asks the server to move the account to a new address. It is not changed until the address is confirmed. */
+    async changeEmail(call: SessionCall, newEmail: string): Promise<void> {
+      await postSession("/change-email", { newEmail: newEmail.trim() }, call);
+    },
+
+    async changePassword(call: SessionCall, input: { currentPassword: string; newPassword: string }): Promise<void> {
+      await postSession("/change-password", { ...input, revokeOtherSessions: false }, call);
+    },
+
+    async listAccounts(call: SessionCall): Promise<LinkedAccount[]> {
+      return asList(await get("/list-accounts", call)).flatMap((item) => {
+        const id = text(item.id);
+        const providerId = text(item.providerId);
+        return id && providerId ? [{ id, providerId }] : [];
+      });
+    },
+
+    async listSessions(call: SessionCall): Promise<SessionInfo[]> {
+      return asList(await get("/list-sessions", call)).flatMap((item) => {
+        const id = text(item.id);
+        const token = text(item.token);
+        if (!id || !token) return [];
+        return [
+          {
+            id,
+            token,
+            userAgent: text(item.userAgent),
+            ipAddress: text(item.ipAddress),
+            createdAt: text(item.createdAt),
+          },
+        ];
+      });
+    },
+
+    async revokeSession(call: SessionCall, token: string): Promise<void> {
+      await postSession("/revoke-session", { token }, call);
+    },
+
+    async listOrganizations(call: SessionCall): Promise<Organization[]> {
+      return asList(await get("/organization/list", call)).flatMap((item) => {
+        const id = text(item.id);
+        const name = text(item.name);
+        const slug = text(item.slug);
+        return id && name && slug ? [{ id, name, slug, logo: text(item.logo) }] : [];
+      });
+    },
+
+    async createOrganization(call: SessionCall, input: { name: string; slug: string }): Promise<void> {
+      await postSession("/organization/create", { name: input.name.trim(), slug: input.slug.trim() }, call);
+    },
+
+    /** Deletes the signed-in user at Neon Auth (`delete-user`). Throws when this deployment does not allow it. */
+    async deleteUser(call: SessionCall): Promise<void> {
+      await postSession("/delete-user", {}, call);
     },
 
     /** Ends the session on the server. The caller clears local state whatever this returns. */

@@ -55,7 +55,11 @@ export function createSessionStore(
       const raw = await backend.getItem(SESSION_KEY);
       return raw ? parse(raw) : null;
     },
-    save: (session) => backend.setItem(SESSION_KEY, JSON.stringify(session)),
+    save: (session) => {
+      // The avatar can be a large data URL, and secure storage is for the session token and identity.
+      const { image: _image, ...user } = session.user;
+      return backend.setItem(SESSION_KEY, JSON.stringify({ ...session, user }));
+    },
     clear: () => backend.deleteItem(SESSION_KEY),
   };
 }
