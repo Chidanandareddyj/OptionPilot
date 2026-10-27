@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { View } from "react-native";
 import { useOnboarding } from "@/lib/onboarding";
 import { useScreenInsets } from "@/lib/safe-area";
@@ -29,10 +30,15 @@ const POINTS: { icon: PhosphorIcon; title: string; body: string }[] = [
 export default function OnboardingThree() {
   const insets = useScreenInsets();
   const { colors } = useTheme();
+  const router = useRouter();
   const { complete } = useOnboarding();
 
-  // Phase 6 sends these two buttons to sign-up and sign-in. Until the auth screens exist, both
-  // just finish the intro and open the app.
+  /** Marks the intro as seen, which swaps this group for the auth screens, then opens the chosen one. */
+  function finish(destination: "/sign-up" | "/sign-in") {
+    complete();
+    router.replace(destination);
+  }
+
   return (
     <Screen>
       <View className="h-11 flex-row items-center">
@@ -66,8 +72,8 @@ export default function OnboardingThree() {
       <View className="mt-auto gap-3" style={{ paddingBottom: Math.max(insets.bottom + 14, 24) }}>
         <PageDots count={3} active={2} />
         <View className="h-3" />
-        <Button label="Create free account" variant="primary" icon={ArrowRightIcon} onPress={complete} />
-        <Button label="I already have an account" variant="ghost" onPress={complete} />
+        <Button label="Create free account" variant="primary" icon={ArrowRightIcon} onPress={() => finish("/sign-up")} />
+        <Button label="I already have an account" variant="ghost" onPress={() => finish("/sign-in")} />
         <Text size="xs" tone="faint" className="text-center">
           By continuing you agree to the Terms and Privacy policy.
         </Text>

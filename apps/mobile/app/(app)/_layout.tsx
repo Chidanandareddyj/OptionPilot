@@ -16,6 +16,10 @@ export default function AppLayout() {
           contentStyle: { backgroundColor: colors.card },
         }}
       />
+      <Stack.Screen
+        name="sign-out"
+        options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }}
+      />
     </Stack>
   );
 }

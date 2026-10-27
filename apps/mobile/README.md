@@ -26,6 +26,15 @@ npx expo export --platform ios --platform android --output-dir dist-native
 
 `.github/workflows/mobile.yml` runs the same commands.
 
+## Sign-in
+
+Sign-in is email + password, with a one-time code to verify a new account. Google sign-in is not in v1.
+
+- `EXPO_PUBLIC_API_BASE_URL` sets the API base URL (default `https://www.optionpilot.tech`; use `www`, the apex is rejected as an Origin).
+- The session token from the `set-auth-token` header is kept in `expo-secure-store`. It is exchanged at `/api/auth/token` for the 15-minute JWT, which stays in memory and is refreshed when under about 60 s remain.
+- If the server does not send that header, the app falls back to a cookie session behind the same interface (`lib/auth/strategy.ts`).
+- All API calls go through `apiFetch` (`lib/auth/apiFetch.ts`). A 401 or a redirect signs the user out.
+
 ## Layout
 
 - `app/` Expo Router routes. `(onboarding)` is shown once, `(app)` holds the four tabs and the Appearance sheet.

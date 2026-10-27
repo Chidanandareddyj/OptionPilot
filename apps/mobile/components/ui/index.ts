@@ -5,3 +5,4 @@ export { ListGroup, ListRow } from "./ListRow";
 export { PageDots } from "./PageDots";
 export { Screen } from "./Screen";
 export { Text, type TextProps } from "./Text";
+export { TextLink } from "./TextLink";
