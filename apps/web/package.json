@@ -7,7 +7,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --import ./test/register.mjs --experimental-strip-types --test lib/auth/request-user.test.ts"
+    "test": "node --import ./test/register.mjs --experimental-strip-types --test lib/auth/request-user.test.ts lib/market-quotes.test.ts"
   },
   "dependencies": {
     "@neon/config": "^1.7.2",

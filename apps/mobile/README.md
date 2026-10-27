@@ -39,6 +39,7 @@ Sign-in is email + password, with a one-time code to verify a new account. Googl
 
 - `app/` Expo Router routes. `(onboarding)` is shown once, `(app)` holds the four tabs and the Appearance sheet.
 - `components/ui` reusable primitives, `components/brand` the logo and splash, `components/navigation` the floating tab bar.
+- `lib/api` the typed client for the website's routes and the React Query hooks, `lib/analysis` the analysis model and the analyze flow, `lib/chart` the payoff chart's layout maths (pure, tested apart from the Skia drawing in `components/chart`).
 - `lib/theme` the theme provider. Colours come from `@optionpilot/shared` and are mirrored in `global.css`, which `__tests__/global-css.test.ts` keeps in sync.
 - `scripts/generate-brand-assets.mjs` draws the app icon, adaptive icon, splash images and favicon from the website logo. Run `npm run icons` after changing the logo or palette.
 
@@ -52,4 +53,4 @@ Styles use [Uniwind](https://uniwind.dev) (Tailwind v4 classes on React Native c
 
 ## Preview in a browser
 
-For layout checks only: `EXPO_PUBLIC_PREVIEW_INSETS="54,34" npx expo export --platform web`. The variable gives the page the top and bottom safe-area insets of a recent iPhone. This is a react-native-web render, not a device.
+For layout checks only: `npm run setup:web` once (it copies the CanvasKit WebAssembly file the Skia payoff chart needs into `public/`, which git ignores), then `EXPO_PUBLIC_PREVIEW_INSETS="54,34" npx expo export --platform web`. The variable gives the page the top and bottom safe-area insets of a recent iPhone. This is a react-native-web render, not a device.

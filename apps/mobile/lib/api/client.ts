@@ -1,0 +1,76 @@
+import type {
+  AnalysisDetail,
+  AnalysisSummary,
+  AnalyzeResponse,
+  MarketIndicesResponse,
+  MarketQuote,
+  MarketQuotesResponse,
+} from "@optionpilot/shared";
+
+/** The server answered, but with an error status. `message` is the server's own text when it sent one. */
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+type ApiFetch = (path: string, init?: RequestInit) => Promise<Response>;
+
+type HistoryPage = { analyses: AnalysisSummary[]; nextCursor: string | null };
+
+async function readJson(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+const errorText = (body: unknown): string | null =>
+  body && typeof body === "object" && typeof (body as { error?: unknown }).error === "string"
+    ? (body as { error: string }).error
+    : null;
+
+/** The OptionPilot routes the Terminal uses, over the authenticated `apiFetch` from the session. */
+export function createApi(apiFetch: ApiFetch) {
+  async function request<T>(path: string, init?: RequestInit): Promise<T> {
+    const response = await apiFetch(path, init);
+    const body = await readJson(response);
+    if (!response.ok) {
+      throw new ApiError(errorText(body) ?? `The request failed (${response.status}).`, response.status);
+    }
+    return body as T;
+  }
+
+  return {
+    indices: () => request<MarketIndicesResponse>("/api/market/indices"),
+
+    async quotes(symbols: string[]): Promise<MarketQuote[]> {
+      if (symbols.length === 0) return [];
+      const query = encodeURIComponent(symbols.join(","));
+      return (await request<MarketQuotesResponse>(`/api/market/quotes?symbols=${query}`)).quotes;
+    },
+
+    /** The newest page of the signed-in user's saved analyses. */
+    async recentAnalyses(): Promise<AnalysisSummary[]> {
+      return (await request<HistoryPage>("/api/analyses")).analyses;
+    },
+
+    analysis: (id: string) => request<AnalysisDetail>(`/api/analyses/${encodeURIComponent(id)}`),
+
+    /** Runs the calculators for a symbol and saves the result. Slow: it queries the option chain. */
+    analyze: (company: string, signal?: AbortSignal) =>
+      request<AnalyzeResponse>("/api/analyze", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ company }),
+        signal,
+      }),
+  };
+}
+
+export type Api = ReturnType<typeof createApi>;

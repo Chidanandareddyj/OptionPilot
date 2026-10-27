@@ -22,7 +22,7 @@ export type MarketIndicesResponse = {
 };
 
 /**
- * One symbol quote. `GET /api/market/quotes` is a later phase.
+ * One symbol quote, from `GET /api/market/quotes`.
  * Recent symbols on the terminal need this for stocks, not only the two indices.
  */
 export type MarketQuote = {

@@ -1,13 +1,11 @@
 import { useState, type Ref, type ReactNode } from "react";
-import { Platform, Pressable, TextInput, View, type TextInputInstance, type TextInputProps } from "react-native";
+import { Pressable, TextInput, View, type TextInputInstance, type TextInputProps } from "react-native";
 import { EyeIcon, EyeSlashIcon, WarningCircleIcon } from "@/components/icons";
 import { Text } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { useTheme } from "@/lib/theme/ThemeProvider";
+import { INPUT_RESET } from "@/lib/theme/inputReset";
 import { textStyles } from "@/lib/theme/typography";
-
-/** The wrapping view draws the focus ring, so browsers must not add their own outline to the input. */
-const INPUT_RESET = Platform.OS === "web" ? ({ outlineStyle: "none" } as object) : { outlineWidth: 0 };
 
 export type TextFieldProps = Omit<TextInputProps, "style" | "placeholderTextColor" | "secureTextEntry"> & {
   label: string;

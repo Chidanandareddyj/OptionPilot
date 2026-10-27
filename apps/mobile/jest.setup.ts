@@ -1,6 +1,13 @@
 import mockAsyncStorage from "@react-native-async-storage/async-storage/jest/async-storage-mock";
 
+import "react-native-gesture-handler/jestSetup";
+
 jest.mock("@react-native-async-storage/async-storage", () => mockAsyncStorage);
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories cannot use imports
+jest.mock("@react-native-community/netinfo", () => require("@react-native-community/netinfo/jest/netinfo-mock.js"));
+
+// Skia draws on a native canvas that jest does not have. The chart's maths is tested apart from its drawing.
+jest.mock("@/components/chart/ChartCanvas", () => ({ ChartCanvas: () => null }));
 
 // Uniwind is a Metro-transformed library. Tests only need its theme switch, which this fake keeps.
 jest.mock("uniwind", () => {
