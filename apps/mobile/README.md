@@ -43,6 +43,10 @@ Sign-in is email + password, with a one-time code to verify a new account. Googl
 - `lib/theme` the theme provider. Colours come from `@optionpilot/shared` and are mirrored in `global.css`, which `__tests__/global-css.test.ts` keeps in sync.
 - `scripts/generate-brand-assets.mjs` draws the app icon, adaptive icon, splash images and favicon from the website logo. Run `npm run icons` after changing the logo or palette.
 
+## Compare and recommend
+
+The analysis screen opens Compare (every strategy, or two views side by side) and Recommend ("Which strategy fits?", a form sheet that scores a view and a loss budget through `POST /api/decide`, then the result screen). Their ranking is the website's: the server ranks (`scoreStrategies`, `rankDecision`), and the order, filters, search, and the saved single or two-view result come from the pure functions in `packages/shared/src/compare.ts`, which the website's strategy explorer uses too. `useDecide` writes the answer into the cached analysis, so every screen shows the new ranking at once. `__tests__/compare-recommend-lib.test.ts` and `packages/shared/src/compare.test.ts` check the same order for the same analysis, with the real scoring on a fixture.
+
 ## Styling
 
 Styles use [Uniwind](https://uniwind.dev) (Tailwind v4 classes on React Native components). Theme variables live in `global.css`; `light`, `dark` and `system` are switched at runtime from Settings, Appearance.

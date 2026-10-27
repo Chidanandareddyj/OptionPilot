@@ -1,12 +1,11 @@
 import NetInfo from "@react-native-community/netinfo";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import { Alert } from "react-native";
 import AnalysisScreen from "@/app/(app)/analysis/[id]";
 import CalculatingScreen from "@/app/(app)/analysis/new";
 import { DETAIL, failure, fakeApi, renderApp } from "./app-harness";
 import { analysisResult } from "./fixtures/analysis";
 
-const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: jest.fn(() => true) };
+const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), dismissTo: jest.fn(), canGoBack: jest.fn(() => true) };
 let mockParams: Record<string, string> = {};
 jest.mock("expo-router", () => ({ useRouter: () => mockRouter, useLocalSearchParams: () => mockParams }));
 
@@ -104,14 +103,30 @@ describe("Analysis screen (18 to 24)", () => {
     expect(await screen.findByRole("button", { name: "Back to History" })).toBeOnTheScreen();
   });
 
-  it("says Compare and Recommend arrive later, instead of doing nothing", async () => {
-    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+  it("opens Compare and Recommend on the strategy being viewed", async () => {
     useApi({ "GET /api/analyses/an-1": DETAIL });
     await renderApp(<AnalysisScreen />);
     await fireEvent.press(await screen.findByRole("button", { name: "Compare" }));
+    expect(mockRouter.push).toHaveBeenLastCalledWith({ pathname: "/analysis/[id]/compare", params: { id: "an-1", strategy: "bull_call_spread" } });
     await fireEvent.press(screen.getByRole("button", { name: "Recommend" }));
-    expect(alert).toHaveBeenCalledTimes(2);
-    alert.mockRestore();
+    expect(mockRouter.push).toHaveBeenLastCalledWith({ pathname: "/analysis/[id]/recommend", params: { id: "an-1" } });
+  });
+
+  it("shows the strategy Compare or the result sends back, each time it is sent", async () => {
+    mockParams = { id: "an-1", strategy: "bear_put_spread", at: "1" };
+    useApi({ "GET /api/analyses/an-1": DETAIL });
+    await renderApp(<AnalysisScreen />);
+    expect(await screen.findByLabelText(/^Strategy: Bear Put Spread/)).toBeOnTheScreen();
+
+    // The user picks another one from the strategy picker, then sends the same one again.
+    await fireEvent.press(screen.getByLabelText(/^Strategy: Bear Put Spread/));
+    await fireEvent.press(screen.getByRole("button", { name: /^Bull Call Spread/ }));
+    expect(screen.getByLabelText(/^Strategy: Bull Call Spread/)).toBeOnTheScreen();
+
+    mockParams = { id: "an-1", strategy: "bear_put_spread", at: "2" };
+    // Any state change re-reads the route's params.
+    await fireEvent.press(screen.getByRole("tab", { name: /^Legs/ }));
+    expect(screen.getByLabelText(/^Strategy: Bear Put Spread/)).toBeOnTheScreen();
   });
 
   it("offers a retry when the analysis cannot be loaded", async () => {

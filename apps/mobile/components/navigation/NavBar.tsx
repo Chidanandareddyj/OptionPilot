@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Pressable, View } from "react-native";
 import { CaretLeftIcon } from "@/components/icons";
 import { Text } from "@/components/ui";
@@ -17,10 +18,12 @@ type NavBarProps = {
   title?: string;
   /** Solid once the page has scrolled under it: a near-opaque fill (there is no backdrop blur), a hairline and the title. */
   solid?: boolean;
+  /** Controls on the right of the bar, such as a switch. */
+  right?: ReactNode;
 };
 
 /** The bar over the top of a pushed screen. Content scrolls under it, so pad the page by `useNavBarHeight`. */
-export function NavBar({ backLabel, onBack, title, solid = false }: NavBarProps) {
+export function NavBar({ backLabel, onBack, title, solid = false, right }: NavBarProps) {
   const insets = useScreenInsets();
   const { colors, scheme } = useTheme();
   return (
@@ -28,7 +31,7 @@ export function NavBar({ backLabel, onBack, title, solid = false }: NavBarProps)
       className={cn("absolute inset-x-0 top-0 z-10 border-b", solid ? "border-border" : "border-transparent")}
       style={{ paddingTop: insets.top, backgroundColor: solid ? surfaceColors(scheme).glassBackground : "transparent" }}
     >
-      <View className="h-[44px] flex-row items-center px-2">
+      <View className="h-[44px] flex-row items-center justify-between px-2">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Back to ${backLabel}`}
@@ -41,6 +44,7 @@ export function NavBar({ backLabel, onBack, title, solid = false }: NavBarProps)
             {backLabel}
           </Text>
         </Pressable>
+        {right ? <View className="flex-row items-center gap-2 pr-2">{right}</View> : null}
       </View>
       {solid && title ? (
         <View pointerEvents="none" className="absolute inset-x-24 h-[44px] items-center justify-center" style={{ top: insets.top }}>

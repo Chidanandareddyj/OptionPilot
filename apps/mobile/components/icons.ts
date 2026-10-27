@@ -2,6 +2,7 @@
 export { ArrowDownIcon } from "phosphor-react-native/src/icons/ArrowDown";
 export { ArrowLeftIcon } from "phosphor-react-native/src/icons/ArrowLeft";
 export { ArrowRightIcon } from "phosphor-react-native/src/icons/ArrowRight";
+export { ArrowsClockwiseIcon } from "phosphor-react-native/src/icons/ArrowsClockwise";
 export { ArrowsLeftRightIcon } from "phosphor-react-native/src/icons/ArrowsLeftRight";
 export { CaretDownIcon } from "phosphor-react-native/src/icons/CaretDown";
 export { CaretLeftIcon } from "phosphor-react-native/src/icons/CaretLeft";
@@ -32,7 +33,9 @@ export { SpinnerGapIcon } from "phosphor-react-native/src/icons/SpinnerGap";
 export { SunIcon } from "phosphor-react-native/src/icons/Sun";
 export { TrendDownIcon } from "phosphor-react-native/src/icons/TrendDown";
 export { TrendUpIcon } from "phosphor-react-native/src/icons/TrendUp";
+export { SlidersHorizontalIcon } from "phosphor-react-native/src/icons/SlidersHorizontal";
 export { WarningCircleIcon } from "phosphor-react-native/src/icons/WarningCircle";
+export { WarningIcon } from "phosphor-react-native/src/icons/Warning";
 export { WaveSineIcon } from "phosphor-react-native/src/icons/WaveSine";
 export { WifiSlashIcon } from "phosphor-react-native/src/icons/WifiSlash";
 export { XCircleIcon } from "phosphor-react-native/src/icons/XCircle";

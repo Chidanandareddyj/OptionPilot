@@ -140,15 +140,19 @@ export function ChartCanvas({ layout, scrub }: ChartCanvasProps) {
             <Line p1={{ x: layout.spot.x, y: plot.top }} p2={{ x: layout.spot.x, y: plot.bottom }} color={colors.primary} strokeWidth={1.5}>
               <DashPathEffect intervals={[4, 4]} />
             </Line>
-            <RoundedRect {...layout.spot.pill} r={6} color={colors.primary} />
-            <Label
-              font={fonts.monoBold}
-              text={layout.spot.label}
-              x={layout.spot.pill.x + layout.spot.pill.width / 2}
-              y={18}
-              align="middle"
-              color={colors.primaryForeground}
-            />
+            {layout.compact ? null : (
+              <>
+                <RoundedRect {...layout.spot.pill} r={6} color={colors.primary} />
+                <Label
+                  font={fonts.monoBold}
+                  text={layout.spot.label}
+                  x={layout.spot.pill.x + layout.spot.pill.width / 2}
+                  y={18}
+                  align="middle"
+                  color={colors.primaryForeground}
+                />
+              </>
+            )}
           </Group>
         ) : null}
 
@@ -174,8 +178,10 @@ export function ChartCanvas({ layout, scrub }: ChartCanvasProps) {
           <Group key={`s${strike.x}`}>
             <Circle cx={strike.x} cy={strike.y} r={4.5} color={colors.card} />
             <Circle cx={strike.x} cy={strike.y} r={4.5} style="stroke" strokeWidth={2} color={colors.foreground} />
-            <Label font={fonts.sansBold} text={strike.lines[0]} x={strike.x} y={axisY + 48} align="middle" color={colors.mutedForeground} />
-            {strike.lines[1] ? (
+            {layout.compact ? null : (
+              <Label font={fonts.sansBold} text={strike.lines[0]} x={strike.x} y={axisY + 48} align="middle" color={colors.mutedForeground} />
+            )}
+            {strike.lines[1] && !layout.compact ? (
               <Label font={fonts.mono} text={strike.lines[1]} x={strike.x} y={axisY + 62} align="middle" color={colors.mutedForeground} />
             ) : null}
           </Group>

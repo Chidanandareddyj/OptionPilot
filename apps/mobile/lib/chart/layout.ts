@@ -13,6 +13,8 @@ import { money, signed } from "@/lib/analysis/format";
 
 /** Space between the card edge and the plot: left for the y labels, bottom for the axis. */
 export const CHART_MARGIN = { left: 44, top: 36, right: 20, bottom: 72 } as const;
+/** The compact chart (Compare views) has no strike labels under the axis, so less room is kept there. */
+const COMPACT_MARGIN = { ...CHART_MARGIN, top: 35, bottom: 45 } as const;
 /**
  * The canvas is this much wider than the layout on each side. The y labels are 44 px wide and the
  * design lets them spill into the card padding, so the canvas covers that padding too.
@@ -39,6 +41,8 @@ export type ChartInput = {
   maxLoss: Limit;
   width: number;
   height: number;
+  /** Axis, spot line and strike guides only: no labels for the spot, strikes, breakevens or limits. */
+  compact?: boolean;
 };
 
 export type AxisLabel = { value: number; at: number; text: string };
@@ -52,6 +56,7 @@ export type BreakevenGuide = { x: number; text: string; align: Align; textX: num
 export type ChartLayout = {
   width: number;
   height: number;
+  compact: boolean;
   plot: { left: number; top: number; right: number; bottom: number };
   zeroY: number;
   window: readonly [number, number];
@@ -97,12 +102,13 @@ function limitText(kind: "profit" | "loss", limit: Limit, fallback: number): str
 }
 
 export function layoutChart(input: ChartInput): ChartLayout {
-  const { width, height, window: range, spot } = input;
+  const { width, height, window: range, spot, compact = false } = input;
+  const margin = compact ? COMPACT_MARGIN : CHART_MARGIN;
   const plot = {
-    left: CHART_MARGIN.left,
-    top: CHART_MARGIN.top,
-    right: width - CHART_MARGIN.right,
-    bottom: height - CHART_MARGIN.bottom,
+    left: margin.left,
+    top: margin.top,
+    right: width - margin.right,
+    bottom: height - margin.bottom,
   };
   const [xmin, xmax] = range;
   const curve = windowCurve(input.points, range);
@@ -120,11 +126,14 @@ export function layoutChart(input: ChartInput): ChartLayout {
     clamp(xmin + ((x - plot.left) / (plot.right - plot.left || 1)) * (xmax - xmin), xmin, xmax);
   const zeroY = yOf(0);
 
-  const xTickValues = innerTicks(xmin, xmax, 5);
+  // The compact chart labels the window's two edges and three prices between them.
+  const xTickValues = compact
+    ? [0, 1, 2, 3, 4].map((i) => Math.round(xmin + ((xmax - xmin) * i) / 4))
+    : innerTicks(xmin, xmax, 5);
   const tickStep = xTickValues.length > 1 ? xTickValues[1] - xTickValues[0] : (xmax - xmin) / 5;
   const rulerStep = tickStep / 20;
   const ruler: ChartLayout["ruler"] = [];
-  if (rulerStep > 0) {
+  if (rulerStep > 0 && !compact) {
     for (let v = Math.ceil(xmin / rulerStep) * rulerStep, n = 0; v <= xmax && n < 400; v += rulerStep, n += 1) {
       const rounded = Number(v.toFixed(6));
       ruler.push({ x: xOf(rounded), price: rounded, major: Math.abs((rounded / (tickStep / 2)) % 1) < 1e-6 });
@@ -153,11 +162,11 @@ export function layoutChart(input: ChartInput): ChartLayout {
   const labelX = (side: "left" | "right") => (side === "left" ? plot.left + 4 : plot.right - 4);
 
   const profit: LimitLabel | null =
-    input.maxProfit !== null && hi > 0
+    !compact && input.maxProfit !== null && hi > 0
       ? { kind: "profit", title: "Max profit", value: limitText("profit", input.maxProfit, hi), x: labelX(profitSide), y: yOf(hi) - 20, align: alignOf(profitSide) }
       : null;
   const loss: LimitLabel | null =
-    input.maxLoss !== null && lo < 0
+    !compact && input.maxLoss !== null && lo < 0
       ? { kind: "loss", title: "Max loss", value: limitText("loss", input.maxLoss, lo), x: labelX(lossSide), y: yOf(lo) - 20, align: alignOf(lossSide) }
       : null;
 
@@ -168,7 +177,7 @@ export function layoutChart(input: ChartInput): ChartLayout {
     height: 32,
   });
 
-  const breakevens = input.breakevens
+  const breakevens = (compact ? [] : input.breakevens)
     .filter((b) => b > xmin && b < xmax)
     .map((b, i, all): BreakevenGuide => {
       const text = `Breakeven ${money(b)}`;
@@ -202,6 +211,7 @@ export function layoutChart(input: ChartInput): ChartLayout {
   return {
     width,
     height,
+    compact,
     plot,
     zeroY,
     window: range,

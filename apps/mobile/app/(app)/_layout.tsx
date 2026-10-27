@@ -23,6 +23,18 @@ export default function AppLayout() {
           />
           <Stack.Screen name="analysis/new" />
           <Stack.Screen name="analysis/[id]/index" />
+          <Stack.Screen name="analysis/[id]/compare" />
+          <Stack.Screen name="analysis/[id]/recommendation" />
+          <Stack.Screen
+            name="analysis/[id]/recommend"
+            options={{
+              presentation: "formSheet",
+              sheetAllowedDetents: "fitToContents",
+              sheetGrabberVisible: true,
+              sheetCornerRadius: 24,
+              contentStyle: { backgroundColor: colors.card },
+            }}
+          />
           <Stack.Screen
             name="appearance"
             options={{
