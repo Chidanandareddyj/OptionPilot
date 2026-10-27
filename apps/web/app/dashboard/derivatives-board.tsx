@@ -12,51 +12,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { calculateBearCallSpread } from "@optionpilot/shared";
-import { calculateBearPutSpread } from "@optionpilot/shared";
-import { calculateBullCallSpread } from "@optionpilot/shared";
-import { calculateBullPutSpread } from "@optionpilot/shared";
-import { calculateCallButterfly } from "@optionpilot/shared";
-import { calculateCallCondor } from "@optionpilot/shared";
-import { calculateLongStraddle } from "@optionpilot/shared";
-import { calculateLongStrangle } from "@optionpilot/shared";
-import { calculatePutButterfly } from "@optionpilot/shared";
-import { calculatePutCondor } from "@optionpilot/shared";
-import { calculateShortStraddle } from "@optionpilot/shared";
-import { calculateShortStrangle } from "@optionpilot/shared";
 import {
+  BOARD_CALCULATORS,
+  DEFAULT_BOARD_VIEW,
   applyView,
-  evaluate,
-  type Calculator,
+  boardCountText,
+  connectionLabel,
+  countStale,
+  evaluateBoard,
+  isMarketOpen,
+  mergeTick,
+  parseRupees,
+  staleNote,
+  type BoardFeed as Feed,
   type Company,
+  type ConnState as Conn,
   type Evaluation,
-  type LiveRow,
   type BoardView as View,
+  type RelayTick,
   type SortKey,
 } from "@optionpilot/shared";
-import { NORMAL_OPEN, signedInr } from "@optionpilot/shared";
+import { signedInr } from "@optionpilot/shared";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/app/components/spinner";
 import { MobileDerivativeCard } from "./mobile-derivative-card";
 import { STRATEGY_DEFINITIONS } from "@optionpilot/shared";
-
-const CALCULATORS: Record<string, Calculator> = {
-  long_straddle: calculateLongStraddle,
-  short_straddle: calculateShortStraddle,
-  long_strangle: calculateLongStrangle,
-  short_strangle: calculateShortStrangle,
-  bull_call_spread: calculateBullCallSpread,
-  bull_put_spread: calculateBullPutSpread,
-  bear_call_spread: calculateBearCallSpread,
-  bear_put_spread: calculateBearPutSpread,
-  call_butterfly: calculateCallButterfly,
-  put_butterfly: calculatePutButterfly,
-  call_condor: calculateCallCondor,
-  put_condor: calculatePutCondor,
-};
-
-type Feed = { rows: Map<string, LiveRow>; live: boolean; status: string; now: number };
-type Conn = "connecting" | "open" | "reconnecting";
 
 const rupees = (n: number) => `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 const money = (n: number | null, unlimited: string) => (n == null ? unlimited : rupees(n));
@@ -87,15 +67,7 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
 
   const [strategy, setStrategy] = useState("long_straddle");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [view, setView] = useState<View>({
-    investment: "all",
-    min: null,
-    max: null,
-    hideStale: true,
-    search: "",
-    sort: "roi",
-    dir: "desc",
-  });
+  const [view, setView] = useState<View>(DEFAULT_BOARD_VIEW);
 
   // Relay connection. The token lasts 60s, so every (re)connect fetches a fresh one.
   useEffect(() => {
@@ -113,16 +85,12 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
         es = new EventSource(`${body.url}/stream?token=${encodeURIComponent(body.token)}`);
         es.addEventListener("universe", (e) => setCompanies(JSON.parse((e as MessageEvent).data)));
         es.addEventListener("tick", (e) => {
-          const t = JSON.parse((e as MessageEvent).data) as { rows: LiveRow[]; live: boolean; status: string; now: number };
+          const t = JSON.parse((e as MessageEvent).data) as RelayTick;
           setConn("open");
           if (typeof window !== "undefined" && t.status) {
             window.dispatchEvent(new CustomEvent("market-status", { detail: t.status }));
           }
-          setFeed((prev) => {
-            const rows = new Map(prev?.rows);
-            for (const r of t.rows) rows.set(r.k, r);
-            return { rows, live: t.live, status: t.status, now: t.now };
-          });
+          setFeed((prev) => mergeTick(prev, t));
         });
         es.onerror = () => {
           es?.close();
@@ -144,27 +112,12 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
     };
   }, []);
 
-  const marketOpen = feed?.status === NORMAL_OPEN;
+  const marketOpen = isMarketOpen(feed);
 
-  const { evaluations, unavailable } = useMemo(() => {
-    const evaluations: Evaluation[] = [];
-    let unavailable = 0;
-    if (!feed) return { evaluations, unavailable };
-    for (const company of companies) {
-      const row = feed.rows.get(company.k);
-      if (!row) continue;
-      const e = evaluate(strategy, CALCULATORS[strategy], company, row, { now: feed.now, marketOpen });
-      if (e) evaluations.push(e);
-      else unavailable++;
-    }
-    return { evaluations, unavailable };
-  }, [companies, feed, strategy, marketOpen]);
+  const { evaluations, unavailable } = useMemo(() => evaluateBoard(companies, feed, strategy), [companies, feed, strategy]);
 
   const visible = useMemo(() => applyView(evaluations, view), [evaluations, view]);
-  const staleCount = useMemo(
-    () => applyView(evaluations, { ...view, hideStale: false }).filter((e) => e.stale).length,
-    [evaluations, view],
-  );
+  const staleCount = useMemo(() => countStale(evaluations, view), [evaluations, view]);
 
   const patch = (p: Partial<View>) => setView((v) => ({ ...v, ...p }));
   const sortBy = (key: SortKey) =>
@@ -175,12 +128,10 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
       if (!next.delete(k)) next.add(k);
       return next;
     });
-  const parseRupees = (s: string) => (s.trim() === "" || Number.isNaN(Number(s)) ? null : Number(s));
 
-  const status =
-    conn === "reconnecting" ? "Reconnecting…" : !feed ? "Connecting…" : !feed.live && marketOpen ? "Syncing…" : null;
+  const status = connectionLabel(conn, feed);
 
-  const count = `Showing ${visible.length} of ${evaluations.length} contracts${unavailable ? `, ${unavailable} unavailable` : ""}`;
+  const count = boardCountText(visible.length, evaluations.length, unavailable);
 
   return (
     <div className="flex flex-col gap-4">
@@ -229,7 +180,7 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Object.keys(CALCULATORS).map((k) => (
+              {Object.keys(BOARD_CALCULATORS).map((k) => (
                 <SelectItem key={k} value={k}>
                   {STRATEGY_DEFINITIONS[k]?.name ?? k}
                 </SelectItem>
@@ -302,7 +253,7 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-2">
         <span className="text-sm text-muted-foreground">
           {count}
-          {staleCount > 0 && (view.hideStale ? `. ${staleCount} stale rows are hidden.` : `, ${staleCount} stale rows shown faded.`)}
+          {staleCount > 0 && (view.hideStale ? `. ${staleNote(staleCount, true)}.` : `, ${staleNote(staleCount, false)}.`)}
         </span>
         <span className="text-sm text-faint lg:ml-auto">
           Investment is max loss per lot. Unlimited risk strategies have no investment figure. P&amp;L assumes entry at last traded prices.

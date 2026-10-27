@@ -31,6 +31,8 @@ export type Evaluation = {
   roi: number | null;
   breakevens: number[];
   beDistancePct: number | null;
+  /** The contracts the strategy trades, in the order the calculator names them (e.g. "980CE", "1000CE"). */
+  legs: string[];
   /** Why the row is stale (e.g. "1210CE"), else null. */
   stale: string | null;
   payoff: Record<string, unknown>[];
@@ -91,13 +93,12 @@ export function evaluate(
   const perLot = (v: number | null) => (v == null ? null : Math.round(v * company.l * 100) / 100);
 
   let stale: string | null = null;
+  const legIds: string[] = [];
   for (const [field, id] of Object.entries(r)) {
     if (!field.endsWith("_instrument_key") || typeof id !== "string") continue;
+    legIds.push(id);
     const leg = legs.get(id);
-    if (!leg || leg.ltp <= 0 || (ctx.marketOpen && ctx.now - leg.ltt > STALE_AFTER_MS)) {
-      stale = id;
-      break;
-    }
+    if (stale === null && (!leg || leg.ltp <= 0 || (ctx.marketOpen && ctx.now - leg.ltt > STALE_AFTER_MS))) stale = id;
   }
 
   const breakevens = ["breakeven", "lower_breakeven", "upper_breakeven"].map((f) => num(r[f])).filter((v): v is number => v != null);
@@ -116,6 +117,7 @@ export function evaluate(
     roi: maxProfit != null && maxLoss != null && maxLoss > 0 ? maxProfit / maxLoss : null,
     breakevens,
     beDistancePct: breakevens.length ? Math.min(...breakevens.map((b) => (Math.abs(b - row.sp) / row.sp) * 100)) : null,
+    legs: legIds,
     stale,
     payoff: Array.isArray(r.payoff_table) ? (r.payoff_table as Record<string, unknown>[]) : [],
   };

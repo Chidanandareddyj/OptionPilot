@@ -77,6 +77,20 @@ export type {
   View as BoardView,
 } from "./derivativesBoard";
 
+export {
+  BOARD_CALCULATORS,
+  DEFAULT_BOARD_VIEW,
+  boardCountText,
+  connectionLabel,
+  countStale,
+  evaluateBoard,
+  isMarketOpen,
+  mergeTick,
+  parseRupees,
+  staleNote,
+} from "./derivativesFeed";
+export type { BoardFeed, ConnState, RelayTick } from "./derivativesFeed";
+
 export { NORMAL_OPEN, checkIsMarketOpen } from "./market";
 
 export {

@@ -8,6 +8,6 @@
   },
   "scripts": {
     "lint": "eslint src",
-    "test": "node --import ./test/register.mjs --experimental-strip-types --test src/analysis.test.ts src/decision.test.ts src/types.test.ts src/derivativesBoard.test.ts src/adversarial.test.ts src/theme/tokens.test.ts src/history.test.ts src/compare.test.ts"
+    "test": "node --import ./test/register.mjs --experimental-strip-types --test src/analysis.test.ts src/decision.test.ts src/types.test.ts src/derivativesBoard.test.ts src/derivativesFeed.test.ts src/adversarial.test.ts src/theme/tokens.test.ts src/history.test.ts src/compare.test.ts"
   }
 }
