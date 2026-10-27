@@ -33,9 +33,6 @@ jobs:
         working-directory: apps/web
         run: node ../../.github/scripts/check-eslint-baseline.mjs
 
-      - name: Lint shared package
-        run: npm run lint -w @optionpilot/shared
-
       # LayoutProps and PageProps are generated globals. tsc cannot see them until this runs.
       - name: Generate Next.js route types
         working-directory: apps/web

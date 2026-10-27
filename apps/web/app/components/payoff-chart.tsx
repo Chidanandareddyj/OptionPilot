@@ -14,10 +14,7 @@ import {
   signedInr,
   toSeries,
   type PayoffPoint,
-  type StrikeMarker,
-} from "@optionpilot/shared";
-
-export type { StrikeMarker };
+} from "@/lib/payoff-series";
 
 const config = {
   profit: { label: "Profit", color: "var(--profit)" },
@@ -28,6 +25,7 @@ const config = {
 type ViewBox = { x: number; y: number; width: number; height: number };
 type LabelProps = { viewBox?: ViewBox };
 
+export type StrikeMarker = { price: number; label: string };
 export type ChartLimit = number | "Unlimited" | null;
 
 export type PayoffChartProps = {

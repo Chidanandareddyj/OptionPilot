@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto";
-import { requireUserId, UnauthorizedError } from "@optionpilot/shared";
+import { requireUserId, UnauthorizedError } from "@/lib/analysis";
 import { auth } from "@/lib/auth/server";
 import { NextResponse } from "next/server";
 

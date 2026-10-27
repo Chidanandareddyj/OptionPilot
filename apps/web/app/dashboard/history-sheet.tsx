@@ -4,10 +4,17 @@ import { ClockCounterClockwiseIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { parseStoredDecision, STRATEGY_DEFINITIONS, type Snapshot } from "@optionpilot/shared";
+import { parseStoredDecision } from "@/lib/analysis";
 import { cn } from "@/lib/utils";
+import { STRATEGY_DEFINITIONS } from "./types";
 
-export type { Snapshot };
+export type Snapshot = {
+  id?: string;
+  company: string;
+  createdAt?: Date;
+  result: unknown;
+  decision?: unknown;
+};
 
 function describe(item: Snapshot) {
   const stored = parseStoredDecision(item.decision);

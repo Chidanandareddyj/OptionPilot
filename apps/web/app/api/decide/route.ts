@@ -2,8 +2,8 @@ import { getDailyCloses } from "@/upstoxservices/getDailyCloses";
 import { getLotSize } from "@/upstoxservices/getLotSize";
 import { getOptions } from "@/upstoxservices/getOptions";
 
-import { BadRequestError, mergeCompareDecision, parseDecideInput, requireUserId, UnauthorizedError } from "@optionpilot/shared";
-import { expiryMsLeft, rankDecision, scoreStrategies } from "@optionpilot/shared";
+import { BadRequestError, mergeCompareDecision, parseDecideInput, requireUserId, UnauthorizedError } from "@/lib/analysis";
+import { expiryMsLeft, rankDecision, scoreStrategies } from "@/lib/decision";
 import { explainDecision } from "@/lib/explain";
 import { askMercury } from "@/lib/mercury";
 import { auth } from "@/lib/auth/server";

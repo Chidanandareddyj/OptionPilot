@@ -12,18 +12,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { calculateBearCallSpread } from "@optionpilot/shared";
-import { calculateBearPutSpread } from "@optionpilot/shared";
-import { calculateBullCallSpread } from "@optionpilot/shared";
-import { calculateBullPutSpread } from "@optionpilot/shared";
-import { calculateCallButterfly } from "@optionpilot/shared";
-import { calculateCallCondor } from "@optionpilot/shared";
-import { calculateLongStraddle } from "@optionpilot/shared";
-import { calculateLongStrangle } from "@optionpilot/shared";
-import { calculatePutButterfly } from "@optionpilot/shared";
-import { calculatePutCondor } from "@optionpilot/shared";
-import { calculateShortStraddle } from "@optionpilot/shared";
-import { calculateShortStrangle } from "@optionpilot/shared";
+import { calculateBearCallSpread } from "@/strategies/BearCallSpread";
+import { calculateBearPutSpread } from "@/strategies/BearPutSpread";
+import { calculateBullCallSpread } from "@/strategies/BullCallSpread";
+import { calculateBullPutSpread } from "@/strategies/BullPutSpread";
+import { calculateCallButterfly } from "@/strategies/CallButterfly";
+import { calculateCallCondor } from "@/strategies/CallCondor";
+import { calculateLongStraddle } from "@/strategies/LongStraddle";
+import { calculateLongStrangle } from "@/strategies/LongStrangle";
+import { calculatePutButterfly } from "@/strategies/PutButterfly";
+import { calculatePutCondor } from "@/strategies/PutCondor";
+import { calculateShortStraddle } from "@/strategies/ShortStraddle";
+import { calculateShortStrangle } from "@/strategies/ShortStrangle";
 import {
   applyView,
   evaluate,
@@ -31,14 +31,14 @@ import {
   type Company,
   type Evaluation,
   type LiveRow,
-  type BoardView as View,
   type SortKey,
-} from "@optionpilot/shared";
-import { NORMAL_OPEN, signedInr } from "@optionpilot/shared";
+  type View,
+} from "@/lib/derivativesBoard";
+import { signedInr } from "@/lib/payoff-series";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/app/components/spinner";
 import { MobileDerivativeCard } from "./mobile-derivative-card";
-import { STRATEGY_DEFINITIONS } from "@optionpilot/shared";
+import { STRATEGY_DEFINITIONS } from "./types";
 
 const CALCULATORS: Record<string, Calculator> = {
   long_straddle: calculateLongStraddle,
@@ -144,7 +144,7 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
     };
   }, []);
 
-  const marketOpen = feed?.status === NORMAL_OPEN;
+  const marketOpen = feed?.status === "NORMAL_OPEN";
 
   const { evaluations, unavailable } = useMemo(() => {
     const evaluations: Evaluation[] = [];

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ViewBadge } from "@/app/components/view-badge";
 import { cn } from "@/lib/utils";
-import { inr, type NormalizedStrategy } from "@optionpilot/shared";
+import { inr, type NormalizedStrategy } from "./types";
 
 type DecisionRow = {
   rank?: number;

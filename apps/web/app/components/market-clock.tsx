@@ -1,6 +1,5 @@
 "use client";
 
-import { NORMAL_OPEN } from "@optionpilot/shared";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -52,7 +51,7 @@ export function MarketClock({ className }: { className?: string }) {
     const handleStatus = (e: Event) => {
       const status = (e as CustomEvent).detail;
       if (typeof status === "string") {
-        setFeedStatus(status === NORMAL_OPEN);
+        setFeedStatus(status === "NORMAL_OPEN");
       }
     };
     window.addEventListener("market-status", handleStatus);

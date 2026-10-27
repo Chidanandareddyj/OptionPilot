@@ -1,8 +1,43 @@
-import { checkIsMarketOpen, type IndexQuote, type MarketIndicesResponse } from "@optionpilot/shared";
 import { NextResponse } from "next/server";
 import axios from "axios";
 
 export const dynamic = "force-dynamic";
+
+interface IndexQuote {
+  symbol: string;
+  price: number;
+  netChange: number;
+  percentChange: number;
+  close: number;
+}
+
+interface MarketIndicesResponse {
+  isLive: boolean;
+  status: "OPEN" | "CLOSED";
+  timestamp: string;
+  indices: {
+    nifty: IndexQuote;
+    bankNifty: IndexQuote;
+  };
+}
+
+function checkIsMarketOpen(): boolean {
+  // IST is UTC + 5 hours 30 mins
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const istDate = new Date(utc + 5.5 * 3600000);
+
+  const day = istDate.getDay();
+  // Weekend check: 0 is Sunday, 6 is Saturday
+  if (day === 0 || day === 6) return false;
+
+  const hours = istDate.getHours();
+  const minutes = istDate.getMinutes();
+  const timeInMinutes = hours * 60 + minutes;
+
+  // 9:15 AM to 3:30 PM (555 to 930 minutes)
+  return timeInMinutes >= 555 && timeInMinutes <= 930;
+}
 
 export async function GET() {
   const isLive = checkIsMarketOpen();

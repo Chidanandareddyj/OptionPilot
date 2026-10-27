@@ -3,10 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Sparkline } from "@/app/components/sparkline";
 import { ViewBadge } from "@/app/components/view-badge";
-import { signedInr } from "@optionpilot/shared";
+import { signedInr } from "@/lib/payoff-series";
 import { cn } from "@/lib/utils";
-import { payoffPoints } from "@optionpilot/shared";
-import { inr, type NormalizedStrategy } from "@optionpilot/shared";
+import { payoffPoints } from "./payoff-points";
+import { inr, type NormalizedStrategy } from "./types";
 
 export type RankedEntry = {
   score: number;
