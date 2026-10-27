@@ -12,13 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Spinner } from "@/app/components/spinner";
-import type { Pane } from "@/lib/analysis";
-import type { rankDecision } from "@/lib/decision";
-import { signedInr } from "@/lib/payoff-series";
+import { signedInr, STRATEGY_DEFINITIONS, type Category, type Decision, type Pane } from "@optionpilot/shared";
 import { cn } from "@/lib/utils";
-import { STRATEGY_DEFINITIONS, type Category } from "./types";
 
-export type Decision = ReturnType<typeof rankDecision> & { summary?: string | null };
+export type { Decision };
 
 function Summary({ text }: { text: string }) {
   return (

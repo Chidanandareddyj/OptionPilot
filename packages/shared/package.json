@@ -1,0 +1,13 @@
+{
+  "name": "@optionpilot/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "test": "node --experimental-strip-types --test src/analysis.test.ts src/decision.test.ts src/types.test.ts src/derivativesBoard.test.ts src/adversarial.test.ts src/theme/tokens.test.ts"
+  }
+}

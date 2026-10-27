@@ -8,7 +8,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import StrategyDetail from "./strategy-detail";
-import type { NormalizedStrategy } from "./types";
+import type { NormalizedStrategy } from "@optionpilot/shared";
 
 export function MobileStrategySheet({
   strategy,

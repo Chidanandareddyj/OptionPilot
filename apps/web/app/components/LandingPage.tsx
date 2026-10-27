@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { usePageTransition } from "@/app/components/loading-overlay";
-import type { PayoffPoint } from "@/lib/payoff-series";
+import type { PayoffPoint } from "@optionpilot/shared";
 import { cn } from "@/lib/utils";
 import { Brand } from "./brand";
 import { LandingNav } from "./landing-nav";

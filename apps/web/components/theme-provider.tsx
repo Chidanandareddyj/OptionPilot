@@ -1,12 +1,10 @@
 "use client";
 
+import { THEMES } from "@optionpilot/shared";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import type { ComponentProps } from "react";
 
-export const THEMES = [
-  { value: "dark", label: "Saffron", description: "Dark" },
-  { value: "light", label: "Paper", description: "Light" },
-] as const;
+export { THEMES };
 
 export function ThemeProvider(props: ComponentProps<typeof NextThemesProvider>) {
   return (

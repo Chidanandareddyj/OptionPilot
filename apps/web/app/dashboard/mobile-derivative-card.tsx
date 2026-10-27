@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { Evaluation } from "@/lib/derivativesBoard";
-import { signedInr } from "@/lib/payoff-series";
+import type { Evaluation } from "@optionpilot/shared";
+import { signedInr } from "@optionpilot/shared";
 import { cn } from "@/lib/utils";
 
 const rupees = (n: number) => `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;

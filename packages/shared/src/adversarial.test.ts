@@ -6,13 +6,13 @@ import {
   isCompareDecision,
   type Pane,
   type StoredDecision,
-} from "../../lib/analysis.ts";
+} from "./analysis.ts";
 import {
   applyView,
   type Evaluation,
   type View,
   type SortKey,
-} from "../../lib/derivativesBoard.ts";
+} from "./derivativesBoard.ts";
 import { normalizeStrategy, STRATEGY_DEFINITIONS, inr, keyMetrics } from "./types.ts";
 
 // Helper replicating strategy-explorer's asDecision

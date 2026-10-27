@@ -2,7 +2,7 @@
 
 import { ComposedChart, Line, ReferenceLine, XAxis, YAxis } from "recharts";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
-import { toSeries, type PayoffPoint } from "@/lib/payoff-series";
+import { toSeries, type PayoffPoint } from "@optionpilot/shared";
 
 const config = {
   pos: { label: "Profit", color: "var(--profit)" },
