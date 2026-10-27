@@ -23,6 +23,26 @@ export {
   LOGO_VIEW_BOX,
 } from "./brand/logo";
 
+export {
+  COMPARE_FILTERS,
+  asDecision,
+  filterCount,
+  initialCompareState,
+  paneStrategies,
+  visibleStrategies,
+} from "./compare";
+export type { CompareFilter, CompareState } from "./compare";
+
+export {
+  ANALYSIS_PAGE_SIZE,
+  analysisListWhere,
+  analysisSpot,
+  analysisTag,
+  toAnalysisDetail,
+  toAnalysisSummary,
+} from "./history";
+export type { AnalysisCursor, AnalysisDetail, AnalysisSummary } from "./history";
+
 export type {
   AnalyzeResponse,
   DecideRequest,
@@ -56,6 +76,20 @@ export type {
   SortKey,
   View as BoardView,
 } from "./derivativesBoard";
+
+export {
+  BOARD_CALCULATORS,
+  DEFAULT_BOARD_VIEW,
+  boardCountText,
+  connectionLabel,
+  countStale,
+  evaluateBoard,
+  isMarketOpen,
+  mergeTick,
+  parseRupees,
+  staleNote,
+} from "./derivativesFeed";
+export type { BoardFeed, ConnState, RelayTick } from "./derivativesFeed";
 
 export { NORMAL_OPEN, checkIsMarketOpen } from "./market";
 

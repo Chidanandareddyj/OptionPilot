@@ -17,10 +17,12 @@ export type MarketIndicesResponse = {
     nifty: IndexQuote;
     bankNifty: IndexQuote;
   };
+  // Additive. "fallback" means the hard-coded prices, not a live Upstox quote.
+  source: "live" | "fallback";
 };
 
 /**
- * One symbol quote. `GET /api/market/quotes` is a later phase.
+ * One symbol quote, from `GET /api/market/quotes`.
  * Recent symbols on the terminal need this for stocks, not only the two indices.
  */
 export type MarketQuote = {

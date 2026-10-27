@@ -12,6 +12,7 @@ export async function GET() {
     isLive,
     status: isLive ? ("OPEN" as const) : ("CLOSED" as const),
     timestamp: new Date().toISOString(),
+    source: "fallback" as const,
     indices: {
       nifty: {
         symbol: "NIFTY 50",
@@ -76,6 +77,7 @@ export async function GET() {
       isLive,
       status: isLive ? "OPEN" : "CLOSED",
       timestamp: new Date().toISOString(),
+      source: niftyRaw && bankRaw ? "live" : "fallback",
       indices: {
         nifty: extractQuote(niftyRaw, fallback.indices.nifty),
         bankNifty: extractQuote(bankRaw, fallback.indices.bankNifty),

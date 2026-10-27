@@ -24,6 +24,7 @@ test("bull call spread: per-lot profit, loss and investment", () => {
   assert.equal(e.maxLoss, 1000); // 10 * 100
   assert.equal(e.investment, 1000);
   assert.equal(e.stale, null);
+  assert.deepEqual(e.legs, ["90CE", "110CE"]);
   assert.equal(e.roi, 1);
   assert.ok(e.payoff.length > 0);
 });
@@ -48,7 +49,7 @@ test("stale: zero price always, old trade only while market is open", () => {
 test("applyView: median Low/High split, hide stale, sort", () => {
   const mk = (symbol: string, investment: number | null, stale: string | null = null): Evaluation => ({
     k: symbol, symbol, name: symbol, expiry: "", lot: 1, spot: 1, maxProfit: investment, maxLoss: investment,
-    investment, roi: null, breakevens: [], beDistancePct: null, stale, payoff: [],
+    investment, roi: null, breakevens: [], beDistancePct: null, legs: [], stale, payoff: [],
   });
   const rows = [mk("A", 100), mk("B", 200), mk("C", 300), mk("D", 400), mk("E", 50, "stale"), mk("F", null)];
   const view: View = { investment: "all", min: null, max: null, hideStale: true, search: "", sort: "investment", dir: "asc" };

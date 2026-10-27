@@ -11,6 +11,12 @@
     "build": "npm run build -w @optionpilot/web",
     "start": "npm run start -w @optionpilot/web",
     "lint": "npm run lint -w @optionpilot/web && npm run lint -w @optionpilot/shared",
-    "test": "npm test -w @optionpilot/shared && node --experimental-strip-types --test relay/universe.test.mjs"
+    "test": "npm test -w @optionpilot/shared && npm test -w @optionpilot/web && node --experimental-strip-types --test relay/universe.test.mjs"
+  },
+  "overrides": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "@types/react": "19.3.0",
+    "react-native-gesture-handler": "3.3.0"
   }
 }

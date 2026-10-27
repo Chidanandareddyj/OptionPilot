@@ -9,7 +9,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { parseStoredDecision, type Pane } from "@optionpilot/shared";
+import { initialCompareState, paneStrategies, visibleStrategies, type Pane } from "@optionpilot/shared";
 import { cn } from "@/lib/utils";
 import { MobileStrategyCard } from "./mobile-strategy-card";
 import { MobileStrategySheet } from "./mobile-strategy-sheet";
@@ -35,11 +35,6 @@ type Payload = {
   underlying_spot_price?: number;
   [key: string]: unknown;
 };
-
-function asDecision(value: unknown): Decision | null {
-  if (!value || typeof value !== "object") return null;
-  return Array.isArray((value as Decision).strategies) ? (value as Decision) : null;
-}
 
 function lotOf(value: unknown) {
   if (!value || typeof value !== "object") return 0;
@@ -100,19 +95,14 @@ export default function StrategyExplorer({
   decision?: unknown;
 }) {
   const data = (result ?? {}) as Payload;
-  const stored = parseStoredDecision(savedDecision);
-  const [compareMode, setCompareMode] = useState(stored.mode === "compare");
-  const [single, setSingle] = useState<Decision | null>(stored.mode === "single" ? asDecision(stored.single) : null);
-  const [left, setLeft] = useState<Decision | null>(
-    stored.mode === "compare" ? asDecision(stored.left) : (stored.mode === "single" ? asDecision(stored.single) : null)
-  );
-  const [right, setRight] = useState<Decision | null>(stored.mode === "compare" ? asDecision(stored.right) : null);
+  const initial = initialCompareState(savedDecision);
+  const [compareMode, setCompareMode] = useState(initial.compareMode);
+  const [single, setSingle] = useState<Decision | null>(initial.single);
+  const [left, setLeft] = useState<Decision | null>(initial.left);
+  const [right, setRight] = useState<Decision | null>(initial.right);
   const [focusPane, setFocusPane] = useState<Pane>("left");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const [selectedByPane, setSelectedByPane] = useState<{ left: string | null; right: string | null }>({
-    left: stored.mode === "compare" ? (asDecision(stored.left)?.best?.key ?? null) : (stored.mode === "single" ? (asDecision(stored.single)?.best?.key ?? null) : null),
-    right: stored.mode === "compare" ? (asDecision(stored.right)?.best?.key ?? null) : null,
-  });
+  const [selectedByPane, setSelectedByPane] = useState(initial.selected);
   const [filter, setFilter] = useState<Category | "all">("all");
   const [query, setQuery] = useState("");
   const [showJson, setShowJson] = useState(false);
@@ -126,18 +116,10 @@ export default function StrategyExplorer({
   const spot = data.underlying_spot_price ?? 0;
   const lotSize = lotOf(data) || lotOf(rankedDecision) || lotOf(single) || lotOf(left) || lotOf(right) || 1;
   const strategies = Object.keys(STRATEGY_DEFINITIONS).flatMap((key) => normalizeStrategy(key, data[key], spot, lotSize) ?? []);
-  const pick = (key: string | null) => strategies.find((s) => s.key === key) ?? null;
-  const active = pick(selectedKey) ?? strategies[0];
-  const leftActive = pick(selectedByPane.left) ?? (strategies.length > 0 ? strategies[0] : null);
-  const rightActive = pick(selectedByPane.right) ?? (strategies.length > 1 ? strategies[1] : strategies[0] ?? null);
+  const active = strategies.find((s) => s.key === selectedKey) ?? strategies[0];
+  const { left: leftActive, right: rightActive } = paneStrategies(strategies, selectedByPane);
   const ranked = new Map(rankedDecision?.strategies.map((s, i) => [s.key, { ...s, rank: i + 1 }]));
-  const visible = strategies
-    .filter(
-      (s) =>
-        (filter === "all" || s.category === filter) &&
-        `${s.name} ${s.tagline}`.toLowerCase().includes(query.trim().toLowerCase()),
-    )
-    .sort((a, b) => (ranked.get(a.key)?.rank ?? 99) - (ranked.get(b.key)?.rank ?? 99));
+  const visible = visibleStrategies(strategies, rankedDecision, filter, query);
 
   const handleCompareMode = (on: boolean) => {
     setCompareMode(on);
