@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 const result = spawnSync("npx", ["eslint", "-f", "json"], {
   encoding: "utf8",
   maxBuffer: 20 * 1024 * 1024,
+  shell: true,
 });
 
 if (result.error) {
@@ -21,7 +22,7 @@ if (result.status !== 0 && result.status !== 1) {
 const data = JSON.parse(result.stdout);
 const rows = [];
 for (const file of data) {
-  const rel = relative(process.cwd(), file.filePath);
+  const rel = relative(process.cwd(), file.filePath).replace(/\\/g, "/");
   for (const message of file.messages) {
     const firstLine = String(message.message).split("\n")[0];
     rows.push(
@@ -33,7 +34,7 @@ rows.sort();
 
 const actual = rows.length === 0 ? "" : `${rows.join("\n")}\n`;
 const expectedPath = new URL("../eslint-baseline.txt", import.meta.url);
-const expected = readFileSync(expectedPath, "utf8");
+const expected = readFileSync(expectedPath, "utf8").replace(/\r\n/g, "\n");
 
 if (actual === expected) {
   const errors = rows.filter((row) => row.includes(": 2 ")).length;

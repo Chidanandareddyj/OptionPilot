@@ -6,9 +6,6 @@ app/components/AuthViewClient.tsx:351:42: 2 @typescript-eslint/no-explicit-any U
 app/components/AuthViewClient.tsx:368:29: 2 @typescript-eslint/no-explicit-any Unexpected any. Specify a different type.
 app/components/AuthViewClient.tsx:466:6: 1 react-hooks/exhaustive-deps React Hook useEffect has missing dependencies: 'router' and 'showLoading'. Either include them or remove the dependency array.
 app/components/mobile-bottom-nav.tsx:21:10: 1 @typescript-eslint/no-unused-vars 'Button' is defined but never used.
-app/components/mobile-symbol-sheet.tsx:24:3: 1 @typescript-eslint/no-unused-vars 'symbolName' is defined but never used.
-app/components/mobile-symbol-sheet.tsx:25:8: 1 @typescript-eslint/no-unused-vars 'Suggestion' is defined but never used.
-app/components/mobile-symbol-sheet.tsx:6:3: 1 @typescript-eslint/no-unused-vars 'SparkleIcon' is defined but never used.
 app/dashboard/recommendation-panel.tsx:342:7: 2 react-hooks/set-state-in-effect Error: Calling setState synchronously within an effect can trigger cascading renders
 app/dashboard/recommendation-panel.tsx:348:7: 2 react-hooks/set-state-in-effect Error: Calling setState synchronously within an effect can trigger cascading renders
 app/dashboard/recommendation-panel.tsx:354:7: 2 react-hooks/set-state-in-effect Error: Calling setState synchronously within an effect can trigger cascading renders
