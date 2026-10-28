@@ -1,4 +1,4 @@
-import { evaluateBoard, mergeTick, type BoardView, type Evaluation } from "@optionpilot/shared";
+import { BOARD_CALCULATORS, STRATEGY_DEFINITIONS, evaluateBoard, mergeTick, type BoardView, type Evaluation } from "@optionpilot/shared";
 import {
   activeFilterCount,
   boardStatus,
@@ -57,9 +57,11 @@ describe("filters", () => {
 });
 
 describe("strategies", () => {
-  it("offers the two designed strategies, plus a third when a tile chose it", () => {
-    expect(strategySegments("bear_put_spread").map((s) => s.label)).toEqual(["Bull Call Spread", "Bear Put Spread"]);
-    expect(strategySegments("long_straddle").map((s) => s.label)).toEqual(["Bull Call Spread", "Bear Put Spread", "Long Straddle"]);
+  it("offers every strategy the board can price, in the website's order", () => {
+    const keys = Object.keys(BOARD_CALCULATORS);
+    expect(strategySegments().map((s) => s.value)).toEqual(keys);
+    expect(strategySegments().map((s) => s.label)).toEqual(keys.map((key) => STRATEGY_DEFINITIONS[key].name));
+    expect(keys).toHaveLength(12);
   });
 
   it("falls back to Bull Call Spread for an unknown link", () => {

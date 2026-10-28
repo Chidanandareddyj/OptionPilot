@@ -24,11 +24,12 @@ import { EmptyCompanies } from "@/components/derivatives/EmptyCompanies";
 import { ActiveFilterChips } from "@/components/derivatives/FilterChips";
 import { FilterButton } from "@/components/derivatives/FilterButton";
 import { InfoBanner } from "@/components/derivatives/InfoBanner";
+import { StrategySwitcher } from "@/components/derivatives/StrategySwitcher";
 import { FormAlert } from "@/components/forms/FormAlert";
 import { StatusPill } from "@/components/market/StatusPill";
 import { TAB_BAR_CLEARANCE } from "@/components/navigation/FloatingTabBar";
 import { PULL_THRESHOLD, PullHint } from "@/components/terminal/PullHint";
-import { SegmentedControl, Text } from "@/components/ui";
+import { Text } from "@/components/ui";
 import { useOnline } from "@/lib/api/online";
 import { useBoardState } from "@/lib/derivatives/BoardState";
 import { useLiveFeed } from "@/lib/derivatives/FeedProvider";
@@ -41,7 +42,6 @@ import {
   filterChips,
   parseStrategy,
   resetFilters,
-  strategySegments,
 } from "@/lib/derivatives/model";
 import { PREVIEW_PULL, useScreenInsets } from "@/lib/safe-area";
 import { useTheme } from "@/lib/theme/ThemeProvider";
@@ -124,7 +124,7 @@ export default function DerivativesTab() {
         />
         <FilterButton count={activeFilterCount(view)} onPress={() => router.push("/derivatives/filters")} />
       </View>
-      <SegmentedControl tone="primary" segments={strategySegments(strategy)} value={strategy} onChange={setStrategy} />
+      <StrategySwitcher value={strategy} onChange={setStrategy} />
       {filters.length > 0 ? <ActiveFilterChips chips={filters} onRemove={(id) => setView((v) => clearFilter(v, id))} /> : null}
       <Text size="sm" tone="muted" accessibilityLiveRegion="polite">
         {summary}

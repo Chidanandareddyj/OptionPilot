@@ -1,4 +1,5 @@
 import {
+  BOARD_CALCULATORS,
   DEFAULT_BOARD_VIEW,
   STRATEGY_DEFINITIONS,
   signedInr,
@@ -20,9 +21,8 @@ const OPEN_MINUTES = 9 * 60 + 15;
 /** The board's starting view. The web opens ranked by profit to risk; the phone's designs list companies A to Z, and it has no sort control. */
 export const MOBILE_BOARD_VIEW: BoardView = { ...DEFAULT_BOARD_VIEW, sort: "symbol", dir: "asc" };
 
-/** The two strategies the board's switcher offers. */
-export const DEFAULT_STRATEGIES = ["bull_call_spread", "bear_put_spread"] as const;
-export const DEFAULT_STRATEGY = DEFAULT_STRATEGIES[0];
+/** The board opens on Bull Call Spread, the same strategy the designs show selected. */
+export const DEFAULT_STRATEGY = "bull_call_spread";
 
 /** The strategy each Terminal "Browse by view" tile opens the board with. */
 export const VIEW_STRATEGY: Record<Category, string> = {
@@ -34,12 +34,9 @@ export const VIEW_STRATEGY: Record<Category, string> = {
 
 export const strategyName = (key: string) => STRATEGY_DEFINITIONS[key]?.name ?? key;
 
-/** The switcher's segments: the two offered, plus the strategy in use when a tile opened another one. */
-export function strategySegments(current: string): { value: string; label: string }[] {
-  const keys: string[] = DEFAULT_STRATEGIES.includes(current as (typeof DEFAULT_STRATEGIES)[number])
-    ? [...DEFAULT_STRATEGIES]
-    : [...DEFAULT_STRATEGIES, current];
-  return keys.map((value) => ({ value, label: strategyName(value) }));
+/** Every strategy the board can price, in the same order as the website's dropdown. */
+export function strategySegments(): { value: string; label: string }[] {
+  return Object.keys(BOARD_CALCULATORS).map((value) => ({ value, label: strategyName(value) }));
 }
 
 /** A strategy key from a link, or the default when it names nothing the board knows. */
