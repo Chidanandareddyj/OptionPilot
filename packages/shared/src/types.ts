@@ -158,11 +158,10 @@ const formatLimit = (v: Limit) => (typeof v === "number" ? inr(v) : v ?? "—");
 const round = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
 export function keyMetrics(s: NormalizedStrategy) {
-  const lotSuffix = s.lotSize > 1 ? ` (${s.lotSize.toLocaleString("en-IN")} lot)` : "";
   return [
-    { label: `${s.costOrCredit.label}${lotSuffix}`, value: inr(s.costOrCredit.amount), tone: "text-foreground" },
-    { label: `Max profit${lotSuffix}`, value: formatLimit(s.maxProfit), tone: "text-profit" },
-    { label: `Max loss${lotSuffix}`, value: formatLimit(s.maxLoss), tone: "text-loss" },
+    { label: s.costOrCredit.label, value: inr(s.costOrCredit.amount), tone: "text-foreground" },
+    { label: "Max profit", value: formatLimit(s.maxProfit), tone: "text-profit" },
+    { label: "Max loss", value: formatLimit(s.maxLoss), tone: "text-loss" },
     {
       label: s.breakevens.length > 1 ? "Breakevens" : "Breakeven",
       value: s.breakevens.map(inr).join(" / ") || "—",

@@ -23,10 +23,10 @@ export type Evaluation = {
   expiry: string;
   lot: number;
   spot: number;
-  /** Per lot, rupees. null = unlimited. */
+  /** Total rupees for 1 contract lot. null = unlimited. */
   maxProfit: number | null;
   maxLoss: number | null;
-  /** Capital at risk = max loss per lot. null = unlimited. */
+  /** Capital at risk = total max loss. null = unlimited. */
   investment: number | null;
   roi: number | null;
   breakevens: number[];
@@ -104,6 +104,18 @@ export function evaluate(
   const breakevens = ["breakeven", "lower_breakeven", "upper_breakeven"].map((f) => num(r[f])).filter((v): v is number => v != null);
   const maxProfit = perLot(profit);
   const maxLoss = perLot(loss);
+
+  const rawPayoff = Array.isArray(r.payoff_table) ? (r.payoff_table as Record<string, unknown>[]) : [];
+  const payoff = rawPayoff.map((pRow) => {
+    if (!pRow || typeof pRow !== "object") return pRow;
+    const scaled: Record<string, unknown> = { closing_price: pRow.closing_price };
+    for (const [k, v] of Object.entries(pRow)) {
+      if (k === "closing_price") continue;
+      scaled[k] = typeof v === "number" ? perLot(v) : v;
+    }
+    return scaled;
+  });
+
   return {
     k: company.k,
     symbol: company.s,
@@ -119,7 +131,7 @@ export function evaluate(
     beDistancePct: breakevens.length ? Math.min(...breakevens.map((b) => (Math.abs(b - row.sp) / row.sp) * 100)) : null,
     legs: legIds,
     stale,
-    payoff: Array.isArray(r.payoff_table) ? (r.payoff_table as Record<string, unknown>[]) : [],
+    payoff,
   };
 }
 
