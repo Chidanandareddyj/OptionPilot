@@ -1,59 +1,74 @@
-const MODEL = "inception/mercury-decide:free";
+import { OpenRouter } from "@openrouter/sdk";
 
-type Answer = { noul?: number; choice?: string; confidence?: number };
+const MODEL = "respan/span-01-lite:free";
+
+type Answer = { noul?: number; type?: string };
 
 // Free tier allows 50 requests/day, so everything goes in one request; any failure degrades to quant-only.
 export async function askMercury(state: unknown, keys: string[]) {
-  if (!process.env.OPENROUTER_API_KEY) return null;
+  if (!process.env.OPENROUTER_API_KEY || !keys.length) return null;
   const label = (key: string) => key.replaceAll("_", " ");
   try {
-    const response = await fetch("https://openrouter.ai/api/alpha/decisions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        state,
-        questions: {
-          ...Object.fromEntries(
-            keys.map((key) => [
-              `viable_${key}`,
-              {
-                type: "noul",
-                instructions: `Given the market view, risk budget and metrics in state.strategies.${key}, is the ${label(key)} a sound trade right now?`,
-                criteria: {
-                  true: "Liquid, within budget, fits the view, and its probability, expected value and reward/risk justify the risk.",
-                  false: "Illiquid, over budget, against the view, or its risk is not compensated by its expected payoff.",
-                },
-              },
-            ]),
-          ),
-          best: {
-            type: "choice",
-            instructions: "Which single strategy is the best trade for this market view and risk budget?",
-            criteria: {
-              ...Object.fromEntries(keys.map((key) => [key, label(key)])),
-              none: "No strategy is worth trading right now.",
-            },
+    const openrouter = new OpenRouter({
+      apiKey: process.env.OPENROUTER_API_KEY,
+    });
+
+    const stringState = typeof state === "string" ? state : JSON.stringify(state, null, 2);
+
+    const questions = Object.fromEntries(
+      keys.map((key) => [
+        `viable_${key}`,
+        {
+          type: "noul" as const,
+          instructions: `Given the market view, risk budget and metrics in state.strategies.${key}, is the ${label(key)} a sound trade right now?`,
+          criteria: {
+            true: "Liquid, within budget, fits the view, and its probability, expected value and reward/risk justify the risk.",
+            false: "Illiquid, over budget, against the view, or its risk is not compensated by its expected payoff.",
           },
         },
-      }),
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      ]),
+    );
+
+    const response = await openrouter.alpha.decisions.create(
+      {
+        decisionsRequest: {
+          model: MODEL,
+          state: stringState,
+          questions,
+        },
+      },
+      { timeoutMs: 10_000 },
+    );
+
+    const answers = response.answers as Record<string, Answer> | undefined;
+    if (!answers) {
+      throw new Error("No answers returned from OpenRouter Decision API");
     }
-    const { answers } = (await response.json()) as { answers?: Record<string, Answer> };
-    const viable = Object.fromEntries(keys.map((key) => [key, answers?.[`viable_${key}`]?.noul]));
-    const best = answers?.best;
-    if (Object.values(viable).some((p) => typeof p !== "number" || p < 0 || p > 1) || typeof best?.choice !== "string") {
-      throw new Error(`Malformed answers: ${JSON.stringify(answers)}`);
+
+    const viable: Record<string, number> = {};
+    let bestKey: string | null = null;
+    let highestScore = -1;
+
+    for (const key of keys) {
+      const score = answers[`viable_${key}`]?.noul;
+      if (typeof score !== "number" || score < 0 || score > 1) {
+        throw new Error(`Malformed answer for viable_${key}: ${JSON.stringify(answers[`viable_${key}`])}`);
+      }
+      viable[key] = score;
+      if (score > highestScore) {
+        highestScore = score;
+        bestKey = key;
+      }
     }
-    return { viable: viable as Record<string, number>, best: best.choice, confidence: best.confidence ?? null };
+
+    const best = highestScore >= 0.5 && bestKey ? bestKey : "none";
+    const confidence = highestScore >= 0 ? highestScore : null;
+
+    return { viable, best, confidence };
   } catch (error) {
-    console.warn("Mercury Decide unavailable:", error);
+    console.warn("Span-01 Decision unavailable:", error);
     return null;
   }
 }
+
+export const askDecision = askMercury;
