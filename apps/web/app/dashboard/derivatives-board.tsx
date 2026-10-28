@@ -50,8 +50,8 @@ const Flash = ({ v, children }: { v: unknown; children: React.ReactNode }) => (
 
 const COLUMNS: { key: SortKey; label: string; right?: boolean }[] = [
   { key: "symbol", label: "Company" },
-  { key: "maxProfit", label: "Max profit per lot", right: true },
-  { key: "maxLoss", label: "Max loss per lot", right: true },
+  { key: "maxProfit", label: "Max profit", right: true },
+  { key: "maxLoss", label: "Max loss", right: true },
   { key: "investment", label: "Investment", right: true },
   { key: "roi", label: "Profit to risk", right: true },
   { key: "beDistancePct", label: "Breakeven away", right: true },
@@ -256,7 +256,7 @@ export default function DerivativesBoard({ onAnalyze }: { onAnalyze: (symbol: st
           {staleCount > 0 && (view.hideStale ? `. ${staleNote(staleCount, true)}.` : `, ${staleNote(staleCount, false)}.`)}
         </span>
         <span className="text-sm text-faint lg:ml-auto">
-          Investment is max loss per lot. Unlimited risk strategies have no investment figure. P&amp;L assumes entry at last traded prices.
+          Investment is max loss for the position. Unlimited risk strategies have no investment figure. P&amp;L assumes entry at last traded prices.
         </span>
       </div>
 
@@ -422,33 +422,40 @@ function PayoffTable({ e }: { e: Evaluation }) {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-muted-foreground">
-        Payoff at expiry, per share with the last column per lot. Hypothetical entry at current prices.
+        Payoff at expiry for 1 lot ({e.lot.toLocaleString("en-IN")} shares). Hypothetical entry at current prices.
       </p>
       <Table className="text-right">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             {cols.map((c) => (
               <TableHead key={c} className="px-2 text-right text-xs font-normal text-muted-foreground capitalize">
-                {c.replace(/_/g, " ")}
+                {c === "net_pl" ? "Net P&L" : c.replace(/_/g, " ")}
               </TableHead>
             ))}
-            <TableHead className="px-2 text-right text-xs font-normal text-muted-foreground">Net P&amp;L per lot</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {e.payoff.map((r, i) => {
-            const net = Number(r.net_pl) * e.lot;
             return (
               <TableRow key={String(r.closing_price)} className={cn("num text-xs", i === nearest && "bg-accent hover:bg-accent")}>
-                {cols.map((c) => (
-                  <TableCell
-                    key={c}
-                    className={cn("px-2 py-1", c === "net_pl" && (Number(r[c]) >= 0 ? "text-profit" : "text-loss"))}
-                  >
-                    <Flash v={r[c]}>{String(r[c])}</Flash>
-                  </TableCell>
-                ))}
-                <TableCell className={cn("px-2 py-1", net >= 0 ? "text-profit" : "text-loss")}>{signedInr(net)}</TableCell>
+                {cols.map((c) => {
+                  const val = Number(r[c]);
+                  const isPnl = c !== "closing_price";
+                  return (
+                    <TableCell
+                      key={c}
+                      className={cn(
+                        "px-2 py-1",
+                        c === "net_pl" && (val >= 0 ? "text-profit" : "text-loss"),
+                        c !== "net_pl" && isPnl && "text-muted-foreground",
+                      )}
+                    >
+                      <Flash v={r[c]}>
+                        {isPnl ? signedInr(val) : val.toLocaleString("en-IN")}
+                      </Flash>
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             );
           })}

@@ -98,7 +98,7 @@ const STEPS = [
 ];
 
 const INSIGHTS = [
-  { title: "Expected Value (EV)", desc: "Mathematical expectation in rupees per lot, evaluating win/loss probabilities against maximum payoff targets." },
+  { title: "Expected Value (EV)", desc: "Mathematical expectation in rupees for the position, evaluating win/loss probabilities against maximum payoff targets." },
   { title: "Probability of Profit (POP)", desc: "Integrated log-normal probability distribution between calculated breakeven thresholds at expiry." },
   { title: "IV vs Realized Vol Ratio", desc: "Identifies whether options are overpricing or underpricing recent movement to score net debit versus credit advantage." },
 ];

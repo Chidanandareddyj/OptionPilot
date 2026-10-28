@@ -159,12 +159,12 @@ export function MobileDerivativeCard({
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-2 text-left text-[11px]">Closing</TableHead>
-                <TableHead className="px-2 text-right text-[11px]">Net P&amp;L/Lot</TableHead>
+                <TableHead className="px-2 text-right text-[11px]">Net P&amp;L</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {item.payoff.map((r, i) => {
-                const net = Number(r.net_pl) * item.lot;
+                const net = Number(r.net_pl);
                 return (
                   <TableRow
                     key={String(r.closing_price)}

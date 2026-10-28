@@ -74,18 +74,32 @@ export function calculateBullPutSpread(
   const higherStrike = strikes[atmIndex - 1];
 
   // Buy a further OTM put for downside protection.
-  const lowerStrike = strikes[atmIndex - 2];
+  let lowerStrike = strikes[atmIndex - 2];
 
   const higherPutPremium =
     higherStrike.put_options.market_data.ltp;
 
-  const lowerPutPremium =
+  let lowerPutPremium =
     lowerStrike.put_options.market_data.ltp;
 
   // Bull put spread receives a net credit
-  const netCredit = round(
+  let netCredit = round(
     higherPutPremium - lowerPutPremium,
   );
+
+  if (netCredit <= 0) {
+    for (let i = atmIndex - 3; i >= 0; i--) {
+      const candidateLower = strikes[i];
+      const candidateLowerPrem = candidateLower.put_options.market_data.ltp;
+      const candidateCredit = round(higherPutPremium - candidateLowerPrem);
+      if (candidateCredit > 0) {
+        lowerStrike = candidateLower;
+        lowerPutPremium = candidateLowerPrem;
+        netCredit = candidateCredit;
+        break;
+      }
+    }
+  }
 
   if (netCredit <= 0) {
     throw new Error(

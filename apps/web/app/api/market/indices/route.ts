@@ -4,93 +4,103 @@ import axios from "axios";
 
 export const dynamic = "force-dynamic";
 
+// In-memory cache for the last real market quotes fetched from Upstox.
+// Persists across requests so that if Upstox is unreachable or markets are closed,
+// the real last traded prices are returned instead of fake numbers.
+let lastKnownIndices: {
+  nifty: IndexQuote;
+  bankNifty: IndexQuote;
+} | null = null;
+let lastKnownTimestamp: string | null = null;
+
+function extractQuote(raw: any, symbol: string): IndexQuote | null {
+  if (!raw) return null;
+  const price = Number(raw.last_price || raw.ohlc?.close);
+  if (!Number.isFinite(price) || price <= 0) return null;
+  const netChange = typeof raw.net_change === "number" ? raw.net_change : 0;
+  const prevClose = price - netChange;
+  const percentChange = prevClose > 0 ? (netChange / prevClose) * 100 : 0;
+  const close = Number(raw.ohlc?.close || price);
+
+  return {
+    symbol,
+    price,
+    netChange: Number(netChange.toFixed(2)),
+    percentChange: Number(percentChange.toFixed(2)),
+    close,
+  };
+}
+
 export async function GET() {
   const isLive = checkIsMarketOpen();
-
-  // Baseline defaults in case Upstox is unreachable or unconfigured
-  const fallback = {
-    isLive,
-    status: isLive ? ("OPEN" as const) : ("CLOSED" as const),
-    timestamp: new Date().toISOString(),
-    source: "fallback" as const,
-    indices: {
-      nifty: {
-        symbol: "NIFTY 50",
-        price: 22888.95,
-        netChange: -257.2,
-        percentChange: -1.11,
-        close: 22888.95,
-      },
-      bankNifty: {
-        symbol: "BANKNIFTY",
-        price: 55488.1,
-        netChange: -355.9,
-        percentChange: -0.64,
-        close: 55488.1,
-      },
-    },
-  };
-
   const apiKey = process.env.UPSTOX_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(fallback);
-  }
 
-  try {
-    const response = await axios.get("https://api.upstox.com/v2/market-quote/quotes", {
-      params: {
-        instrument_key: "NSE_INDEX|Nifty 50,NSE_INDEX|Nifty Bank",
-      },
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        Accept: "application/json",
-      },
-      timeout: 4000,
-    });
+  if (apiKey) {
+    try {
+      const response = await axios.get("https://api.upstox.com/v2/market-quote/quotes", {
+        params: {
+          instrument_key: "NSE_INDEX|Nifty 50,NSE_INDEX|Nifty Bank",
+        },
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Accept: "application/json",
+        },
+        timeout: 4000,
+      });
 
-    const data = response.data?.data;
-    if (!data) {
-      return NextResponse.json(fallback);
+      const data = response.data?.data;
+      if (data) {
+        const niftyRaw = data["NSE_INDEX:Nifty 50"];
+        const bankRaw = data["NSE_INDEX:Nifty Bank"];
+
+        const nifty = extractQuote(niftyRaw, "NIFTY 50") ?? lastKnownIndices?.nifty ?? null;
+        const bankNifty = extractQuote(bankRaw, "BANKNIFTY") ?? lastKnownIndices?.bankNifty ?? null;
+
+        if (nifty && bankNifty) {
+          lastKnownIndices = { nifty, bankNifty };
+          lastKnownTimestamp = new Date().toISOString();
+
+          const result: MarketIndicesResponse = {
+            isLive,
+            status: isLive ? "OPEN" : "CLOSED",
+            timestamp: lastKnownTimestamp,
+            source: isLive ? "live" : "cached",
+            indices: { nifty, bankNifty },
+          };
+
+          return NextResponse.json(result, {
+            headers: {
+              "Cache-Control": isLive
+                ? "public, s-maxage=3, stale-while-revalidate=5"
+                : "public, s-maxage=60, stale-while-revalidate=120",
+            },
+          });
+        }
+      }
+    } catch (err: any) {
+      console.warn("[/api/market/indices fetch warning]:", err.message);
     }
+  }
 
-    const niftyRaw = data["NSE_INDEX:Nifty 50"];
-    const bankRaw = data["NSE_INDEX:Nifty Bank"];
-
-    const extractQuote = (raw: any, fallbackQuote: IndexQuote): IndexQuote => {
-      if (!raw) return fallbackQuote;
-      const price = Number(raw.last_price || raw.ohlc?.close || fallbackQuote.price);
-      const netChange = typeof raw.net_change === "number" ? raw.net_change : fallbackQuote.netChange;
-      const prevClose = price - netChange;
-      const percentChange = prevClose > 0 ? (netChange / prevClose) * 100 : fallbackQuote.percentChange;
-      const close = Number(raw.ohlc?.close || price);
-
-      return {
-        symbol: fallbackQuote.symbol,
-        price,
-        netChange: Number(netChange.toFixed(2)),
-        percentChange: Number(percentChange.toFixed(2)),
-        close,
-      };
-    };
-
-    const result: MarketIndicesResponse = {
-      isLive,
+  // If live fetch failed or no API key, but we have last known real data in memory
+  if (lastKnownIndices) {
+    const cachedResult: MarketIndicesResponse = {
+      isLive: false,
       status: isLive ? "OPEN" : "CLOSED",
-      timestamp: new Date().toISOString(),
-      source: niftyRaw && bankRaw ? "live" : "fallback",
-      indices: {
-        nifty: extractQuote(niftyRaw, fallback.indices.nifty),
-        bankNifty: extractQuote(bankRaw, fallback.indices.bankNifty),
-      },
+      timestamp: lastKnownTimestamp ?? new Date().toISOString(),
+      source: "cached",
+      indices: lastKnownIndices,
     };
-
-    return NextResponse.json(result, {
+    return NextResponse.json(cachedResult, {
       headers: {
-        "Cache-Control": "public, s-maxage=3, stale-while-revalidate=5",
+        "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30",
       },
     });
-  } catch (err: any) {
-    console.error("[/api/market/indices error]:", err.message);
-    return NextResponse.json(fallback);
   }
+
+  // No real data has ever been fetched yet and live fetch failed
+  return NextResponse.json(
+    { error: "Market index quotes are currently unavailable" },
+    { status: 503 },
+  );
 }
