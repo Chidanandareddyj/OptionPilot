@@ -3,6 +3,7 @@ import { createAuthApi, type AuthApi } from "./authApi";
 import { getApiBaseUrl } from "./config";
 import { createSessionManager, type SessionManager } from "./sessionManager";
 import { ApiError } from "@/lib/api/client";
+import { clearPushToken, disablePush } from "@/lib/notifications/push";
 import { createSessionStore, type SessionStore } from "./sessionStore";
 import type { AuthUser } from "./types";
 
@@ -79,6 +80,7 @@ export function AuthProvider({ children, api, store, baseUrl = getApiBaseUrl() }
   );
 
   const signOut = useCallback(async () => {
+    await disablePush(manager.apiFetch).catch(() => {});
     await manager.signOut();
     setUser(null);
   }, [manager]);
@@ -124,6 +126,7 @@ export function AuthProvider({ children, api, store, baseUrl = getApiBaseUrl() }
       const message = body && typeof body === "object" ? (body as { error?: unknown }).error : null;
       throw new ApiError(typeof message === "string" ? message : "Could not delete your account.", response.status);
     }
+    await clearPushToken();
     let loginDeleted = Boolean(body && typeof body === "object" && (body as { authUserDeleted?: unknown }).authUserDeleted === true);
     if (!loginDeleted) {
       // The server could not remove the login itself, so ask Neon Auth to do it for the signed-in user.

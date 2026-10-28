@@ -16,6 +16,10 @@ function setup(options: { authUserDeleted?: boolean } = {}) {
     { id: "a2", userId: "alice" },
     { id: "b1", userId: "bob" },
   ];
+  const devices = [
+    { token: "alice-phone", userId: "alice" },
+    { token: "bob-phone", userId: "bob" },
+  ];
   const removedAuthUsers: string[] = [];
   const handle = createDeleteAccountHandler({
     getUserId: async (request) => {
@@ -31,6 +35,13 @@ function setup(options: { authUserDeleted?: boolean } = {}) {
       }
       return before - rows.length;
     },
+    deleteDevices: async (userId) => {
+      const before = devices.length;
+      for (let index = devices.length - 1; index >= 0; index -= 1) {
+        if (devices[index].userId === userId) devices.splice(index, 1);
+      }
+      return before - devices.length;
+    },
     deleteAuthUser: async (userId) => {
       removedAuthUsers.push(userId);
       return options.authUserDeleted ?? true;
@@ -43,15 +54,16 @@ function setup(options: { authUserDeleted?: boolean } = {}) {
         headers: token ? { authorization: `Bearer ${token}` } : undefined,
       }),
     );
-  return { rows, removedAuthUsers, call };
+  return { rows, devices, removedAuthUsers, call };
 }
 
 test("deletes only the caller's analyses and auth user", async () => {
-  const { rows, removedAuthUsers, call } = setup();
+  const { rows, devices, removedAuthUsers, call } = setup();
   const response = await call("alice-jwt");
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { analysesDeleted: 2, authUserDeleted: true });
   assert.deepEqual(rows, [{ id: "b1", userId: "bob" }]);
+  assert.deepEqual(devices, [{ token: "bob-phone", userId: "bob" }]);
   assert.deepEqual(removedAuthUsers, ["alice"]);
 });
 
@@ -95,6 +107,9 @@ test("a database failure is a 500 and does not touch the auth user", async () =>
     getUserId: async () => "alice",
     deleteAnalyses: async () => {
       throw new Error("db down");
+    },
+    deleteDevices: async () => {
+      throw new Error("devices should not be reached");
     },
     deleteAuthUser: async (userId) => {
       removed.push(userId);

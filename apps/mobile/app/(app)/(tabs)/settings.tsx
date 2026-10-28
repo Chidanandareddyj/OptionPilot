@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { Pressable, View } from "react-native";
 import { APPEARANCE_ROW_VALUE } from "@/components/appearance/options";
 import {
@@ -18,6 +18,7 @@ import { SettingsSkeleton } from "@/components/settings/SettingsSkeleton";
 import { ListGroup, ListRow, Screen, Text } from "@/components/ui";
 import { useAccountSession } from "@/lib/account/hooks";
 import { useAuth } from "@/lib/auth";
+import { pushIsOn } from "@/lib/notifications/push";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 
 /** Settings home (design 56). While the account details load it shows the skeleton (57). */
@@ -26,7 +27,18 @@ export default function SettingsTab() {
   const { colors, appearance } = useTheme();
   const { user: stored } = useAuth();
   const session = useAccountSession();
-  const [notice, setNotice] = useState<string | null>(null);
+  const [alertsOn, setAlertsOn] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      let live = true;
+      void pushIsOn().then((on) => {
+        if (live) setAlertsOn(on);
+      });
+      return () => {
+        live = false;
+      };
+    }, []),
+  );
 
   // A failed refresh falls back to the identity saved on this device, so Settings still opens offline.
   const user = session.data?.user ?? (session.isError ? stored : null);
@@ -87,15 +99,10 @@ export default function SettingsTab() {
               <ListRow
                 icon={BellIcon}
                 label="Notifications"
-                value="Off"
-                onPress={() => setNotice("Push notifications are not available in this version yet.")}
+                value={alertsOn ? "On" : "Off"}
+                onPress={() => router.push("/settings/notifications")}
               />
             </ListGroup>
-            {notice ? (
-              <Text size="sm" tone="muted" className="px-1 pt-2" accessibilityLiveRegion="polite">
-                {notice}
-              </Text>
-            ) : null}
           </View>
 
           <View className="mt-4">

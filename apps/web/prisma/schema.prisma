@@ -19,3 +19,28 @@ model Analysis {
   @@index([userId])
   @@index([userId, createdAt])
 }
+
+/// An Expo push token for one signed-in phone. Opt-in only: a row exists after the person turns alerts on.
+model Device {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  platform  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+/// One alert already sent, so the 15-minute cron does not repeat it the same IST day.
+model AlertSent {
+  id         String   @id @default(cuid())
+  userId     String
+  analysisId String
+  kind       String
+  istDate    String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, analysisId, kind, istDate])
+  @@index([userId])
+}
