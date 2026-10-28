@@ -66,7 +66,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   extra: {
     apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL,
+    eas: { projectId: "5fda50b0-5603-4df3-a515-2ed60efbca8a" },
   },
-  // EAS project id, Apple team id and Google service account are not available yet. They are
-  // filled in when the Expo project is created (phase 13): `eas init` writes extra.eas.projectId.
+  // Apple team id and Google service account are not available yet.
 });
