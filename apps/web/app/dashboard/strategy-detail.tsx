@@ -93,7 +93,7 @@ export default function StrategyDetail({ strategy }: { strategy: NormalizedStrat
             </TabsTrigger>
           </TabsList>
           <span className="text-sm text-muted-foreground @3xl:ml-auto">
-            Expiry P&amp;L for one lot{lotSize > 1 && <> of <span className="num">{lotSize.toLocaleString("en-IN")}</span></>}. Hover the chart to read any price.
+            Expiry P&amp;L for 1 lot{lotSize > 1 && <> ({lotSize.toLocaleString("en-IN")} shares)</>}. Hover the chart to read any price.
           </span>
         </div>
 
@@ -184,7 +184,7 @@ export default function StrategyDetail({ strategy }: { strategy: NormalizedStrat
               <TableRow className="h-12">
                 <TableCell colSpan={3} className="px-4 text-sm font-medium">
                   {costOrCredit.label}
-                  {lotSize > 1 && <span className="font-normal text-muted-foreground"> for one lot</span>}
+                  {lotSize > 1 && <span className="font-normal text-muted-foreground"> ({lotSize.toLocaleString("en-IN")} shares)</span>}
                 </TableCell>
                 <TableCell className="num px-4 text-right text-sm font-medium">{inr(costOrCredit.amount)}</TableCell>
                 <TableCell />

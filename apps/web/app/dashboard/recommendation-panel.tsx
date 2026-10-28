@@ -214,7 +214,7 @@ function RecommendationPane({
               ["Lot", String(decision.lot_size)],
               ["DTE", String(decision.days_to_expiry)],
               ["View", decision.view],
-              ["Model", decision.llm === "ok" ? "Mercury Decide" : "unavailable (quant only)"],
+              ["Model", decision.llm === "ok" ? "Span-01" : "unavailable (quant only)"],
             ].map(([label, value]) => (
               <Badge key={label} variant="outline" className="h-6 gap-2 rounded-md px-2 font-normal">
                 <span className="text-muted-foreground">{label}</span>
