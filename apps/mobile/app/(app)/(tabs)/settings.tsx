@@ -1,6 +1,6 @@
 import { useRouter, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { Pressable, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
 import { APPEARANCE_ROW_VALUE } from "@/components/appearance/options";
 import {
   BellIcon,
@@ -18,6 +18,7 @@ import { SettingsSkeleton } from "@/components/settings/SettingsSkeleton";
 import { ListGroup, ListRow, Screen, Text } from "@/components/ui";
 import { useAccountSession } from "@/lib/account/hooks";
 import { useAuth } from "@/lib/auth";
+import { getApiBaseUrl } from "@/lib/auth/config";
 import { pushIsOn } from "@/lib/notifications/push";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 
@@ -117,9 +118,20 @@ export default function SettingsTab() {
             </ListGroup>
           </View>
 
-          <Text size="xs" tone="muted" className="mt-6 text-center">
-            OptionPilot · MIT licensed · Market data from Upstox
-          </Text>
+          <View className="mt-6 items-center gap-1">
+            <Text size="xs" tone="muted" className="text-center">
+              OptionPilot · MIT licensed · Market data from Upstox
+            </Text>
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel="Privacy"
+              onPress={() => void Linking.openURL(`${getApiBaseUrl()}/privacy`)}
+            >
+              <Text size="xs" tone="primary">
+                Privacy
+              </Text>
+            </Pressable>
+          </View>
         </>
       )}
     </Screen>

@@ -2,6 +2,9 @@
 .expo/
 dist/
 dist-native/
+dist-web/
+dist-android/
+.expo-tmp/
 web-build/
 /ios
 /android
