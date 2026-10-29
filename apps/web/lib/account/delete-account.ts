@@ -6,6 +6,8 @@ export type DeleteAccountDeps = {
   getUserId: (request: Request) => Promise<string>;
   /** Hard-deletes every saved analysis of this user and returns how many rows went. */
   deleteAnalyses: (userId: string) => Promise<number>;
+  /** Removes this user's push tokens so a deleted account gets no further alerts. */
+  deleteDevices: (userId: string) => Promise<number>;
   /** Removes the Neon Auth user. Returns false when this deployment cannot do it. */
   deleteAuthUser: (userId: string) => Promise<boolean>;
 };
@@ -62,6 +64,7 @@ export function createDeleteAccountHandler(deps: DeleteAccountDeps) {
     try {
       const userId = await deps.getUserId(request);
       const analysesDeleted = await deps.deleteAnalyses(userId);
+      await deps.deleteDevices(userId);
       const authUserDeleted = await deps.deleteAuthUser(userId).catch(() => false);
       const body: DeleteAccountResult = { analysesDeleted, authUserDeleted };
       return Response.json(body);

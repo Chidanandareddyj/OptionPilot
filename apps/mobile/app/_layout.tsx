@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
+import { configurePush } from "@/lib/notifications/push";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "@/lib/auth";
@@ -18,6 +19,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 const MIN_SPLASH_MS = 800;
 
 export default function RootLayout() {
+  useEffect(() => configurePush(), []);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

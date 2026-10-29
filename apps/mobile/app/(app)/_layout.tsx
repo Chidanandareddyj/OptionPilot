@@ -70,6 +70,7 @@ export default function AppLayout() {
                 }}
               />
               <Stack.Screen name="settings/account" />
+              <Stack.Screen name="settings/notifications" />
               <Stack.Screen name="settings/security" />
               <Stack.Screen name="settings/organizations" />
               <Stack.Screen

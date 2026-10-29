@@ -44,6 +44,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-font",
     "expo-secure-store",
     [
+      "expo-notifications",
+      {
+        // Shown as the Android notification colour. The permission reason is on the Notifications screen.
+        color: semantic.saffron.primary,
+      },
+    ],
+    [
       "expo-image-picker",
       {
         photosPermission: "OptionPilot uses your photos so you can choose an avatar.",

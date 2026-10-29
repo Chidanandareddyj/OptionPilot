@@ -6,6 +6,15 @@ jest.mock("@react-native-async-storage/async-storage", () => mockAsyncStorage);
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories cannot use imports
 jest.mock("@react-native-community/netinfo", () => require("@react-native-community/netinfo/jest/netinfo-mock.js"));
 
+jest.mock("expo-notifications", () => ({
+  AndroidImportance: { DEFAULT: 5 },
+  setNotificationHandler: jest.fn(),
+  getPermissionsAsync: jest.fn(async () => ({ status: "undetermined" })),
+  requestPermissionsAsync: jest.fn(async () => ({ status: "granted" })),
+  getExpoPushTokenAsync: jest.fn(async () => ({ data: "ExponentPushToken[test]" })),
+  setNotificationChannelAsync: jest.fn(async () => null),
+}));
+
 // Skia draws on a native canvas that jest does not have. The chart's maths is tested apart from its drawing.
 jest.mock("@/components/chart/ChartCanvas", () => ({ ChartCanvas: () => null }));
 

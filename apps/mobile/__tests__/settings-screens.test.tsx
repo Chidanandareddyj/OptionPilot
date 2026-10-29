@@ -10,7 +10,17 @@ import type { AccountSession, LinkedAccount, Organization, SessionInfo } from "@
 import { renderThemed } from "./test-utils";
 
 const mockRouter = { back: jest.fn(), push: jest.fn() };
-jest.mock("expo-router", () => ({ useRouter: () => mockRouter, useIsFocused: () => true }));
+jest.mock("expo-router", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories cannot use imports
+  const React = require("react");
+  return {
+    useRouter: () => mockRouter,
+    useIsFocused: () => true,
+    useFocusEffect: (effect: () => void | (() => void)) => {
+      React.useEffect(() => effect(), [effect]);
+    },
+  };
+});
 
 const ME = { id: "u1", email: "asha@example.com", name: "Asha Rao" };
 const mockAccount = {
@@ -77,6 +87,7 @@ describe("Settings home (56, 57)", () => {
     await press("Account");
     await press("Security");
     await press("Organizations");
+    await press(/^Notifications/);
     await press("Sign out");
     await press("Delete account");
 
@@ -84,6 +95,7 @@ describe("Settings home (56, 57)", () => {
       "/settings/account",
       "/settings/security",
       "/settings/organizations",
+      "/settings/notifications",
       "/sign-out",
       "/settings/delete-account",
     ]);
@@ -95,15 +107,11 @@ describe("Settings home (56, 57)", () => {
     expect(screen.getByText("System")).toBeOnTheScreen();
   });
 
-  it("keeps Notifications as an honest placeholder: it says it is off and does nothing else", async () => {
+  it("shows alerts as off until the phone has opted in", async () => {
     await renderScreen(<SettingsTab />);
     await screen.findByText("Asha Rao");
+    expect(screen.getByRole("button", { name: /^Notifications/ })).toBeOnTheScreen();
     expect(screen.getByText("Off")).toBeOnTheScreen();
-
-    await press(/^Notifications/);
-
-    expect(screen.getByText("Push notifications are not available in this version yet.")).toBeOnTheScreen();
-    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 
   it("falls back to the identity saved on the device when the refresh fails", async () => {
