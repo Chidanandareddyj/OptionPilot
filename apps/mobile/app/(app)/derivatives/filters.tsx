@@ -3,11 +3,12 @@ import { useMemo } from "react";
 import { Pressable, ScrollView, Switch, View } from "react-native";
 import { applyView, evaluateBoard, type BoardView } from "@optionpilot/shared";
 import { RupeeInput } from "@/components/derivatives/RupeeInput";
+import { StrategySwitcher } from "@/components/derivatives/StrategySwitcher";
 import { XIcon } from "@/components/icons";
 import { Button, SegmentedControl, Text } from "@/components/ui";
 import { useBoardState } from "@/lib/derivatives/BoardState";
 import { useLiveFeed } from "@/lib/derivatives/FeedProvider";
-import { resetFilters, strategySegments } from "@/lib/derivatives/model";
+import { resetFilters } from "@/lib/derivatives/model";
 import { useScreenInsets } from "@/lib/safe-area";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 
@@ -50,7 +51,7 @@ export default function FiltersSheet() {
           <Text size="sm" weight="medium">
             Strategy
           </Text>
-          <SegmentedControl tone="primary" segments={strategySegments(strategy)} value={strategy} onChange={setStrategy} />
+          <StrategySwitcher value={strategy} onChange={setStrategy} />
         </View>
 
         <View className="gap-2">

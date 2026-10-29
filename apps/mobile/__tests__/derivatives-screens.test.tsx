@@ -102,6 +102,15 @@ describe("Derivatives tab (37)", () => {
     expect(cardNames()).toEqual(expected);
   });
 
+  it("lists every strategy and re-ranks for one the old switcher hid", async () => {
+    await renderBoard(<DerivativesTab />);
+    await relaySends(await openedStream());
+    expect(screen.getAllByRole("tab")).toHaveLength(12);
+    await fireEvent.press(screen.getByRole("tab", { name: "Long Strangle" }));
+    const expected = applyView(evaluateBoard(UNIVERSE, feedFrom(fullTick()), "long_strangle").evaluations, MOBILE_BOARD_VIEW).map((e) => e.symbol);
+    expect(cardNames()).toEqual(expected);
+  });
+
   it("opens on the strategy a Terminal tile asked for", async () => {
     mockParams = { strategy: "long_straddle", at: "1" };
     await renderBoard(<DerivativesTab />);
@@ -180,6 +189,8 @@ describe("Filters sheet (41, 42)", () => {
     await renderBoard(<FiltersSheet />);
     await relaySends(await openedStream());
     expect(screen.getByRole("header", { name: "Filters" })).toBeOnTheScreen();
+    expect(screen.getByRole("tab", { name: "Long Strangle" })).toBeOnTheScreen();
+    expect(screen.getByRole("tab", { name: "Put Condor" })).toBeOnTheScreen();
     expect(screen.getByText("Investment")).toBeOnTheScreen();
     expect(screen.getByLabelText("Min investment")).toBeOnTheScreen();
     expect(screen.getByLabelText("Max investment")).toBeOnTheScreen();

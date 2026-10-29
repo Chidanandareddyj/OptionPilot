@@ -24,10 +24,10 @@ export type ContractDetail = {
 
 const limit = (value: number | null, sign: 1 | -1) => (value == null ? "Unlimited" : signedInr(sign * Math.abs(value)));
 
-/** Net profit or loss per lot at each closing price of the calculator's table. The row nearest spot is marked. */
+/** Net profit or loss per lot at each closing price. The board's evaluation already scales the table by lot size. The row nearest spot is marked. */
 export function payoffRows(evaluation: Evaluation): ContractPayoffRow[] {
   const rows = evaluation.payoff
-    .map((r) => ({ price: Number(r.closing_price), pnl: Number(r.net_pl) * evaluation.lot }))
+    .map((r) => ({ price: Number(r.closing_price), pnl: Number(r.net_pl) }))
     .filter((r) => Number.isFinite(r.price) && Number.isFinite(r.pnl));
   let nearest = -1;
   rows.forEach((r, i) => {
