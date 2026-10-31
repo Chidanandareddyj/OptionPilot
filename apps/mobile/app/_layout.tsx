@@ -55,13 +55,13 @@ function Root() {
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       {ready ? (
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
-          <Stack.Protected guard={!seen}>
+          <Stack.Protected guard={!seen} redirectTo={signedIn ? "/terminal" : "/sign-in"}>
             <Stack.Screen name="(onboarding)" />
           </Stack.Protected>
-          <Stack.Protected guard={seen && !signedIn}>
+          <Stack.Protected guard={seen && !signedIn} redirectTo="/terminal">
             <Stack.Screen name="(auth)" />
           </Stack.Protected>
-          <Stack.Protected guard={seen && signedIn}>
+          <Stack.Protected guard={seen && signedIn} redirectTo={seen ? "/sign-in" : "/"}>
             <Stack.Screen name="(app)" />
           </Stack.Protected>
         </Stack>
