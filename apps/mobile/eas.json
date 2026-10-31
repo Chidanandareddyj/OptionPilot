@@ -11,7 +11,7 @@
       "env": {
         "EXPO_PUBLIC_APP_ENV": "development",
         "ORG_GRADLE_PROJECT_reactNativeArchitectures": "arm64-v8a",
-        "GRADLE_OPTS": "-Dorg.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=512m -Dorg.gradle.workers.max=2 -Dorg.gradle.parallel=false"
+        "GRADLE_OPTS": "-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=384m -Dkotlin.daemon.jvm.options=-Xmx768m -Dorg.gradle.workers.max=2 -Dorg.gradle.parallel=false"
       }
     },
     "preview": {
@@ -21,7 +21,8 @@
       },
       "env": {
         "EXPO_PUBLIC_APP_ENV": "preview",
-        "GRADLE_OPTS": "-Dorg.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=512m -Dorg.gradle.workers.max=2 -Dorg.gradle.parallel=false"
+        "ORG_GRADLE_PROJECT_reactNativeArchitectures": "arm64-v8a",
+        "GRADLE_OPTS": "-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=384m -Dkotlin.daemon.jvm.options=-Xmx768m -Dorg.gradle.workers.max=2 -Dorg.gradle.parallel=false"
       }
     },
     "production": {
@@ -29,7 +30,7 @@
       "env": {
         "EXPO_PUBLIC_APP_ENV": "production",
         "ORG_GRADLE_PROJECT_reactNativeArchitectures": "arm64-v8a",
-        "GRADLE_OPTS": "-Dorg.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=512m -Dorg.gradle.workers.max=2 -Dorg.gradle.parallel=false"
+        "GRADLE_OPTS": "-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=384m -Dkotlin.daemon.jvm.options=-Xmx768m -Dorg.gradle.workers.max=2 -Dorg.gradle.parallel=false"
       }
     }
   },

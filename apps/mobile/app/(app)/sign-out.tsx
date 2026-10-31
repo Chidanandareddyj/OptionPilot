@@ -21,7 +21,6 @@ export default function SignOutConfirm() {
     setBusy(true);
     // Clearing the session makes the root layout leave the app group, so nothing is navigated here.
     await signOut();
-    router.replace("/sign-in");
   }
 
   return (
