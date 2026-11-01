@@ -54,7 +54,7 @@ export default function SignIn() {
     setSubmitting(true);
     try {
       await signIn(email, password);
-      // The root layout swaps this group for the app as soon as the session exists.
+      router.replace("/terminal");
     } catch (error) {
       if (error instanceof AuthError && error.code === "email-not-verified") {
         await resendVerificationCode(email).catch(() => {});

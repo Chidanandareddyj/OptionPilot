@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo } from "react";
-import { ScrollView, View } from "react-native";
+import { useMemo, useState } from "react";
+import { ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { initialCompareState } from "@optionpilot/shared";
 import { BottomBar, useActionBarClearance } from "@/components/analysis/ActionBar";
 import { FormAlert } from "@/components/forms/FormAlert";
@@ -16,6 +16,9 @@ import { analysisHeader } from "@/lib/analysis/model";
 import { useAnalysis } from "@/lib/api/hooks";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 
+/** How far the page scrolls before the nav bar turns solid and shows the symbol. */
+const SOLID_AFTER = 32;
+
 /** The answer to "Which strategy fits?": the pick, the numbers behind it and the ranking. Reads the saved recommendation. */
 export default function RecommendationScreen() {
   const router = useRouter();
@@ -26,6 +29,8 @@ export default function RecommendationScreen() {
   const detail = useAnalysis(id);
   const analysis = detail.data;
 
+  const [scrollY, setScrollY] = useState(0);
+
   const header = useMemo(() => (analysis ? analysisHeader(analysis.company, analysis.result) : null), [analysis]);
   const decision = useMemo(() => initialCompareState(analysis?.decision).single, [analysis]);
   const label = header?.symbol ?? "Analysis";
@@ -34,6 +39,8 @@ export default function RecommendationScreen() {
   const openSheet = () => router.push({ pathname: "/analysis/[id]/recommend", params: { id, from: "result" } });
   const showPayoff = (strategy: string) =>
     router.dismissTo({ pathname: "/analysis/[id]", params: { id, strategy, at: String(Date.now()) } });
+
+  const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => setScrollY(event.nativeEvent.contentOffset.y);
 
   if (!analysis || !header) {
     return (
@@ -56,6 +63,7 @@ export default function RecommendationScreen() {
 
   const pick = decision ? bestPick(decision) : null;
   const summary = decision?.summary?.trim();
+  const solid = scrollY > SOLID_AFTER;
 
   return (
     <View className="flex-1 bg-background">
@@ -63,6 +71,8 @@ export default function RecommendationScreen() {
         contentContainerClassName="gap-4 px-4"
         contentContainerStyle={{ paddingTop: navHeight, paddingBottom: barClearance }}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={onScroll}
       >
         <View className="gap-2">
           <Text size="4xl" weight="semibold" tight accessibilityRole="header">
@@ -105,7 +115,7 @@ export default function RecommendationScreen() {
         )}
       </ScrollView>
 
-      <NavBar backLabel={label} onBack={goBack} />
+      <NavBar backLabel={label} onBack={goBack} title={header.symbol} solid={solid} />
       <BottomBar>
         {decision && !pick ? (
           <View className="flex-1">
