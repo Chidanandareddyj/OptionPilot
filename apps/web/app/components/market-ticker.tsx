@@ -74,30 +74,37 @@ function IndexQuote({
 
 /** NIFTY and BANKNIFTY quotes, polled from the market indices API and cached in localStorage. */
 export function MarketTicker({ className, showStatus = true }: { className?: string; showStatus?: boolean }) {
-  const [market, setMarket] = useState<MarketState>({
-    isLive: false,
-    status: "CLOSED",
-    indices: null,
-  });
-  const [tickActive, setTickActive] = useState(false);
+  const [market, setMarket] = useState<MarketState>(() => {
+    const fallback: MarketState = {
+      isLive: false,
+      status: "CLOSED",
+      indices: null,
+    };
 
-  useEffect(() => {
-    let mounted = true;
+    if (typeof window === "undefined") {
+      return fallback;
+    }
 
-    // 1. Hydrate from localStorage on client mount if available
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as MarketState;
         if (parsed?.indices?.nifty && parsed?.indices?.bankNifty) {
-          setMarket(parsed);
+          return parsed;
         }
       }
     } catch {
       // Local storage unreadable or unavailable
     }
 
-    // 2. Fetch live data from server
+    return fallback;
+  });
+  const [tickActive, setTickActive] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    // Fetch live data from server
     async function fetchIndices() {
       try {
         const res = await fetch("/api/market/indices");
