@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "558197472332",
+    "project_id": "optionpilot-app",
+    "storage_bucket": "optionpilot-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:558197472332:android:6e4bfb52db7b96ff6908e9",
+        "android_client_info": {
+          "package_name": "tech.optionpilot.ap"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRc29_MCEqEijOYgx7aTa-mla8uvXSup8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:558197472332:android:c631f9ad94b929af6908e9",
+        "android_client_info": {
+          "package_name": "tech.optionpilot.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRc29_MCEqEijOYgx7aTa-mla8uvXSup8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
