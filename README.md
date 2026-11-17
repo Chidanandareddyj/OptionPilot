@@ -1,4 +1,4 @@
-Option Pilot
+Option Pilot Capstone
 ## Backend Architecture
 
 ```mermaid
