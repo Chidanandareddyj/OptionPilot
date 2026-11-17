@@ -1,7 +1,6 @@
 import { Pressable, ScrollView } from "react-native";
 import { XIcon } from "@/components/icons";
 import { Text } from "@/components/ui";
-import { cn } from "@/lib/cn";
 import type { FilterId } from "@/lib/derivatives/model";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 
@@ -18,12 +17,12 @@ export function ActiveFilterChips({ chips, onRemove }: ChipsProps) {
           accessibilityRole="button"
           accessibilityLabel={`${chip.label}, remove`}
           onPress={() => onRemove(chip.id)}
-          className={cn("h-11 flex-row items-center gap-2 rounded-full border px-4", chip.id === "investment" ? "border-primary bg-primary" : "border-border bg-card")}
+          className="h-10 flex-row items-center gap-2 rounded-full border border-border bg-muted px-3.5"
         >
-          <Text size="sm" weight="medium" tone={chip.id === "investment" ? "onPrimary" : "foreground"}>
+          <Text size="sm" weight="medium" tone="foreground">
             {chip.label}
           </Text>
-          <XIcon size={14} weight="bold" color={chip.id === "investment" ? colors.primaryForeground : colors.mutedForeground} />
+          <XIcon size={14} weight="bold" color={colors.mutedForeground} />
         </Pressable>
       ))}
     </ScrollView>

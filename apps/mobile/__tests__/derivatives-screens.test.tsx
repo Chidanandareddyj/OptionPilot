@@ -167,6 +167,22 @@ describe("Search, filters and empty (41 to 46)", () => {
     expect(mockRouter.push).toHaveBeenCalledWith("/derivatives/filters");
   });
 
+  it("re-sorts the board, and flips direction when the same sort is picked again", async () => {
+    await renderBoard(<DerivativesTab />);
+    await relaySends(await openedStream());
+    const evaluations = evaluateBoard(UNIVERSE, feedFrom(fullTick()), "bull_call_spread").evaluations;
+    const order = (sort: "maxProfit" | "roi", dir: "asc" | "desc") =>
+      applyView(evaluations, { ...MOBILE_BOARD_VIEW, sort, dir }).map((e) => e.symbol);
+
+    await fireEvent.press(screen.getByLabelText("Sort by Max profit"));
+    expect(cardNames()).toEqual(order("maxProfit", "desc"));
+    await fireEvent.press(screen.getByLabelText("Sort by Max profit"));
+    expect(cardNames()).toEqual(order("maxProfit", "asc"));
+
+    await fireEvent.press(screen.getByLabelText("Sort by Profit to risk"));
+    expect(cardNames()).toEqual(order("roi", "desc"));
+  });
+
   it("filters on a minimum and removes the chip again", async () => {
     await renderBoard(
       <>
@@ -191,7 +207,10 @@ describe("Filters sheet (41, 42)", () => {
     expect(screen.getByRole("header", { name: "Filters" })).toBeOnTheScreen();
     expect(screen.getByRole("tab", { name: "Long Strangle" })).toBeOnTheScreen();
     expect(screen.getByRole("tab", { name: "Put Condor" })).toBeOnTheScreen();
-    expect(screen.getByText("Investment")).toBeOnTheScreen();
+    expect(screen.getByText("Sort by")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Sort by Breakeven away")).toBeOnTheScreen();
+    expect(screen.getByRole("tab", { name: "Low" })).toBeOnTheScreen();
+    expect(screen.getByRole("tab", { name: "High" })).toBeOnTheScreen();
     expect(screen.getByLabelText("Min investment")).toBeOnTheScreen();
     expect(screen.getByLabelText("Max investment")).toBeOnTheScreen();
     expect(screen.getByLabelText("Show stale rows")).toBeOnTheScreen();

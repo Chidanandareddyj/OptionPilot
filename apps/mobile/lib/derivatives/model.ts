@@ -18,7 +18,7 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 /** NSE opens at 9:15 am IST, in minutes after midnight. */
 const OPEN_MINUTES = 9 * 60 + 15;
 
-/** The board's starting view. The web opens ranked by profit to risk; the phone's designs list companies A to Z, and it has no sort control. */
+/** The board's starting view: companies A to Z, as the phone's designs show. The sort chips re-rank it. */
 export const MOBILE_BOARD_VIEW: BoardView = { ...DEFAULT_BOARD_VIEW, sort: "symbol", dir: "asc" };
 
 /** The board opens on Bull Call Spread, the same strategy the designs show selected. */
@@ -74,6 +74,22 @@ export const resetFilters = (view: BoardView): BoardView => ({
   hideStale: true,
   search: "",
 });
+
+/** The sort choices, in the same order as the website's table columns. */
+export const SORT_OPTIONS: { value: BoardView["sort"]; label: string }[] = [
+  { value: "symbol", label: "Symbol" },
+  { value: "maxProfit", label: "Max profit" },
+  { value: "maxLoss", label: "Max loss" },
+  { value: "investment", label: "Investment" },
+  { value: "roi", label: "Profit to risk" },
+  { value: "beDistancePct", label: "Breakeven away" },
+];
+
+/** Choosing a field sorts it best-first (symbol A to Z); choosing it again flips the direction. */
+export function cycleSort(view: BoardView, key: BoardView["sort"]): BoardView {
+  if (view.sort === key) return { ...view, dir: view.dir === "asc" ? "desc" : "asc" };
+  return { ...view, sort: key, dir: key === "symbol" ? "asc" : "desc" };
+}
 
 /** "980 / 1000 CE" for one side, "980 CE / 980 PE" when calls and puts mix. */
 export function legSummary(legs: string[]): string {

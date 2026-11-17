@@ -4,7 +4,7 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 import { semantic } from "../../packages/shared/src/theme/semantic.ts";
 
 /** Android package and iOS bundle identifier. */
-const APP_ID = "tech.optionpilot.app";
+const APP_ID = "tech.optionpilot.ap";
 
 /**
  * Where the OptionPilot web app and its `/api/auth/*` proxy live. It must be the `www` host: the
@@ -28,6 +28,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: APP_ID,
+    googleServicesFile: "./google-services.json",
+    googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       monochromeImage: "./assets/adaptive-icon-monochrome.png",

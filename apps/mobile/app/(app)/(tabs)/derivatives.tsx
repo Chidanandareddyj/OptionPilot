@@ -24,6 +24,7 @@ import { EmptyCompanies } from "@/components/derivatives/EmptyCompanies";
 import { ActiveFilterChips } from "@/components/derivatives/FilterChips";
 import { FilterButton } from "@/components/derivatives/FilterButton";
 import { InfoBanner } from "@/components/derivatives/InfoBanner";
+import { SortChips } from "@/components/derivatives/SortChips";
 import { StrategySwitcher } from "@/components/derivatives/StrategySwitcher";
 import { FormAlert } from "@/components/forms/FormAlert";
 import { StatusPill } from "@/components/market/StatusPill";
@@ -39,6 +40,7 @@ import {
   clearFilter,
   closedBanner,
   contractCard,
+  cycleSort,
   filterChips,
   parseStrategy,
   resetFilters,
@@ -125,6 +127,12 @@ export default function DerivativesTab() {
         <FilterButton count={activeFilterCount(view)} onPress={() => router.push("/derivatives/filters")} />
       </View>
       <StrategySwitcher value={strategy} onChange={setStrategy} />
+      <View className="flex-row items-center gap-3">
+        <Text size="sm" weight="medium" tone="muted">
+          Sort
+        </Text>
+        <SortChips sort={view.sort} dir={view.dir} onSort={(key) => setView((v) => cycleSort(v, key))} className="min-w-0 flex-1" />
+      </View>
       {filters.length > 0 ? <ActiveFilterChips chips={filters} onRemove={(id) => setView((v) => clearFilter(v, id))} /> : null}
       <Text size="sm" tone="muted" accessibilityLiveRegion="polite">
         {summary}
