@@ -9,8 +9,8 @@ flowchart TD
     Chain["getOptions<br/>Upstox option chain"]
     ATM["getAtmStrike<br/>find nearest strike"]
     Strategies["Strategy calculators"]
-    Results["JSON response<br/>payoff tables and metadata"]
     Upstox["Upstox API"]
+    Results["JSON response<br/>payoff tables and metadata"]
 
     Client -->|"company"| Route
     Route --> Search
