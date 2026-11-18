@@ -1,19 +1,47 @@
-# OptionPilot
+<p align="center">
+  <img src="apps/mobile/assets/icon.png" alt="OptionPilot app icon" width="112" height="112" />
+</p>
 
-[![Web CI](https://github.com/Chidanandareddyj/OptionPilot/actions/workflows/web.yml/badge.svg?branch=main)](https://github.com/Chidanandareddyj/OptionPilot/actions/workflows/web.yml)
-[![Mobile CI](https://github.com/Chidanandareddyj/OptionPilot/actions/workflows/mobile.yml/badge.svg?branch=main)](https://github.com/Chidanandareddyj/OptionPilot/actions/workflows/mobile.yml)
+<h1 align="center">OptionPilot</h1>
+
+<p align="center">
+  <strong>Options strategies built to withstand any volatility.</strong><br />
+  A web and mobile analysis platform for the Indian F&amp;O market.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Chidanandareddyj/OptionPilot/actions/workflows/web.yml">
+    <img src="https://github.com/Chidanandareddyj/OptionPilot/actions/workflows/web.yml/badge.svg?branch=main" alt="Web CI" />
+  </a>
+  <a href="https://github.com/Chidanandareddyj/OptionPilot/actions/workflows/mobile.yml">
+    <img src="https://github.com/Chidanandareddyj/OptionPilot/actions/workflows/mobile.yml/badge.svg?branch=main" alt="Mobile CI" />
+  </a>
+  <img src="https://img.shields.io/badge/PRs-welcome-25B4B6" alt="PRs welcome" />
+  <img src="https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/Expo-000020?logo=expo&logoColor=white" alt="Expo" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
+</p>
+
+<p align="center">
+  <a href="#what-it-does">What it does</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#tech-stack">Tech stack</a> ·
+  <a href="#getting-started">Getting started</a> ·
+  <a href="#contributing">Contributing</a>
+</p>
 
 OptionPilot is an options strategy analysis platform for Indian markets. It combines a web app and an Expo mobile app with shared payoff and strategy logic, saved analyses, and a live derivatives market-data board.
 
+> [!WARNING]
 > **Risk notice:** Options are high-risk financial instruments. OptionPilot provides analysis tools and market-data-based estimates for informational purposes; it is not investment advice and does not place or execute trades. Verify market data and calculations independently before making financial decisions.
 
 ## What it does
 
-- Looks up underlyings and option chains, then calculates payoff tables for 12 options strategies.
-- Lets signed-in users save analyses, compare strategies, and request a risk-budget-aware ranking.
-- Provides a derivatives board with live prices through a separate market-data relay.
-- Supports analysis history, account settings, and opt-in push alerts.
-- Shares core TypeScript models, payoff calculations, market-feed rules, and design tokens between web and mobile.
+- 📊 Looks up underlyings and option chains, then calculates payoff tables for 12 options strategies.
+- 💾 Lets signed-in users save analyses, compare strategies, and request a risk-budget-aware ranking.
+- 📈 Provides a derivatives board with live prices through a separate market-data relay.
+- 🕘 Supports analysis history, account settings, and opt-in push alerts.
+- 🧩 Shares core TypeScript models, payoff calculations, market-feed rules, and design tokens between web and mobile.
 
 ## Architecture
 
@@ -236,6 +264,5 @@ Please do not include real credentials or personal market data in issues, commit
 
 Do not report exploitable vulnerabilities in a public issue. Use GitHub's private vulnerability reporting for this repository when it is available.
 
-## License
 
-No `LICENSE` file is currently present. Until a license is added, this repository has no explicit license granting permission to use, modify, or redistribute its contents.
+---
