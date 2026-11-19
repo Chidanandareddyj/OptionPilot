@@ -3,6 +3,7 @@ import { useWindowDimensions, View } from "react-native";
 import { Tabs } from "expo-router/js-tabs";
 import type { BottomTabNavigationOptions } from "expo-router/js-tabs";
 import { FloatingTabBar } from "@/components/navigation/FloatingTabBar";
+import { SwipeTabs } from "@/components/navigation/SwipeTabs";
 import { TAB_EASE, TAB_TRANSITION_MS } from "@/lib/motion";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import { useReducedMotion } from "@/lib/useReducedMotion";
@@ -55,15 +56,17 @@ export default function TabsLayout() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <Tabs
-        tabBar={(props) => <FloatingTabBar {...props} />}
-        screenOptions={screenOptions}
-      >
-        <Tabs.Screen name="terminal" options={{ title: "Terminal" }} />
-        <Tabs.Screen name="derivatives" options={{ title: "Derivatives" }} />
-        <Tabs.Screen name="history" options={{ title: "History" }} />
-        <Tabs.Screen name="settings" options={{ title: "Settings" }} />
-      </Tabs>
+      <SwipeTabs>
+        <Tabs
+          tabBar={(props) => <FloatingTabBar {...props} />}
+          screenOptions={screenOptions}
+        >
+          <Tabs.Screen name="terminal" options={{ title: "Terminal" }} />
+          <Tabs.Screen name="derivatives" options={{ title: "Derivatives" }} />
+          <Tabs.Screen name="history" options={{ title: "History" }} />
+          <Tabs.Screen name="settings" options={{ title: "Settings" }} />
+        </Tabs>
+      </SwipeTabs>
     </View>
   );
 }

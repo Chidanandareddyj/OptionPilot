@@ -14,3 +14,9 @@ export const TAB_PRESS_MS = 110;
 
 /** Balanced deceleration with a soft settle. No overshoot. */
 export const TAB_EASE = Easing.bezier(0.32, 0.72, 0, 1);
+
+/** How far a chip or segment squashes while it is held. */
+export const CHIP_PRESS_SCALE = 0.96;
+
+/** How long a removed filter chip takes to collapse out of its row. */
+export const CHIP_REMOVE_MS = 200;
